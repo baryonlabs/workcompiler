@@ -28,6 +28,8 @@ from core.runtime.executors import (
     SLMExecutor,
 )
 
+from core.runtime.oracle_gate import ObjectiveOracleGate
+
 __all__ = [
     "ActionResult",
     "BaseExecutor",
@@ -38,6 +40,7 @@ __all__ = [
     "SLMExecutor",
     "LLMExecutor",
     "HumanExecutor",
+    "ObjectiveOracleGate",
     "DurableRuntimeEngine",
     "WorkflowInstance",
     "StepExecutionRecord",

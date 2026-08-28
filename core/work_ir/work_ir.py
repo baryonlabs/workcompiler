@@ -24,10 +24,12 @@ class WorkIRValidationError(ValueError):
 
 
 class ExecutorType(str, Enum):
-    """Execution tier type according to the 5-tier routing model."""
+    """Execution tier type according to the 8-tier routing model."""
 
     CODE = "code"
     RULE = "rule"
+    HTTP = "http"
+    ML = "ml"
     SLM = "slm"
     FRONTIER_LLM = "frontier_llm"
     HUMAN = "human"
@@ -40,7 +42,7 @@ class ExecutorDef(BaseModel):
 
     type: ExecutorType = Field(
         ...,
-        description="Executor tier type (code, rule, slm, frontier_llm, human)",
+        description="Executor tier type (code, rule, http, ml, slm, frontier_llm, human)",
     )
     handler: Optional[str] = Field(
         default=None,

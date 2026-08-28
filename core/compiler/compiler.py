@@ -2,7 +2,8 @@
 
 Decomposes recorded agent execution traces, discovers state machine states,
 detects causal and behavioral action dependencies, extracts process invariants,
-and synthesizes deterministic Work IR specifications.
+integrates middle-end analyzers (Determinism, Prediction, SLM), and synthesizes
+deterministic Work IR specifications lowering steps across the 8-tier executor hierarchy.
 """
 
 from __future__ import annotations
@@ -11,6 +12,19 @@ import re
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from core.compiler.analyzers.determinism import (
+    DeterminismAnalysisResult,
+    DeterminismAnalyzer,
+)
+from core.compiler.analyzers.prediction import (
+    PredictionAnalysisResult,
+    PredictionAnalyzer,
+)
+from core.compiler.analyzers.slm import (
+    SLMAnalysisResult,
+    SLMAnalyzer,
+)
+from core.optimizer.optimizer import TrainingCandidate
 from core.validation.classifier import (
     BehaviorCategory,
     classify_behavior,
@@ -18,18 +32,29 @@ from core.validation.classifier import (
 from core.work_ir.work_ir import (
     BehaviorRef,
     ExecutorConfig,
+    ExecutorType,
     WorkIR,
 )
 from protocols.traces.trace_ir import TraceIR, TraceStep
 
 
 class WorkCompiler:
-    """Compiles agent execution traces and behavior contracts into executable Work IR."""
+    """Compiles agent execution traces and behavior contracts into executable Work IR.
+
+    Integrates DeterminismAnalyzer, PredictionAnalyzer, and SLMAnalyzer to automatically
+    lower workflow steps across the 8-tier executor hierarchy:
+      - Priority 1 (Model Elimination): Constant / Lookup -> SQL -> Rule -> Deterministic Code
+      - Priority 2 (Model Lowering): Traditional ML -> Vector RAG -> Distilled SLM
+      - Priority 3 (Residual Execution): Frontier LLM -> Human-in-the-Loop
+    """
 
     def __init__(
         self,
         default_quality: Optional[Dict[str, str]] = None,
         default_escalation: Optional[Dict[str, str]] = None,
+        determinism_analyzer: Optional[DeterminismAnalyzer] = None,
+        prediction_analyzer: Optional[PredictionAnalyzer] = None,
+        slm_analyzer: Optional[SLMAnalyzer] = None,
     ) -> None:
         self.default_quality = default_quality or {
             "reviewer_acceptance": ">=0.95",
@@ -40,6 +65,10 @@ class WorkCompiler:
             "on_quality_drop": "require_human_review",
             "on_timeout": "escalate_to_human",
         }
+        self.determinism_analyzer = determinism_analyzer or DeterminismAnalyzer()
+        self.prediction_analyzer = prediction_analyzer or PredictionAnalyzer()
+        self.slm_analyzer = slm_analyzer or SLMAnalyzer()
+        self.training_candidates: Dict[str, TrainingCandidate] = {}
 
     def compile_traces_to_work_ir(
         self,
@@ -67,6 +96,14 @@ class WorkCompiler:
             elif isinstance(t, TraceIR):
                 normalized_traces.append(t)
 
+        # Index steps by normalized action name across all traces
+        steps_by_action: Dict[str, List[TraceStep]] = defaultdict(list)
+        for trace in normalized_traces:
+            for step in trace.steps:
+                if step.action:
+                    norm_act = self._normalize_action_name(step.action)
+                    steps_by_action[norm_act].append(step)
+
         # 1. Decompose steps across all traces
         actions, action_handlers = self._decompose_actions(normalized_traces)
         inputs = self._extract_inputs(normalized_traces)
@@ -81,8 +118,14 @@ class WorkCompiler:
         # 4. Extract process invariants and behavior references
         invariants, behavior_refs = self.extract_invariants(behaviors)
 
-        # 5. Synthesize executor routing
-        executors = self.synthesize_executors(actions, action_handlers, behaviors, target_name)
+        # 5. Synthesize executor routing across the 8-tier hierarchy
+        executors = self.synthesize_executors(
+            actions=actions,
+            action_handlers=action_handlers,
+            behaviors=behaviors,
+            target_name=target_name,
+            steps_by_action=steps_by_action,
+        )
 
         if not description:
             description = f"Compiled workflow for automating {target_name.replace('-', ' ')}"
@@ -124,8 +167,11 @@ class WorkCompiler:
         if "_" in last:
             return re.sub(r"[^\w]+", "_", last)
 
-        # If last segment is a common verb (e.g. calculate, send, search, get) and second-to-last exists
-        verbs = {"calculate", "compute", "send", "search", "query", "get", "lookup", "fetch", "check", "verify", "price"}
+        # If last segment is a common verb and second-to-last exists
+        verbs = {
+            "calculate", "compute", "send", "search", "query", "get", "lookup",
+            "fetch", "check", "verify", "price", "classify", "predict", "score", "draft"
+        }
         if len(parts) >= 2 and last in verbs:
             prev = parts[-2]
             return f"{last}_{prev}"
@@ -154,7 +200,13 @@ class WorkCompiler:
                 # Track handler path cleanly without duplicate prefixes
                 if norm_action not in action_handlers:
                     raw = step.action.strip()
-                    if raw.startswith("connectors.") or raw.startswith("services.") or raw.startswith("rules.") or raw.startswith("models."):
+                    if (
+                        raw.startswith("connectors.")
+                        or raw.startswith("services.")
+                        or raw.startswith("rules.")
+                        or raw.startswith("models.")
+                        or raw.startswith("surfaces.")
+                    ):
                         action_handlers[norm_action] = raw
                     elif "." in raw:
                         if raw.startswith("crm.") or raw.startswith("email.") or raw.startswith("db."):
@@ -163,6 +215,8 @@ class WorkCompiler:
                             action_handlers[norm_action] = f"services.{raw}"
                         elif raw.startswith("pricing_"):
                             action_handlers[norm_action] = f"rules.{raw}"
+                        elif raw.startswith("ml."):
+                            action_handlers[norm_action] = f"models.{raw}"
                         else:
                             action_handlers[norm_action] = f"connectors.{raw}"
                     else:
@@ -233,6 +287,8 @@ class WorkCompiler:
             "search_crm": "crm_queried",
             "calculate_usage": "usage_calculated",
             "price_offer": "offer_priced",
+            "classify_ticket": "ticket_classified",
+            "score_risk": "risk_scored",
             "draft_proposal": "proposal_drafted",
             "review_proposal": "proposal_reviewed",
             "approve": "approved",
@@ -315,13 +371,11 @@ class WorkCompiler:
         for behavior in behaviors:
             classification = classify_behavior(behavior)
             if classification.category == BehaviorCategory.WORKFLOW_TRANSITION:
-                # Check extracted step pairs or parse from evidence/intent
                 evidence_text = f"{behavior.get('evidence', '')} {behavior.get('intent', '')}"
                 for act_a in actions:
                     for act_b in actions:
                         if act_a == act_b:
                             continue
-                        # Look for patterns like 'act_a ... before act_b'
                         pat = rf"{act_a}.*?(?:before|prior to|preceding).*?{act_b}"
                         if re.search(pat, evidence_text, re.IGNORECASE):
                             if act_a not in dependencies[act_b]:
@@ -357,13 +411,11 @@ class WorkCompiler:
             if not raw_name:
                 continue
 
-            # Invariant key in snake_case
             inv_key = re.sub(r"[^\w]+", "_", raw_name.strip().lower())
             if inv_key not in seen_invariants:
                 seen_invariants.add(inv_key)
                 invariants.append(inv_key)
 
-            # Behavior reference
             behavior_path = b.get("path") or f"behaviors/{raw_name}/BEHAVIOR.md"
             behavior_refs.append(BehaviorRef(name=raw_name, path=behavior_path))
 
@@ -375,50 +427,149 @@ class WorkCompiler:
         action_handlers: Dict[str, str],
         behaviors: List[Dict[str, Any]],
         target_name: str,
+        steps_by_action: Optional[Dict[str, List[TraceStep]]] = None,
     ) -> Dict[str, ExecutorConfig]:
-        """Synthesize initial executor configurations for each action step across Code, Rule, and SLM."""
-        executors: Dict[str, ExecutorConfig] = {}
+        """Synthesize executor configurations lowering each action step across the 8-tier hierarchy.
 
-        # Check behavior classification mappings
-        rule_actions: Set[str] = set()
-        for b in behaviors:
-            classification = classify_behavior(b)
-            if classification.category == BehaviorCategory.RULE_POLICY:
-                b_text = f"{b.get('name', '')} {b.get('evidence', '')} {b.get('intent', '')}".lower()
-                for act in actions:
-                    if act in b_text or b.get("name", "").replace("-", "_") in act:
-                        rule_actions.add(act)
+        8-Tier Lowering Pipeline:
+          1. Human Approval / Review Gate (Tier 9)
+          2. Model Elimination (Tiers 1-4: Constant, SQL, Rule, Code/HTTP) via DeterminismAnalyzer
+          3. Model Lowering (Tiers 5-7: Traditional ML, Vector RAG, Distilled SLM) via Prediction & SLM Analyzers
+          4. Residual Frontier LLM (Tier 8)
+
+        Args:
+            actions: List of canonical action names.
+            action_handlers: Inferred or declared handler module paths.
+            behaviors: Attached behavior contracts.
+            target_name: Workflow identifier.
+            steps_by_action: Optional mapping of action names to recorded trace steps.
+
+        Returns:
+            Dictionary mapping action names to ExecutorConfig instances.
+        """
+        executors: Dict[str, ExecutorConfig] = {}
+        steps_map = steps_by_action or {}
 
         for action in actions:
-            act_lower = action.lower()
-
-            if action in rule_actions or "price" in act_lower or "pricing" in act_lower or "policy" in act_lower or "rule" in act_lower:
-                executors[action] = ExecutorConfig(
-                    type="rule",
-                    handler=action_handlers.get(action, f"rules.{action}"),
-                )
-            elif (
-                "draft" in act_lower
-                or "summar" in act_lower
-                or "generate" in act_lower
-                or "synthesize" in act_lower
-                or "proposal" in act_lower
-            ):
-                executors[action] = ExecutorConfig(
-                    type="slm",
-                    preferred=f"models/{target_name}-{action.replace('_', '-')}-slm-v1",
-                    fallback=["frontier_llm", "human"],
-                )
-            elif "approve" in act_lower or "review" in act_lower:
-                executors[action] = ExecutorConfig(
-                    type="human",
-                    handler=f"surfaces.approvals.{action}",
-                )
-            else:
-                # Default to code connector
-                executors[action] = ExecutorConfig(
-                    type="code",
-                    handler=action_handlers.get(action, f"connectors.{action}"),
-                )
+            action_steps = steps_map.get(action, [])
+            default_handler = action_handlers.get(action, "")
+            executor_cfg = self.lower_action(
+                action_name=action,
+                default_handler=default_handler,
+                behaviors=behaviors,
+                target_name=target_name,
+                steps=action_steps,
+            )
+            executors[action] = executor_cfg
 
         return executors
+
+    def lower_action(
+        self,
+        action_name: str,
+        default_handler: str,
+        behaviors: List[Dict[str, Any]],
+        target_name: str,
+        steps: Optional[List[TraceStep]] = None,
+    ) -> ExecutorConfig:
+        """Lower an individual workflow action to the optimal tier in the 8-tier executor hierarchy.
+
+        Args:
+            action_name: Canonical name of the action step.
+            default_handler: Inferred or declared handler path.
+            behaviors: Attached behavior contracts.
+            target_name: Workflow identifier.
+            steps: Optional list of recorded trace steps.
+
+        Returns:
+            Lowered ExecutorConfig instance.
+        """
+        act_lower = action_name.lower()
+        steps = steps or []
+
+        # Tier 9: Human-in-the-Loop Gate (Approval, Review, Manual Intervention)
+        if any(k in act_lower for k in ("approve", "review", "manual", "human_gate")):
+            handler_path = default_handler or f"surfaces.approvals.{action_name}"
+            return ExecutorConfig(
+                type=ExecutorType.HUMAN,
+                handler=handler_path,
+            )
+
+        # Priority 1: Model Elimination (Tiers 1-4 via DeterminismAnalyzer)
+        det_result = self.determinism_analyzer.analyze_action(
+            action_name=action_name,
+            steps=steps,
+            behaviors=behaviors,
+        )
+
+        if det_result.is_deterministic:
+            if det_result.tier == "rule":
+                handler = default_handler if default_handler.startswith("rules.") else (det_result.handler or f"rules.{action_name}")
+                return ExecutorConfig(
+                    type=ExecutorType.RULE,
+                    handler=handler,
+                )
+            elif det_result.tier == "constant" or det_result.tier == "sql":
+                handler = default_handler or det_result.handler or f"connectors.{action_name}"
+                return ExecutorConfig(
+                    type=ExecutorType.CODE,
+                    handler=handler,
+                )
+            elif det_result.tier == "http":
+                handler = default_handler or det_result.handler or f"connectors.{action_name}"
+                return ExecutorConfig(
+                    type=ExecutorType.CODE,
+                    handler=handler,
+                )
+            else:  # tier == "code"
+                handler = default_handler or det_result.handler or f"services.{action_name}"
+                return ExecutorConfig(
+                    type=ExecutorType.CODE,
+                    handler=handler,
+                )
+
+        # Priority 2: Model Lowering (Tiers 5-7 via PredictionAnalyzer & SLMAnalyzer)
+        pred_result = self.prediction_analyzer.analyze_action(
+            action_name=action_name,
+            steps=steps,
+            behaviors=behaviors,
+        )
+
+        if pred_result.is_predictive:
+            if pred_result.tier == "ml":
+                handler = default_handler or pred_result.handler or f"models.ml.{action_name}"
+                preferred_model = f"models/ml/{target_name}-{action_name.replace('_', '-')}-xgb"
+                return ExecutorConfig(
+                    type=ExecutorType.ML,
+                    handler=handler,
+                    preferred=preferred_model,
+                )
+            elif pred_result.tier == "vector":
+                handler = default_handler or pred_result.handler or f"connectors.vector.{action_name}"
+                return ExecutorConfig(
+                    type=ExecutorType.CODE,
+                    handler=handler,
+                )
+
+        slm_result = self.slm_analyzer.analyze_action(
+            action_name=action_name,
+            steps=steps,
+            target_name=target_name,
+            behaviors=behaviors,
+        )
+
+        if slm_result.is_slm_candidate:
+            if slm_result.training_candidate:
+                self.training_candidates[action_name] = slm_result.training_candidate
+            return ExecutorConfig(
+                type=ExecutorType.SLM,
+                preferred=slm_result.preferred_model,
+                fallback=slm_result.fallback_chain,
+            )
+
+        # Priority 3: Residual Execution (Tier 8: Frontier LLM Fallback)
+        return ExecutorConfig(
+            type=ExecutorType.FRONTIER_LLM,
+            preferred="claude-3-5-sonnet",
+            fallback=["human"],
+        )

@@ -71,13 +71,13 @@ Determinism Analyzer   Prediction Analyzer    SLM Analyzer
 ## 4. WorkCompiler Implementation TODO Roadmap
 
 ### Phase 1: Compiler Middle-End Analyzers
-- [ ] **TODO-1.1**: Implement `DeterminismAnalyzer` in `core/compiler/analyzers/determinism.py`
+- [x] **TODO-1.1**: Implement `DeterminismAnalyzer` in `core/compiler/analyzers/determinism.py`
   - Detect exact math, string formatting, dictionary lookup, schema validation, and fixed transformations in `TraceStep` inputs/outputs.
   - Lower detected steps directly to `CodeExecutor`, `RuleExecutor`, or `HTTPExecutor`.
-- [ ] **TODO-1.2**: Implement `PredictionAnalyzer` in `core/compiler/analyzers/prediction.py`
+- [x] **TODO-1.2**: Implement `PredictionAnalyzer` in `core/compiler/analyzers/prediction.py`
   - Identify steps with structured inputs, finite categorical labels, or numerical score outputs (e.g. ticket classification, churn risk, priority rating).
   - Extract labeled datasets for `MLExecutor` (Scikit-Learn / XGBoost).
-- [ ] **TODO-1.3**: Implement `SLMAnalyzer` in `core/compiler/analyzers/slm.py`
+- [x] **TODO-1.3**: Implement `SLMAnalyzer` in `core/compiler/analyzers/slm.py`
   - Identify narrow generative tasks (summarization, structured email drafting, intent extraction).
   - Generate `TrainingCandidate` specs for external `SFTTrainer` pipelines.
 
@@ -90,7 +90,7 @@ Determinism Analyzer   Prediction Analyzer    SLM Analyzer
   - `/work:promote`: Promote qualified compiled pipelines to production.
 
 ### Phase 3: External Oracle Escalation Engine
-- [ ] **TODO-3.1**: Implement objective oracle failure escalation (Frugal-style).
+- [x] **TODO-3.1**: Implement objective oracle failure escalation (Completed in `core/runtime/oracle_gate.py`) - (Frugal-style).
   - Do not rely on LLM self-confidence; escalate step execution to higher tiers ONLY when schema validation, test cases, or behavior contracts fail.
 
 ### Phase 4: Customer Renewal PoC Benchmark
