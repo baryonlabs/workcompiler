@@ -2,8 +2,19 @@ from __future__ import annotations
 
 """OpenWorkflow Zero-Code Agent Proxy Server.
 
-FastAPI / Uvicorn async HTTP reverse proxy intercepting OpenAI (/v1/chat/completions)
-and Anthropic (/v1/messages) traffic to capture trajectories and compile WorkIR.
+FastAPI / Uvicorn async HTTP reverse proxy intercepting OpenAI (/v1/chat/completions),
+OpenAI Responses API (/v1/responses — used by Codex CLI) and Anthropic (/v1/messages)
+traffic to capture trajectories and compile WorkIR.
+
+Two modes coexist:
+
+* ``/v1/chat/completions`` and ``/v1/messages`` answer with a *synthetic* response
+  (development/demo only, flagged by ``X-OpenWorkflow-Response-Mode: synthetic``).
+* ``/v1/responses`` and ``/backend-api/codex/*`` are *transparent passthroughs*:
+  the request (headers included) is forwarded to the real upstream, the SSE stream
+  is relayed byte-for-byte to the client, and the completed turn is captured into
+  TraceIR in the background. This is what lets Codex CLI run unmodified through
+  OpenWorkflow (``X-OpenWorkflow-Response-Mode: passthrough``).
 """
 
 import os
@@ -14,11 +25,12 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import httpx
 from fastapi import FastAPI, Request, Header, HTTPException, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.responses import Response
 
-from adapters.proxy.interceptor import TrajectoryInterceptor
+from adapters.proxy.interceptor import TrajectoryInterceptor, responses_object_from_sse
 from adapters.agentbehavior import parse_behavior_md
 from core.compiler import WorkCompiler
 from core.work_ir import save_work_ir, WorkIR
@@ -35,6 +47,13 @@ compiled_workflows_history: Dict[str, Dict[str, Any]] = {}
 
 UPSTREAM_OPENAI_URL = os.getenv("OPENAI_UPSTREAM_URL", "https://api.openai.com/v1")
 UPSTREAM_ANTHROPIC_URL = os.getenv("ANTHROPIC_UPSTREAM_URL", "https://api.anthropic.com/v1")
+# Codex CLI with ChatGPT login talks to this backend instead of api.openai.com.
+UPSTREAM_CHATGPT_CODEX_URL = os.getenv("CHATGPT_CODEX_UPSTREAM_URL", "https://chatgpt.com/backend-api/codex")
+UPSTREAM_TIMEOUT_SECONDS = float(os.getenv("OPENWORKFLOW_UPSTREAM_TIMEOUT", "600"))
+
+# Hop-by-hop / transport headers that must not be forwarded verbatim.
+_STRIP_REQUEST_HEADERS = {"host", "content-length", "connection", "accept-encoding", "transfer-encoding"}
+_STRIP_RESPONSE_HEADERS = {"content-length", "content-encoding", "transfer-encoding", "connection"}
 
 
 def _workspace_root() -> Path:
@@ -140,10 +159,25 @@ async def list_intercepted_traces() -> Dict[str, Any]:
             "run_id": run_id,
             "source_agent": interceptor.source_agent,
             "steps_count": len(interceptor.steps),
+            "actions": [step.action for step in interceptor.steps],
             "prompt_tokens": interceptor.prompt_tokens_accumulated,
             "completion_tokens": interceptor.completion_tokens_accumulated,
         })
     return {"traces": traces_summary}
+
+
+@app.get("/v1/workcompiler/traces/{run_id}")
+async def get_intercepted_trace(run_id: str, include_raw: bool = False) -> Dict[str, Any]:
+    """Return the TraceIR captured so far for one session (optionally with raw API payloads)."""
+    interceptor = active_interceptors.get(run_id)
+    if interceptor is None:
+        raise HTTPException(status_code=404, detail=f"Unknown trajectory session '{run_id}'.")
+    trace = interceptor.finalize_trace(status="success")
+    body: Dict[str, Any] = {"trace": trace.model_dump(mode="json")}
+    if include_raw:
+        body["raw_requests"] = interceptor.raw_requests
+        body["raw_responses"] = interceptor.raw_responses
+    return body
 
 
 @app.post("/v1/workcompiler/compile")
@@ -172,11 +206,15 @@ async def trigger_work_compilation(
 
     # Trigger WorkCompiler
     compiler = WorkCompiler()
-    work_ir = compiler.compile_traces_to_work_ir(
-        traces=[trace_ir],
-        behaviors=behaviors,
-        target_name=target_name
-    )
+    try:
+        work_ir = compiler.compile_traces_to_work_ir(
+            traces=[trace_ir],
+            behaviors=behaviors,
+            target_name=target_name
+        )
+    except ValueError as exc:
+        # Invalid Work IR (e.g. dependency cycle) is a client-visible compile error, not a crash.
+        raise HTTPException(status_code=422, detail={"status": "error", "work_name": target_name, "error": str(exc)}) from exc
 
     compiled_dict = work_ir.to_dict()
     compiled_workflows_history[target_name] = compiled_dict
@@ -194,6 +232,143 @@ async def trigger_work_compilation(
         "executors_summary": {act: cfg.type.value for act, cfg in work_ir.executors.items()},
         "work_ir": compiled_dict,
     }
+
+
+def _passthrough_headers() -> Dict[str, str]:
+    return {"X-OpenWorkflow-Response-Mode": "passthrough"}
+
+
+def _upstream_client() -> httpx.AsyncClient:
+    """Factory for the upstream HTTP client (patched in tests with a MockTransport)."""
+    return httpx.AsyncClient(timeout=httpx.Timeout(UPSTREAM_TIMEOUT_SECONDS, connect=30.0))
+
+
+def _resolve_run_id(request: Request, payload: Dict[str, Any]) -> Optional[str]:
+    """Group Responses API calls into one trajectory per agent conversation.
+
+    Priority: explicit ``X-OpenWorkflow-Run-ID`` header → Codex ``session_id`` /
+    ``conversation_id`` headers → ``prompt_cache_key`` in the payload (Codex sets it
+    to the thread id) → ``previous_response_id`` chain is not stable, so fall back to a
+    fresh per-process session.
+    """
+    for header in ("x-openworkflow-run-id", "session_id", "conversation_id"):
+        value = request.headers.get(header)
+        if value:
+            return value
+    cache_key = payload.get("prompt_cache_key")
+    if isinstance(cache_key, str) and cache_key:
+        return cache_key
+    return None
+
+
+def _source_agent(request: Request, default: str) -> str:
+    originator = request.headers.get("originator")
+    if originator:
+        return originator
+    return request.headers.get("user-agent", default)
+
+
+async def _relay_responses_api(request: Request, upstream_url: str) -> Response:
+    """Forward a Responses API call upstream, relay the (SSE) reply, capture the turn."""
+    body = await request.body()
+    try:
+        payload = json.loads(body) if body else {}
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise HTTPException(status_code=400, detail="Request body must contain valid JSON.") from exc
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=422, detail="Request JSON body must be an object.")
+
+    forward_headers = {k: v for k, v in request.headers.items() if k.lower() not in _STRIP_REQUEST_HEADERS}
+    interceptor = get_or_create_interceptor(
+        run_id=_resolve_run_id(request, payload),
+        source_agent=_source_agent(request, "openai-responses-client"),
+    )
+
+    client = _upstream_client()
+    start_time = time.perf_counter()
+    try:
+        upstream_request = client.build_request("POST", upstream_url, content=body, headers=forward_headers)
+        upstream_response = await client.send(upstream_request, stream=True)
+    except httpx.HTTPError as exc:
+        await client.aclose()
+        raise HTTPException(status_code=502, detail=f"Upstream request failed: {exc}") from exc
+
+    response_headers = {
+        k: v for k, v in upstream_response.headers.items() if k.lower() not in _STRIP_RESPONSE_HEADERS
+    }
+    response_headers.update(_passthrough_headers())
+    content_type = upstream_response.headers.get("content-type", "")
+    is_stream = "text/event-stream" in content_type or bool(payload.get("stream"))
+
+    async def relay():
+        chunks: List[bytes] = []
+        try:
+            async for chunk in upstream_response.aiter_bytes():
+                chunks.append(chunk)
+                yield chunk
+        finally:
+            await upstream_response.aclose()
+            await client.aclose()
+            duration_ms = (time.perf_counter() - start_time) * 1000.0
+            if upstream_response.status_code < 400:
+                raw = b"".join(chunks).decode("utf-8", errors="replace")
+                final_response: Optional[Dict[str, Any]] = None
+                if is_stream:
+                    final_response = responses_object_from_sse(raw)
+                else:
+                    try:
+                        parsed = json.loads(raw)
+                        final_response = parsed if isinstance(parsed, dict) else None
+                    except Exception:
+                        final_response = None
+                if final_response is not None:
+                    interceptor.intercept_responses_request_response(payload, final_response, duration_ms=duration_ms)
+
+    return StreamingResponse(
+        relay(),
+        status_code=upstream_response.status_code,
+        headers=response_headers,
+        media_type=content_type or None,
+    )
+
+
+@app.post("/v1/responses")
+async def proxy_openai_responses(request: Request) -> Response:
+    """Transparent passthrough for the OpenAI Responses API (API-key clients, Agents SDK)."""
+    return await _relay_responses_api(request, f"{UPSTREAM_OPENAI_URL.rstrip('/')}/responses")
+
+
+@app.post("/backend-api/codex/responses")
+async def proxy_chatgpt_codex_responses(request: Request) -> Response:
+    """Transparent passthrough for Codex CLI signed in with a ChatGPT account.
+
+    Point Codex at this proxy with a custom provider::
+
+        [model_providers.openworkflow]
+        name = "OpenWorkflow Proxy"
+        base_url = "http://127.0.0.1:8787/backend-api/codex"
+        wire_api = "responses"
+        requires_openai_auth = true
+    """
+    return await _relay_responses_api(request, f"{UPSTREAM_CHATGPT_CODEX_URL.rstrip('/')}/responses")
+
+
+@app.api_route("/backend-api/codex/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+async def proxy_chatgpt_codex_other(path: str, request: Request) -> Response:
+    """Forward any other Codex backend call (usage, config bundles, ...) untouched."""
+    body = await request.body()
+    forward_headers = {k: v for k, v in request.headers.items() if k.lower() not in _STRIP_REQUEST_HEADERS}
+    url = f"{UPSTREAM_CHATGPT_CODEX_URL.rstrip('/')}/{path}"
+    if request.url.query:
+        url = f"{url}?{request.url.query}"
+    async with _upstream_client() as client:
+        try:
+            upstream = await client.request(request.method, url, content=body, headers=forward_headers)
+        except httpx.HTTPError as exc:
+            raise HTTPException(status_code=502, detail=f"Upstream request failed: {exc}") from exc
+    headers = {k: v for k, v in upstream.headers.items() if k.lower() not in _STRIP_RESPONSE_HEADERS}
+    headers.update(_passthrough_headers())
+    return Response(content=upstream.content, status_code=upstream.status_code, headers=headers)
 
 
 @app.post("/v1/chat/completions")

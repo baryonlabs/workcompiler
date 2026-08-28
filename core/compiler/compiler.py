@@ -358,9 +358,14 @@ class WorkCompiler:
             for i in range(1, len(trace_actions)):
                 prev_act = trace_actions[i - 1]
                 curr_act = trace_actions[i]
-                if prev_act != curr_act and prev_act in action_indices and curr_act in action_indices:
-                    if prev_act not in dependencies[curr_act]:
-                        dependencies[curr_act].append(prev_act)
+                if prev_act == curr_act or prev_act not in action_indices or curr_act not in action_indices:
+                    continue
+                # Agent trajectories often loop (shell -> respond -> shell ...). Only keep the
+                # forward edge in first-occurrence order so repeated actions never form a cycle.
+                if action_indices[prev_act] >= action_indices[curr_act]:
+                    continue
+                if prev_act not in dependencies[curr_act]:
+                    dependencies[curr_act].append(prev_act)
 
         # If no traces provided sequential pairs, construct default linear chain
         if not dependencies and len(actions) > 1:

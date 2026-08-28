@@ -12,6 +12,22 @@ AI가 한 번 작업하게 하세요. OpenWorkflow는 이후 작업을 안정적
 
 ---
 
+## 30초 데모: Codex 안에서 그대로 쓰기
+
+![Codex TUI 안에서 $ow-compile-work / $ow-traces / $ow-compile-trace 스킬로 OpenWorkLang 컴파일, 캡처 세션 조회, 세션의 work.yaml 컴파일까지 수행하는 실제 녹화](docs/demo/openworkflow-codex-demo.gif)
+
+합성 화면이 아닌 **실제 Codex 대화형 세션**입니다. Codex를 OpenWorkflow 프록시로 향하게 한 뒤(ChatGPT 로그인 그대로), 저장소의 스킬 3개를 `$` 멘션으로 호출하면 됩니다.
+
+| 순서 | Codex 입력 | 결과 |
+| :--- | :--- | :--- |
+| 1 | `$ow-compile-work examples/quality_analysis.work` | OpenWorkLang(`.work`) → `work.yaml` + LinkML 스키마 컴파일, executor 하위 통합(code/rule/ml/slm) |
+| 2 | `$ow-traces` | 프록시가 캡처한 세션 목록 — **이 Codex 세션 자체**가 `shell_python3, shell_sed, respond, …` 스텝으로 잡힘 |
+| 3 | `$ow-compile-trace codex-session` | 캡처된 Codex 세션이 `build/codex-session.work.yaml`로 컴파일됨 |
+
+설정 방법과 각 단계가 실행하는 명령은 [Zero-Code 에이전트 프록시](#zero-code-에이전트-프록시-adaptersproxy) 섹션을 참조하세요.
+
+---
+
 ## 전체 아키텍처 및 파이프라인 개요
 
 ```mermaid
@@ -119,27 +135,78 @@ OpenWorkflow는 이를 역전시킵니다: 에이전트가 1회 작업을 수행
 
 ## Zero-Code 에이전트 프록시 (`adapters/proxy/`)
 
-OpenWorkflow는 표준 LLM API 요청을 TraceIR 입력으로 수집할 수 있습니다. 현재 `adapters/proxy/server.py`는 **개발·데모용 synthetic 응답 모드**이며, 응답의 `X-OpenWorkflow-Response-Mode: synthetic` 헤더로 이를 명시합니다. 실제 OpenAI/Anthropic upstream passthrough와 스트리밍은 아직 구현 대상이므로, 운영 트래픽을 이 프록시로 전달하면 안 됩니다.
+OpenWorkflow는 표준 LLM API 요청을 TraceIR 입력으로 수집합니다. `adapters/proxy/server.py`는 두 가지 모드를 제공합니다.
 
-```bash
-# 기존 에이전트의 API 엔드포인트를 로컬 OpenWorkflow 프록시로 지정
-export OPENAI_BASE_URL="http://localhost:8080/v1"
-export ANTHROPIC_BASE_URL="http://localhost:8080/v1"
-```
+| 엔드포인트 | 모드 | 설명 |
+| :--- | :--- | :--- |
+| `POST /v1/responses`, `POST /backend-api/codex/responses` | **passthrough** (`X-OpenWorkflow-Response-Mode: passthrough`) | 요청을 실제 upstream(OpenAI Responses API 또는 ChatGPT Codex 백엔드)으로 그대로 전달하고 SSE 스트림을 바이트 단위로 중계하면서, 완료된 턴을 백그라운드에서 TraceIR로 캡처합니다. **Codex CLI가 수정 없이 그대로 동작합니다.** |
+| `POST /v1/chat/completions`, `POST /v1/messages` | **synthetic** (`X-OpenWorkflow-Response-Mode: synthetic`) | 개발·데모용 합성 응답. 운영 트래픽을 전달하면 안 됩니다. |
+
+### 실제 사용 화면: Codex TUI 안에서 전부 실행
+
+README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 녹화는 합성 데이터가 아니라 **실제 Codex 대화형 TUI 세션**이며, 프록시 기동 한 줄을 제외한 모든 실행이 Codex 안에서 이뤄집니다. 저장소의 `.agents/skills/`에 든 스킬 3개가 Codex에 자동 탐지되어 `$` 멘션으로 명시 호출됩니다(Codex 문서상 `/prompts:` 커스텀 프롬프트는 폐기되어 최신 버전에서 인식되지 않으므로, 명시적 명령은 스킬 멘션이 표준입니다).
+
+| 순서 | Codex 입력 | Codex가 실행하는 것 | 결과 |
+| :--- | :--- | :--- | :--- |
+| 1 | `$ow-compile-work examples/quality_analysis.work` | `python3 -m core.openworklang compile … --linkml …` | OpenWorkLang → `build/quality_analysis.work.yaml` + LinkML 스키마, 8단계 executor 하위 통합(code/rule/ml/slm) 설명 |
+| 2 | `$ow-traces` | `curl localhost:8787/v1/workcompiler/traces` | 프록시가 캡처한 세션 목록 — **지금 이 Codex 세션 자체**가 `shell_python3, shell_sed, respond, …` 스텝으로 잡혀 있음 |
+| 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` | 캡처된 Codex 세션이 `build/codex-session.work.yaml`로 컴파일됨 (actions: `shell_python3 → shell_sed → respond → shell_curl`) |
+
+녹화 스크립트는 [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/openworkflow-codex-demo.tape)입니다.
+
+**직접 해보기**
+
+1. Codex provider 설정 — `~/.codex/config.toml`에 추가하거나, 별도 `CODEX_HOME` 디렉터리(`auth.json` 복사 + 아래 `config.toml`)를 사용합니다.
+
+   ```toml
+   model_provider = "openworkflow"
+   approval_policy = "never"
+   sandbox_mode = "workspace-write"
+
+   [sandbox_workspace_write]
+   network_access = true            # Codex가 로컬 프록시에 curl 할 수 있게
+
+   [model_providers.openworkflow]
+   name = "OpenWorkflow Proxy"
+   base_url = "http://127.0.0.1:8787/backend-api/codex"
+   wire_api = "responses"
+   requires_openai_auth = true      # ChatGPT 로그인 토큰을 그대로 사용
+   ```
+
+2. 프록시를 띄우고 저장소 루트에서 Codex를 실행합니다. 스킬은 `.agents/skills/`에서 자동으로 로드됩니다.
+
+   ```bash
+   python3 -m uvicorn adapters.proxy.server:app --port 8787 &
+   codex
+   ```
+
+3. Codex 안에서 스킬을 호출합니다 — `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`.
+
+   스킬이 실행하는 명령은 셸에서 직접 써도 동일합니다:
+
+   ```bash
+   python3 -m core.openworklang compile examples/quality_analysis.work --linkml build/quality_analysis.linkml.yaml
+   curl -s localhost:8787/v1/workcompiler/traces | jq                # run_id, actions, 토큰 사용량
+   curl -s localhost:8787/v1/workcompiler/traces/<run_id> | jq       # 세션의 TraceIR 전체
+   curl -s -X POST localhost:8787/v1/workcompiler/compile -H 'Content-Type: application/json' \
+     -d '{"run_id":"<run_id>","target_name":"codex-session","output_path":"build/codex-session.work.yaml"}'
+   ```
+
+   API 키 기반 클라이언트(OpenAI SDK, Agents SDK 등)는 `OPENAI_BASE_URL=http://127.0.0.1:8787/v1`만 지정하면 `/v1/responses`가 같은 방식으로 캡처됩니다.
 
 ```text
-Existing AI Agent (Claude Code, Cursor, AutoGen, LangChain, Custom Script)
+Existing AI Agent (Codex CLI, Claude Code, Cursor, AutoGen, LangChain, Custom Script)
                                 │
-        Standard LLM API Calls (OPENAI_BASE_URL=http://localhost:8080/v1)
+        Standard LLM API Calls (OPENAI_BASE_URL=http://localhost:8787/v1)
                                 │
                                 ▼
  ┌─────────────────────────────────────────────────────────────────────────────┐
  │                OPENWORKFLOW TRANSPARENT PROXY ADAPTER                       │
  │                    (adapters/proxy/server.py)                              │
  ├─────────────────────────────────────────────────────────────────────────────┤
- │ 1. 개발·데모 요청을 synthetic 응답과 함께 기록                              │
+ │ 1. Responses API / Codex 백엔드 호출은 upstream으로 투명 전달 (SSE 중계)    │
  │ 2. Prompts, Tool Calls, Tool Outputs를 TraceIR로 정규화                     │
- │ 3. Production passthrough/streaming은 구현 예정                              │
+ │ 3. chat/completions · messages는 개발용 synthetic 응답                       │
  └──────────────────────────────┬──────────────────────────────────────────────┘
                                 │
                                 ▼
@@ -253,7 +320,14 @@ work quality_analyst {
 Human Intent ──▶ OpenWorkLang (.work) ──▶ OpenWorkLang Compiler ──▶ Work IR (work.yaml) ──▶ Durable Runtime
 ```
 
-상세한 문법 사양과 컴파일러 사용법은 **[OpenWorkLang 명세서(docs/openworklang-spec.md)](docs/openworklang-spec.md)**를 참조하세요.
+명령줄에서 바로 컴파일할 수 있습니다:
+
+```bash
+python3 -m core.openworklang compile examples/quality_analysis.work --linkml build/quality_analysis.linkml.yaml
+# -> build/quality_analysis.work.yaml (+ LinkML 스키마), actions / invariants / executors 요약 출력
+```
+
+상세한 문법 사양과 Python API는 **[OpenWorkLang 명세서(docs/openworklang-spec.md)](docs/openworklang-spec.md)**를 참조하세요.
 
 
 ## 핵심 개념: 작업 컴파일 & `Work IR`
@@ -370,7 +444,8 @@ openworkflow/
 │
 ├── agents/                      # 가이드 및 측정 에이전트 규격
 ├── docs/                        # 명세서, 아키텍처, 사용 가이드, 다이어그램
-├── tests/                       # pytest 테스트 수트 (108개 테스트 전원 통과)
+├── .agents/skills/              # Codex 스킬: $ow-compile-work · $ow-traces · $ow-compile-trace
+├── tests/                       # pytest 테스트 수트 (134개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트
 ```
 
@@ -379,6 +454,17 @@ openworkflow/
 ## 사용 가이드 & 데모 실행
 
 전체 파이프라인 개발자 가이드 및 상세 사용법은 **[사용 가이드(docs/usage.md)](docs/usage.md)**를 참조하세요.
+
+### 파이프라인 데모 (Python 스크립트 실행 화면)
+
+![OpenWorkflow 터미널 데모 — 고객 계약 갱신 파이프라인 실행과 전체 테스트 수트](docs/demo/openworkflow-demo.gif)
+
+위 녹화는 `Agent Trace → BEHAVIOR.md 파싱 → Work IR 컴파일 → Durable Runtime 실행 → Objective Oracle Gate → SLM 승격 평가`의 6단계 파이프라인이 한 번에 실행되는 모습과, 전체 pytest 수트가 통과하는 장면입니다. 녹화 스크립트는 [`docs/demo/openworkflow-demo.tape`](docs/demo/openworkflow-demo.tape)에 있으며, [vhs](https://github.com/charmbracelet/vhs)로 재생성할 수 있습니다:
+
+```bash
+brew install vhs   # 또는 go install github.com/charmbracelet/vhs@latest
+vhs docs/demo/openworkflow-demo.tape
+```
 
 고객 계약 갱신 엔드투엔드 파이프라인 실시간 데모 실행:
 

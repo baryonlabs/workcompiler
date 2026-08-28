@@ -184,3 +184,239 @@ def test_compile_output_path_is_restricted_to_workspace(client, tmp_path, monkey
     )
     assert allowed.status_code == 200
     assert (tmp_path / "compiled" / "path-test.yaml").is_file()
+
+
+# ---------------------------------------------------------------------------
+# Responses API passthrough (Codex CLI path)
+# ---------------------------------------------------------------------------
+
+def _sse(events):
+    return "".join(f"event: {e['type']}\ndata: {json.dumps(e)}\n\n" for e in events).encode()
+
+
+def _codex_like_sse(response_id="resp_1", tool_call=True):
+    output = []
+    if tool_call:
+        output.append({
+            "type": "function_call",
+            "id": "fc_1",
+            "call_id": "call_1",
+            "name": "shell",
+            "arguments": json.dumps({"command": ["bash", "-lc", "cat examples/customer-renewal/BEHAVIOR.md"]}),
+        })
+    output.append({
+        "type": "message",
+        "role": "assistant",
+        "content": [{"type": "output_text", "text": "Reading the behavior contract."}],
+    })
+    response = {
+        "id": response_id,
+        "object": "response",
+        "status": "completed",
+        "output": output,
+        "usage": {"input_tokens": 300, "output_tokens": 25, "total_tokens": 325},
+    }
+    return _sse([
+        {"type": "response.created", "response": {"id": response_id, "status": "in_progress"}},
+        {"type": "response.output_item.done", "item": output[0]},
+        {"type": "response.completed", "response": response},
+    ])
+
+
+def _install_mock_upstream(monkeypatch, handler):
+    import httpx
+    from adapters.proxy import server as proxy_server
+
+    def factory():
+        return httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+    monkeypatch.setattr(proxy_server, "_upstream_client", factory)
+
+
+def test_codex_backend_responses_passthrough_streams_and_captures(client, monkeypatch):
+    import httpx
+
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["auth"] = request.headers.get("authorization")
+        seen["account"] = request.headers.get("chatgpt-account-id")
+        return httpx.Response(200, content=_codex_like_sse(), headers={"content-type": "text/event-stream"})
+
+    _install_mock_upstream(monkeypatch, handler)
+
+    payload = {
+        "model": "gpt-5-codex",
+        "stream": True,
+        "prompt_cache_key": "thread_abc",
+        "input": [{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "Summarize the behavior contract"}]}],
+        "tools": [{"type": "function", "name": "shell"}],
+    }
+    headers = {"Authorization": "Bearer chatgpt-token", "chatgpt-account-id": "acct_1", "originator": "codex_cli_rs"}
+
+    response = client.post("/backend-api/codex/responses", json=payload, headers=headers)
+
+    assert response.status_code == 200
+    assert response.headers["X-OpenWorkflow-Response-Mode"] == "passthrough"
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert response.content == _codex_like_sse()  # relayed byte-for-byte
+    assert seen["url"].endswith("/backend-api/codex/responses")
+    assert seen["auth"] == "Bearer chatgpt-token"
+    assert seen["account"] == "acct_1"
+
+    interceptor = active_interceptors["thread_abc"]
+    assert interceptor.source_agent == "codex_cli_rs"
+    assert len(interceptor.steps) == 1
+    step = interceptor.steps[0]
+    assert step.action == "shell_cat"
+    assert step.input["content"] == "Summarize the behavior contract"
+    assert step.output["tool_calls"][0]["name"] == "shell"
+    assert step.token_usage.prompt_tokens == 300
+    assert interceptor.completion_tokens_accumulated == 25
+
+
+def test_v1_responses_passthrough_non_streaming_json(client, monkeypatch):
+    import httpx
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert str(request.url).endswith("/v1/responses")
+        return httpx.Response(200, json={
+            "id": "resp_json",
+            "object": "response",
+            "status": "completed",
+            "output": [{"type": "message", "role": "assistant",
+                        "content": [{"type": "output_text", "text": "pong"}]}],
+            "usage": {"input_tokens": 10, "output_tokens": 1, "total_tokens": 11},
+        })
+
+    _install_mock_upstream(monkeypatch, handler)
+
+    response = client.post(
+        "/v1/responses",
+        json={"model": "gpt-5", "input": "ping"},
+        headers={"X-OpenWorkflow-Run-ID": "run_json"},
+    )
+    assert response.status_code == 200
+    assert response.json()["id"] == "resp_json"
+    step = active_interceptors["run_json"].steps[0]
+    assert step.action == "respond"
+    assert step.input == {"content": "ping"}
+    assert step.output["content"] == "pong"
+
+
+def test_passthrough_reports_upstream_failure_as_502(client, monkeypatch):
+    import httpx
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("upstream down")
+
+    _install_mock_upstream(monkeypatch, handler)
+    response = client.post("/v1/responses", json={"model": "gpt-5", "input": "ping"})
+    assert response.status_code == 502
+    assert active_interceptors == {} or all(len(i.steps) == 0 for i in active_interceptors.values())
+
+
+def test_codex_session_compiles_into_distinct_shell_actions(client, monkeypatch):
+    """Several Codex turns in one thread become separate workflow actions."""
+    import httpx
+
+    commands = iter(["ls examples/customer-renewal", "cat examples/customer-renewal/work.yaml", None])
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        cmd = next(commands)
+        if cmd is None:
+            return httpx.Response(200, content=_codex_like_sse("resp_final", tool_call=False),
+                                  headers={"content-type": "text/event-stream"})
+        output = [{"type": "function_call", "call_id": "c", "name": "shell",
+                   "arguments": json.dumps({"command": ["bash", "-lc", cmd]})}]
+        body = _sse([{"type": "response.completed", "response": {"id": "r", "status": "completed", "output": output,
+                                                                  "usage": {"input_tokens": 1, "output_tokens": 1}}}])
+        return httpx.Response(200, content=body, headers={"content-type": "text/event-stream"})
+
+    _install_mock_upstream(monkeypatch, handler)
+    for _ in range(3):
+        client.post("/backend-api/codex/responses",
+                    json={"model": "gpt-5-codex", "stream": True, "input": "Review the renewal example"},
+                    headers={"session_id": "codex-thread-1"})
+
+    traces = client.get("/v1/workcompiler/traces").json()["traces"]
+    assert traces[0]["run_id"] == "codex-thread-1" and traces[0]["steps_count"] == 3
+
+    compiled = client.post("/v1/workcompiler/compile", json={"run_id": "codex-thread-1", "target_name": "codex-review"}).json()
+    assert compiled["status"] == "compiled"
+    assert compiled["actions"][:2] == ["shell_ls", "shell_cat"]
+    assert "respond" in compiled["actions"]
+
+
+def test_codex_code_mode_custom_tool_call_is_captured_as_shell_action():
+    """Codex 'code mode' issues custom_tool_call items whose input is a JS exec_command snippet."""
+    interceptor = TrajectoryInterceptor(run_id="code_mode")
+    response = {
+        "id": "resp_cm",
+        "status": "completed",
+        "output": [
+            {"type": "reasoning", "summary": []},
+            {
+                "type": "custom_tool_call",
+                "name": "exec",
+                "call_id": "call_1",
+                "input": 'const r = await tools.exec_command({cmd:"ls && sed -n \'1,40p\' work.yaml","workdir":"/repo"});\ntext(r.output);\n',
+            },
+        ],
+        "usage": {"input_tokens": 50, "output_tokens": 5},
+    }
+    step = interceptor.intercept_responses_request_response({"input": "Read work.yaml"}, response)
+    assert step.action == "shell_ls"
+    assert step.input["cmd"].startswith("ls && sed")
+    assert step.output["tool_calls"][0]["name"] == "exec"
+
+
+@pytest.mark.parametrize("snippet,expected_prefix", [
+    ('tools.exec_command({cmd:"ls -la", workdir:"/x"})', "ls"),
+    ('tools.exec_command({ "cmd": "python3 -m core.openworklang compile a.work", "workdir": "/x" })', "python3"),
+    ("tools.exec_command({ workdir: '/x', cmd: 'curl -s localhost:8787/v1/workcompiler/traces | jq' })", "curl"),
+    ('tools.exec_command({cmd: `curl -s -X POST localhost:8787/x -d \'{"run_id":"a"}\' | jq \'{status}\'`, yield_time_ms: 1})', "curl"),
+])
+def test_code_mode_command_extraction_handles_quote_styles(snippet, expected_prefix):
+    from adapters.proxy.interceptor import _code_mode_command, _shell_program
+
+    assert _code_mode_command(snippet).startswith(expected_prefix)
+    assert _shell_program({"raw_args": snippet}) == expected_prefix
+
+
+def test_looping_agent_session_compiles_without_dependency_cycle(client, monkeypatch):
+    """shell -> shell -> respond -> shell (a typical Codex loop) must not raise a DAG cycle."""
+    import httpx
+
+    cmds = iter(["python3 -m core.openworklang compile a.work", "sed -n '1,25p' build/a.work.yaml", None,
+                 "curl -s localhost:8787/v1/workcompiler/traces", None])
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        cmd = next(cmds)
+        if cmd is None:
+            output = [{"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "ok"}]}]
+        else:
+            output = [{"type": "custom_tool_call", "name": "exec", "call_id": "c",
+                       "input": f'await tools.exec_command({{ "cmd": {json.dumps(cmd)}, "workdir": "/r" }})'}]
+        body = _sse([{"type": "response.output_item.done", "item": output[0]},
+                     {"type": "response.completed", "response": {"id": "r", "status": "completed", "output": [],
+                                                                  "usage": {"input_tokens": 1, "output_tokens": 1}}}])
+        return httpx.Response(200, content=body, headers={"content-type": "text/event-stream"})
+
+    _install_mock_upstream(monkeypatch, handler)
+    for _ in range(5):
+        client.post("/backend-api/codex/responses", json={"model": "gpt-5-codex", "stream": True, "input": "go"},
+                    headers={"session_id": "loop-thread"})
+
+    traces = client.get("/v1/workcompiler/traces").json()["traces"][0]
+    assert traces["actions"] == ["shell_python3", "shell_sed", "respond", "shell_curl", "respond"]
+
+    compiled = client.post("/v1/workcompiler/compile", json={"run_id": "loop-thread", "target_name": "codex-session"})
+    assert compiled.status_code == 200, compiled.text
+    body = compiled.json()
+    assert body["actions"] == ["shell_python3", "shell_sed", "respond", "shell_curl"]
+    deps = body["work_ir"]["dependencies"]
+    assert deps["respond"] == ["shell_sed"]
+    assert deps["shell_curl"] == ["respond"]
+    assert "respond" not in deps.get("shell_python3", [])

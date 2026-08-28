@@ -12,6 +12,22 @@ Let AI do the work once. OpenWorkflow learns how to run it reliably thereafter.
 
 ---
 
+## 30-second demo: use it from inside Codex
+
+![Real recording: inside the Codex TUI, the $ow-compile-work / $ow-traces / $ow-compile-trace skills compile an OpenWorkLang file, list captured sessions, and compile the session itself into work.yaml](docs/demo/openworkflow-codex-demo.gif)
+
+A **real interactive Codex session**, not a mock-up. Point Codex at the OpenWorkflow proxy (ChatGPT login reused as-is) and invoke the three skills shipped in this repository with `$` mentions.
+
+| Step | Typed in Codex | Result |
+| :--- | :--- | :--- |
+| 1 | `$ow-compile-work examples/quality_analysis.work` | OpenWorkLang (`.work`) → `work.yaml` + LinkML schema, with executor lowering (code/rule/ml/slm) |
+| 2 | `$ow-traces` | Sessions captured by the proxy — **this very Codex session** appears as `shell_python3, shell_sed, respond, …` steps |
+| 3 | `$ow-compile-trace codex-session` | The captured Codex session compiles into `build/codex-session.work.yaml` |
+
+Setup and the exact commands each step runs are in the [Zero-Code Agent Proxy](#zero-code-agent-proxy-adaptersproxy) section.
+
+---
+
 ## High-Level Architecture & Pipeline Overview
 
 ```mermaid
@@ -93,27 +109,78 @@ OpenWorkflow inverts this: an agent performs the work once, a human evaluates th
 
 ## Zero-Code Agent Proxy (`adapters/proxy/`)
 
-OpenWorkflow can collect standard LLM API requests as TraceIR input. The current `adapters/proxy/server.py` runs in an explicit **development/demo synthetic-response mode**, identified by the `X-OpenWorkflow-Response-Mode: synthetic` header. Live OpenAI/Anthropic upstream passthrough and streaming are not implemented yet, so production traffic must not be routed through this proxy.
+OpenWorkflow collects standard LLM API requests as TraceIR input. `adapters/proxy/server.py` offers two modes.
 
-```bash
-# Direct your existing agent to the local OpenWorkflow Proxy
-export OPENAI_BASE_URL="http://localhost:8080/v1"
-export ANTHROPIC_BASE_URL="http://localhost:8080/v1"
-```
+| Endpoint | Mode | Description |
+| :--- | :--- | :--- |
+| `POST /v1/responses`, `POST /backend-api/codex/responses` | **passthrough** (`X-OpenWorkflow-Response-Mode: passthrough`) | Forwards the request to the real upstream (OpenAI Responses API or the ChatGPT Codex backend), relays the SSE stream byte-for-byte, and captures the completed turn into TraceIR in the background. **Codex CLI runs unmodified.** |
+| `POST /v1/chat/completions`, `POST /v1/messages` | **synthetic** (`X-OpenWorkflow-Response-Mode: synthetic`) | Development/demo synthetic responses. Do not route production traffic here. |
+
+### Real usage: everything inside the Codex TUI
+
+The [30-second demo](#30-second-demo-use-it-from-inside-codex) at the top of this README is a **real interactive Codex TUI session**, not synthetic data; apart from one line that starts the proxy, every step runs inside Codex. The three skills in this repository's `.agents/skills/` are discovered automatically and invoked explicitly with `$` mentions (Codex has deprecated `/prompts:` custom prompts and current versions no longer recognize them, so skill mentions are the standard explicit command).
+
+| Step | Typed in Codex | What Codex runs | Result |
+| :--- | :--- | :--- | :--- |
+| 1 | `$ow-compile-work examples/quality_analysis.work` | `python3 -m core.openworklang compile … --linkml …` | OpenWorkLang → `build/quality_analysis.work.yaml` + LinkML schema, with the 8-tier executor lowering (code/rule/ml/slm) explained |
+| 2 | `$ow-traces` | `curl localhost:8787/v1/workcompiler/traces` | Sessions captured by the proxy — **this very Codex session** shows up as `shell_python3, shell_sed, respond, …` steps |
+| 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` | The captured Codex session compiles into `build/codex-session.work.yaml` (actions: `shell_python3 → shell_sed → respond → shell_curl`) |
+
+The recording script is [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/openworkflow-codex-demo.tape).
+
+**Try it**
+
+1. Configure the Codex provider — add to `~/.codex/config.toml`, or use a separate `CODEX_HOME` directory (copy `auth.json` + the `config.toml` below).
+
+   ```toml
+   model_provider = "openworkflow"
+   approval_policy = "never"
+   sandbox_mode = "workspace-write"
+
+   [sandbox_workspace_write]
+   network_access = true            # lets Codex curl the local proxy
+
+   [model_providers.openworkflow]
+   name = "OpenWorkflow Proxy"
+   base_url = "http://127.0.0.1:8787/backend-api/codex"
+   wire_api = "responses"
+   requires_openai_auth = true      # reuse the ChatGPT login token as-is
+   ```
+
+2. Start the proxy and launch Codex from the repository root; the skills load from `.agents/skills/` automatically.
+
+   ```bash
+   python3 -m uvicorn adapters.proxy.server:app --port 8787 &
+   codex
+   ```
+
+3. Inside Codex, invoke the skills — `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`.
+
+   The commands the skills run work from a plain shell too:
+
+   ```bash
+   python3 -m core.openworklang compile examples/quality_analysis.work --linkml build/quality_analysis.linkml.yaml
+   curl -s localhost:8787/v1/workcompiler/traces | jq                # run_id, actions, token usage
+   curl -s localhost:8787/v1/workcompiler/traces/<run_id> | jq       # full TraceIR for the session
+   curl -s -X POST localhost:8787/v1/workcompiler/compile -H 'Content-Type: application/json' \
+     -d '{"run_id":"<run_id>","target_name":"codex-session","output_path":"build/codex-session.work.yaml"}'
+   ```
+
+   API-key clients (OpenAI SDK, Agents SDK, ...) only need `OPENAI_BASE_URL=http://127.0.0.1:8787/v1`; `/v1/responses` is captured the same way.
 
 ```text
-Existing AI Agent (Claude Code, Cursor, AutoGen, LangChain, Custom Script)
+Existing AI Agent (Codex CLI, Claude Code, Cursor, AutoGen, LangChain, Custom Script)
                                 │
-        Standard LLM API Calls (OPENAI_BASE_URL=http://localhost:8080/v1)
+        Standard LLM API Calls (OPENAI_BASE_URL=http://localhost:8787/v1)
                                 │
                                 ▼
  ┌─────────────────────────────────────────────────────────────────────────────┐
  │                OPENWORKFLOW TRANSPARENT PROXY ADAPTER                       │
  │                    (adapters/proxy/server.py)                              │
  ├─────────────────────────────────────────────────────────────────────────────┤
- │ 1. Captures development/demo requests with synthetic responses               │
+ │ 1. Responses API / Codex backend calls pass through upstream (SSE relayed)   │
  │ 2. Normalizes prompts, tool calls, and tool outputs into TraceIR             │
- │ 3. Production passthrough/streaming is planned                               │
+ │ 3. chat/completions · messages answer with dev-only synthetic responses      │
  └──────────────────────────────┬──────────────────────────────────────────────┘
                                 │
                                 ▼
@@ -225,6 +292,13 @@ work quality_analyst {
 
 ```text
 Human Intent ──▶ OpenWorkLang (.work) ──▶ OpenWorkLang Compiler ──▶ Work IR (work.yaml) ──▶ Durable Runtime
+```
+
+Compile from the command line:
+
+```bash
+python3 -m core.openworklang compile examples/quality_analysis.work --linkml build/quality_analysis.linkml.yaml
+# -> build/quality_analysis.work.yaml (+ LinkML schema); prints actions / invariants / executors
 ```
 
 See **[OpenWorkLang Spec](docs/openworklang-spec.md)** for full language grammar and compiler details.
@@ -344,7 +418,8 @@ openworkflow/
 │
 ├── agents/                      # Guide and measurement fleet specs
 ├── docs/                        # Specifications, architecture, usage guides, and diagrams
-├── tests/                       # Complete pytest suite (108 tests)
+├── .agents/skills/              # Codex skills: $ow-compile-work · $ow-traces · $ow-compile-trace
+├── tests/                       # Complete pytest suite (134 tests)
 └── examples/                    # Sample workflows, LinkML schemas, and runnable demo scripts
 ```
 
@@ -353,6 +428,17 @@ openworkflow/
 ## Usage & Demonstration
 
 For complete API documentation and a step-by-step developer guide, see **[Usage Guide](docs/usage.md)**.
+
+### Pipeline demo (Python script run)
+
+![OpenWorkflow terminal demo — customer renewal pipeline run and full test suite](docs/demo/openworkflow-demo.gif)
+
+The recording shows the 6-step pipeline (`Agent Trace → BEHAVIOR.md parsing → Work IR compilation → Durable Runtime execution → Objective Oracle Gate → SLM promotion evaluation`) running end to end, followed by the full pytest suite passing. The recording script lives at [`docs/demo/openworkflow-demo.tape`](docs/demo/openworkflow-demo.tape) and can be regenerated with [vhs](https://github.com/charmbracelet/vhs):
+
+```bash
+brew install vhs   # or: go install github.com/charmbracelet/vhs@latest
+vhs docs/demo/openworkflow-demo.tape
+```
 
 Run the end-to-end customer renewal demonstration script:
 
