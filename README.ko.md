@@ -189,6 +189,45 @@ Pydantic               SHACL                  OWL                 Work IR
 
 ---
 
+---
+
+## OpenWorkLang: Agent 프로그래밍 언어 (`.work`)
+
+OpenWorkflow는 인간의 의도, 에이전트 목표, 도구, 메모리 정책, 프로세스 불변식 및 액션 워크플로우를 실행 가능한 에이전트 프로그램으로 컴파일하는 선언형 Agent 프로그래밍 언어인 **OpenWorkLang**을 제시합니다:
+
+> **"Code → Software를 만드는 시대에서 OpenWorkLang → Agent를 컴파일하는 시대로."**
+
+```openworklang
+# OpenWorkLang (.work) 예시: 품질 분석가 에이전트
+
+work quality_analyst {
+  goal: "생산라인의 이상 품질 원인을 분석하고 개선안 보고서를 작성한다"
+
+  inputs: [production_data, quality_inspection_data, equipment_logs]
+  outputs: [root_cause, evidence, confidence_score, remediation_plan]
+  tools: [query_mes(), query_sensor(), analyze_statistics(), create_report()]
+  memory: [short_term, quality_knowledge_base]
+  invariants: [verify_sensor_calibration, require_human_approval_for_remediation]
+
+  workflow: [collect_data -> detect_anomaly -> find_correlation -> determine_root_cause -> create_report]
+
+  executors: {
+    collect_data: code,
+    detect_anomaly: rule,
+    find_correlation: ml,
+    determine_root_cause: slm,
+    create_report: slm
+  }
+}
+```
+
+```text
+Human Intent ──▶ OpenWorkLang (.work) ──▶ OpenWorkLang Compiler ──▶ Work IR (work.yaml) ──▶ Durable Runtime
+```
+
+상세한 문법 사양과 컴파일러 사용법은 **[OpenWorkLang 명세서(docs/openworklang-spec.md)](docs/openworklang-spec.md)**를 참조하세요.
+
+
 ## 핵심 개념: 작업 컴파일 & `Work IR`
 
 ```
