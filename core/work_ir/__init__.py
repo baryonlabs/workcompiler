@@ -1,0 +1,61 @@
+"""OpenWorkflow Work IR and Trace IR Kernel Module."""
+
+from core.work_ir.trace_ir import (
+    Provenance,
+    TokenUsage,
+    TraceIR,
+    TraceResult,
+    TraceStatus,
+    TraceStep,
+    normalize_custom_agent_trace,
+    normalize_langgraph_trace,
+    normalize_openworker_trace,
+    normalize_trace,
+    parse_trace_from_json,
+)
+from core.work_ir.work_ir import (
+    ActionDef,
+    BehaviorRef,
+    EscalationDef,
+    ExecutorConfig,
+    ExecutorDef,
+    ExecutorsDef,
+    ExecutorType,
+    InvariantDef,
+    WorkIR,
+    WorkIRValidationError,
+    load_work_ir,
+    save_work_ir,
+    to_yaml,
+    validate_work_ir,
+)
+
+__all__ = [
+    # Trace IR
+    "TraceIR",
+    "TraceStep",
+    "TraceResult",
+    "TraceStatus",
+    "TokenUsage",
+    "Provenance",
+    "parse_trace_from_json",
+    "normalize_trace",
+    "normalize_openworker_trace",
+    "normalize_langgraph_trace",
+    "normalize_custom_agent_trace",
+    # Work IR
+    "WorkIR",
+    "ActionDef",
+    "ExecutorDef",
+    "ExecutorConfig",
+    "ExecutorsDef",
+    "ExecutorType",
+    "InvariantDef",
+    "BehaviorRef",
+    "EscalationDef",
+    "WorkIRValidationError",
+    "load_work_ir",
+    "save_work_ir",
+    "to_yaml",
+    "validate_work_ir",
+]
