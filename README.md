@@ -4,9 +4,9 @@
 
 Let AI do the work once. OpenWorkflow learns how to run it reliably thereafter.
 
-> **"Build the kernel, integrate the ecosystem."**
+> **"Build the kernel, integrate the ecosystem, enrich with semantic truth."**
 > 
-> *"Bring your agent. Bring your UI. Bring your evals. OpenWorkflow compiles the work."*
+> *"LinkML is the front door for human/LLM model authoring; OWL is the semantic truth layer; SHACL validates constraints; OpenWorkflow executes durable work."*
 
 ---
 
@@ -18,28 +18,54 @@ OpenWorkflow inverts this: an agent performs the work once, a human evaluates th
 
 **AI performs. Humans evaluate outcome quality. OpenWorkflow evaluates behavior, compiles the work, and continuously optimizes execution.**
 
-The result being correct and the way it was done being correct are not the same. OpenWorkflow supervises the process, not only the outcome — see [Behavior Contract Layer](docs/behavior-contracts-v2.md) and [v3 Architecture Spec](docs/v3-architecture-kernel-ecosystem.md).
+The result being correct and the way it was done being correct are not the same. OpenWorkflow supervises the process, not only the outcome — see [Behavior Contract Layer](docs/behavior-contracts-v2.md) and [v4 Architecture Spec](docs/v4-architecture-semantic-layer.md).
 
 ---
 
-## Core Strategy: Kernel vs Ecosystem
+## Semantic Stack Architecture (v4)
 
-OpenWorkflow acts as a **thin, strong execution & compilation kernel**. It does not replace your desktop UI, Slack bots, agent frameworks, or eval platforms. Instead, it owns the compilation and durable execution kernel while connecting to the ecosystem via standard adapters.
+OpenWorkflow v4 introduces a multi-tiered semantic stack. It uses **LinkML** as the developer-friendly YAML authoring language, compiles into internal **Semantic IR**, enriches with **OWL 2** DL semantics, and validates closed-world constraints via **SHACL**:
 
-| Subsystem / Domain | Strategy | Integration Target / Standard |
-| :--- | :---: | :--- |
-| **Core Execution Kernel** | **Build Direct** | Work Compiler, Durable Runtime, Policy/Commit, Optimizer |
-| **Desktop UI / Local Agent** | Minimal | **OpenWorker** (Desktop shell & local execution) |
-| **Slack / Teams UX** | Minimal | **OpenTag / CopilotKit** |
-| **Agent UI Protocol** | Adapter | **AG-UI Protocol** |
-| **Agent Tool Exposure** | Adapter | **MCP (Model Context Protocol)** |
-| **Behavior Specification** | Native Compat | **AgentBehavior** (`BEHAVIOR.md` spec) |
-| **LLM Tracing & Evals** | Adapter | **Braintrust / Langfuse / OpenTelemetry** |
-| **Workflow Canvas** | Future / Embed | n8n / Windmill reference embedding |
-| **Durable Semantics** | Core Concept | Temporal-inspired durable state machine |
-| **Human Interrupt UX** | Adapter | OpenTag / CopilotKit approval cards |
-| **Local Tool Execution** | Adapter | OpenWorker (Local workspace, shell, files) |
-| **Model Training Infra** | External | Hugging Face TRL / Unsloth / Cloud Fine-Tuning |
+| Layer | Role | Target Technology |
+| :--- | :--- | :--- |
+| **Authoring DSL** | Human/Developer/LLM business model authoring | **LinkML (YAML DSL)** |
+| **Semantic Canonical IR** | Internal unified semantic model | **Semantic IR** |
+| **Semantic Ontology** | Open-world reasoning & relationship semantics | **OWL 2 (DL)** |
+| **Constraint Validation** | Closed-world data verification & cardinalities | **SHACL** |
+| **Reasoner** | Inferred classification & consistency checking | **ELK / HermiT** |
+| **Runtime Graph** | Knowledge Graph & RDF triples | **Jena / RDF4J / RDFLib** |
+| **Execution Engine** | Stateful workflow, action DAG & durable runtime | **OpenWorkflow Kernel** |
+
+---
+
+## Compiler Pipeline: Trace → LinkML → Semantic IR → Execution
+
+The **LLM-as-Compiler** does not generate raw OWL axioms directly. Instead, it extracts a developer-friendly LinkML domain model first, which is then enriched into formal OWL semantics and SHACL constraints.
+
+```text
+               Agent Trace
+                    │
+                    ▼
+              LLVM / LLM Compiler
+                    │
+              LinkML Domain Model (YAML)
+                    │
+             Semantic Compiler
+                    │
+              Semantic IR (Canonical)
+                    │
+   ┌────────────────┼────────────────┬────────────────┐
+   ▼                ▼                ▼                ▼
+Pydantic          SHACL             OWL           Work IR
+(Runtime Types) (Closed-World)  (Open-World)    (Durable DAG)
+                    │                │
+                    ▼                ▼
+             Validation Gate     ELK / HermiT Reasoner
+                    │                │
+                    └────────┬───────┘
+                             ▼
+                    OpenWorkflow Runtime
+```
 
 ---
 
@@ -53,7 +79,7 @@ The **Work IR** (`work.yaml`) is OpenWorkflow's primary native asset. It represe
 
 ```yaml
 work: customer-renewal
-version: 3.0
+version: "4.0"
 
 inputs:
   - customer_id
@@ -113,104 +139,14 @@ OpenWorkflow connects to external surfaces and tools through 5 standardized prot
 
 ---
 
-## Architecture (v3 Kernel & Ecosystem)
-
-```
-                               ECOSYSTEM
-┌────────────────────┐   ┌────────────────────┐   ┌────────────────────┐
-│   OpenWorker Desktop│   │   OpenTag / Slack  │   │  Custom Agents     │
-│   (Local Worker)   │   │   (CopilotKit)     │   │  (LangGraph, etc.) │
-└─────────┬──────────┘   └─────────┬──────────┘   └─────────┬──────────┘
-          │ Tool (MCP)             │ Surface (AG-UI)        │ Trace / Ingress
-          ▼                        ▼                        ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                    OPENWORKFLOW GATEWAY ADAPTERS                     │
-│   Ingress Protocol · Surface Protocol (AG-UI) · Tool Protocol (MCP)  │
-│   Trace/Eval Protocol (Trace IR) · Worker Protocol                   │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │ Trace IR / Event IR
-                                   ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                         OPENWORKFLOW CORE                            │
-│                                                                      │
-│   ┌──────────────────────┐               ┌──────────────────────┐    │
-│   │    Work Compiler     │               │ Quality & Behavior   │    │
-│   │  Trace → Work IR     │               │ Contracts            │    │
-│   └──────────┬───────────┘               │ (AgentBehavior spec) │    │
-│              │                           └──────────┬───────────┘    │
-│              ▼                                      │                │
-│       ┌──────────────┐                              │                │
-│       │   Work IR    │                              │                │
-│       └──────┬───────┘                              │                │
-│              ▼                                      ▼                │
-│   ┌──────────────────────┐               ┌──────────────────────┐    │
-│   │   Durable Runtime    │ ◄──────────── │      Optimizer       │    │
-│   │ (State/Timer/Signal) │               │ Routing / SLM Promo  │    │
-│   └──────────┬───────────┘               └──────────────────────┘    │
-│              │                                                       │
-│              ▼                                                       │
-│   ┌──────────────────────┐                                           │
-│   │   Policy / Commit    │                                           │
-│   │ Validation/Approvals │                                           │
-│   └──────────────────────┘                                           │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │ Execution & Telemetry
-                                   ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                    EXTERNAL EVAL & INFRA ADAPTERS                    │
-│   Braintrust / Langfuse / OTel  ·  HuggingFace/TRL  ·  Temporal    │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-### Compilation Analogy: LLVM IR & Late-Binding Provider Adapters
-
-OpenWorkflow adopts the classic compiler architecture pioneered by LLVM:
-
-```text
-[ Classical Compiler (LLVM) ]             [ OpenWorkflow Work Compiler ]
-
-      C / C++ Source Code                       Frontier Agent Trace
-               │                                         │
-               ▼                                         ▼
-         LLVM Frontend                             Work Compiler
-               │                                         │
-               ▼                                         ▼
-   LLVM IR (Target-Agnostic)              Workflow IR + BEHAVIOR.md (Vendor-Agnostic)
-               │                                         │
-    ┌──────────┴──────────┐                   ┌──────────┴──────────┐
-    ▼                     ▼                   ▼                     ▼
-x86 Target           ARM Target          GCP Provider          AWS Provider / On-Prem
-```
-
----
-
-## Non-Negotiable Boundaries
-
-### ❌ What OpenWorkflow Will NOT Build
-- Custom Slack / Teams bot frameworks
-- Proprietary desktop shell / GUI application
-- Drag-and-drop visual workflow canvas
-- Full LLM observability / tracing platform
-- Fine-tuning & GPU cluster infrastructure
-- Proprietary Vector Database
-
-### ✅ What OpenWorkflow WILL Build & Own
-- **Trace → Work IR Compiler**: Decomposing agent traces into deterministic Work IR.
-- **Work IR → Compiled Workflow**: Synthesizing optimized execution DAGs.
-- **Behavior → Executable Invariants**: Compiling `BEHAVIOR.md` into rules, constraints, and judges.
-- **Executor Optimization & Consolidation**: Dynamic routing across Code, Rules, SLMs, LLMs.
-- **Durable Runtime & Human Approval Loop**: Managing stateful execution, interrupts, signals, and human outcome evaluation.
-- **Continuous Recompilation**: Automated feedback loop driven by quality signals.
-
----
-
-## Repository Layout (v3)
+## Repository Layout (v4)
 
 ```
 openworkflow/
 ├── core/                        # Thin, strong OpenWorkflow kernel
+│   ├── semantic_ir/             # [v4] LinkML parser, Semantic IR AST, OWL/SHACL generators
 │   ├── work_ir/                 # Work IR schema, parser, and AST
-│   ├── compiler/                # Trace decomposition & workflow synthesis
+│   ├── compiler/                # Trace IR → Work IR compilation
 │   ├── runtime/                 # Durable state machine & checkpointing
 │   ├── policy/                  # Permissions, approvals, and confidence gates
 │   ├── validation/              # Behavior & outcome validation judges
@@ -222,9 +158,13 @@ openworkflow/
 │   ├── workers/                 # Worker protocol contracts
 │   └── surfaces/                # AG-UI surface event contracts
 │
-├── adapters/                    # Ecosystem integration adapters
+├── adapters/                    # Ecosystem & Semantic Adapters
+│   ├── linkml/                  # [v4] LinkML authoring & generator adapter
+│   ├── owl/                     # [v4] OWL 2 ontology & ELK/HermiT reasoner adapter
+│   ├── shacl/                   # [v4] SHACL constraint validator adapter
 │   ├── agui/                    # Surface protocol adapter for AG-UI
 │   ├── mcp/                     # MCP tool protocol adapter
+│   ├── proxy/                   # Zero-code LLM API proxy adapter
 │   ├── opentag/                 # OpenTag channel adapter
 │   ├── openworker/              # OpenWorker desktop adapter
 │   ├── agentbehavior/           # AgentBehavior BEHAVIOR.md importer
@@ -234,7 +174,7 @@ openworkflow/
 ├── agents/                      # Guide and measurement fleet specs
 ├── docs/                        # Specifications, architecture, and diagrams
 ├── conversations/               # Design conversation archives
-└── examples/                    # Sample workflows, traces, and behavior specs
+└── examples/                    # Sample workflows, LinkML schemas, and behavior specs
 ```
 
 ---
@@ -245,6 +185,9 @@ OpenWorkflow builds upon and integrates with the following open-source projects,
 
 | Category | Project / Standard | Link | Description |
 | :--- | :--- | :--- | :--- |
+| **Model Authoring DSL** | **LinkML** | [linkml/linkml](https://github.com/linkml/linkml) | Linked Open Data Modeling Language for YAML schema modeling |
+| **Semantic Ontology** | **OWL 2 / W3C** | [w3.org/TR/owl2-overview](https://www.w3.org/TR/owl2-overview/) | W3C Web Ontology Language for semantic reasoning |
+| **Constraint Validation** | **SHACL / W3C** | [w3.org/TR/shacl](https://www.w3.org/TR/shacl/) | W3C Shapes Constraint Language for RDF data validation |
 | **Desktop Shell / Local Worker** | **OpenWorker** | [baryonlabs/openworker](https://github.com/baryonlabs/openworker) | Desktop AI agent shell & local execution worker |
 | **Enterprise Channel UX** | **OpenTag** | [baryonlabs/opentag](https://github.com/baryonlabs/opentag) | Slack & Teams channel integration for AI workflows |
 | **UI Streaming Protocol** | **AG-UI** | [agui-protocol/agui](https://github.com/agui-protocol/agui) | Protocol for streaming AI workflow lifecycle events to UIs |

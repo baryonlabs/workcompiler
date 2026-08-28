@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenWorkflow Semantic IR Schema",
+  "type": "object",
+  "required": [
+    "domain",
+    "version",
+    "classes",
+    "slots"
+  ],
+  "properties": {
+    "domain": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "const": "4.0"
+    },
+    "classes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "is_a": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "owl_equivalent_class": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "slots": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "multivalued": {
+            "type": "boolean"
+          },
+          "shacl_path": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

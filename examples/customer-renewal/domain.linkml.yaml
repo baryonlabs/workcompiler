@@ -1,0 +1,72 @@
+id: https://openworkflow.ai/schemas/customer_renewal
+name: customer_renewal_domain
+title: Customer Renewal Domain Model (LinkML)
+version: 4.0.0
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  owf: https://openworkflow.ai/ontology/
+default_prefix: owf
+
+imports:
+  - linkml:types
+
+classes:
+  Customer:
+    description: Enterprise customer record
+    slots:
+      - customer_id
+      - company_name
+      - tier
+
+  Contract:
+    description: Active customer contract
+    slots:
+      - contract_id
+      - start_date
+      - end_date
+      - status
+
+  RenewalProposal:
+    description: Generated renewal proposal artifact
+    slots:
+      - proposal_id
+      - customer_id
+      - proposed_amount
+      - status
+
+  HighRiskRenewal:
+    is_a: RenewalProposal
+    description: Renewal requiring high-level human approval
+    slots:
+      - risk_score
+
+slots:
+  customer_id:
+    range: string
+    required: true
+  company_name:
+    range: string
+    required: true
+  tier:
+    range: string
+    required: true
+  contract_id:
+    range: string
+    required: true
+  start_date:
+    range: string
+  end_date:
+    range: string
+  status:
+    range: string
+    required: true
+  proposal_id:
+    range: string
+    required: true
+  proposed_amount:
+    range: double
+    required: true
+  risk_score:
+    range: double
+    required: true

@@ -4,9 +4,9 @@
 
 AI가 한 번 작업하게 하세요. OpenWorkflow는 이후 작업을 안정적으로 실행하는 방법을 배웁니다.
 
-> **"코어 커널을 구축하고, 생태계를 통합하라 (Build the kernel, integrate the ecosystem.)"**
+> **"코어 커널을 구축하고, 생태계를 통합하며, 시맨틱 진실을 강화하라 (Build the kernel, integrate the ecosystem, enrich with semantic truth.)"**
 > 
-> *"당신의 에이전트, UI, 평가 도구를 가져오세요. OpenWorkflow가 작업을 컴파일합니다."*
+> *"LinkML은 모델 작성의 관문이며, OWL은 시맨틱 진실 레이어이고, SHACL은 제약 조건을 검증하며, OpenWorkflow는 지속적 작업을 실행합니다."*
 
 ---
 
@@ -18,28 +18,54 @@ OpenWorkflow는 이를 역전시킵니다: 에이전트가 1회 작업을 수행
 
 **AI는 실행합니다. 인간은 결과 품질을 평가합니다. OpenWorkflow는 행위를 감독하고, 작업을 컴파일하며, 실행을 지속적으로 최적화합니다.**
 
-결과물이 올바른 것과 작업을 수행한 방식이 올바른 것은 동일하지 않습니다. OpenWorkflow는 결과물뿐만 아니라 과정(행위)을 감독합니다 — [Behavior Contract Layer](docs/behavior-contracts-v2.md) 및 [v3 아키텍처 명세](docs/v3-architecture-kernel-ecosystem.md)를 참고하세요.
+결과물이 올바른 것과 작업을 수행한 방식이 올바른 것은 동일하지 않습니다. OpenWorkflow는 결과물뿐만 아니라 과정(행위)을 감독합니다 — [Behavior Contract Layer](docs/behavior-contracts-v2.md) 및 [v4 아키텍처 명세](docs/v4-architecture-semantic-layer.md)를 참고하세요.
 
 ---
 
-## 핵심 전략: 커널 vs 생태계 (Kernel vs Ecosystem)
+## 시맨틱 스택 아키텍처 (v4)
 
-OpenWorkflow는 **얇고 강력한 실행 & 컴파일 커널(Kernel)**로 작동합니다. 데스크톱 UI, 슬랙 봇, 에이전트 프레임워크, 평가 플랫폼을 직접 재개발하지 않으며, 컴파일 및 지속적 실행 커널을 소유하면서 표준 어댑터를 통해 외부 생태계와 연결됩니다.
+OpenWorkflow v4는 멀티 티어 시맨틱 스택을 도입합니다. **LinkML**을 개발자 친화적인 YAML 저작 언어로 활용하고, 이를 내장 **Semantic IR**로 컴파일한 뒤, **OWL 2** DL 의미론으로 풍부화하고 **SHACL**을 통해 폐쇄 세계(Closed-World) 데이터 제약조건을 검증합니다.
 
-| 영역 | 전략 | 연동 대상 및 표준 |
-| :--- | :---: | :--- |
-| **코어 실행 커널** | **직접 개발** | Work Compiler, Durable Runtime, Policy/Commit, Optimizer |
-| **데스크톱 UI / 로컬 에이전트** | 최소화 | **OpenWorker** (데스크톱 쉘 및 로컬 실행) |
-| **Slack / Teams UX** | 최소화 | **OpenTag / CopilotKit** |
-| **에이전트 UI 프로토콜** | 어댑터 | **AG-UI Protocol** |
-| **에이전트 도구 노출** | 어댑터 | **MCP (Model Context Protocol)** |
-| **행위 규격 사양** | 네이티브 호환 | **AgentBehavior** (`BEHAVIOR.md` spec) |
-| **LLM 트레이싱 & 평가** | 어댑터 | **Braintrust / Langfuse / OpenTelemetry** |
-| **워크플로우 캔버스** | 향후 / 임베딩 | n8n / Windmill 참조 및 임베딩 |
-| **지속성 시맨틱** | 코어 개념 | Temporal 방식의 지속성 상태 머신 |
-| **인간 중단 UX** | 어댑터 | OpenTag / CopilotKit 승인 카드 |
-| **로컬 툴 실행** | 어댑터 | OpenWorker (로컬 워크스페이스, 쉘, 파일) |
-| **모델 학습 인프라** | 외부 연동 | Hugging Face TRL / Unsloth / Cloud Fine-Tuning |
+| 계층 | 역할 | 추천 기술 |
+| :--- | :--- | :--- |
+| **Authoring DSL** | 사람이 업무 모델 작성 | **LinkML (YAML DSL)** |
+| **Semantic Canonical IR** | 내부 통일 시맨틱 모델 | **Semantic IR** |
+| **Semantic Ontology** | 개방 세계 의미/관계/추론 | **OWL 2 (DL)** |
+| **Constraint Validation** | 폐쇄 세계 데이터 제약 검증 | **SHACL** |
+| **Reasoner** | 추론 및 일관성 검사 | **ELK / HermiT** |
+| **Runtime Graph** | 지식 그래프 및 RDF 트리플 | **Jena / RDF4J / RDFLib** |
+| **Execution Engine** | 지속성 워크플로우 실행 엔진 | **OpenWorkflow Kernel** |
+
+---
+
+## 컴파일 파이프라인: Trace → LinkML → Semantic IR → Execution
+
+**LLM-as-Compiler**는 직접 복잡한 OWL 공리를 생성하지 않습니다. 대신 개발자 친화적인 LinkML 도메인 모델을 먼저 추출하고, 이를 정식 OWL 의미론 및 SHACL 제약조건으로 풍부화합니다.
+
+```text
+               Agent Trace
+                    │
+                    ▼
+              LLVM / LLM Compiler
+                    │
+              LinkML Domain Model (YAML)
+                    │
+             Semantic Compiler
+                    │
+              Semantic IR (Canonical)
+                    │
+   ┌────────────────┼────────────────┬────────────────┐
+   ▼                ▼                ▼                ▼
+Pydantic          SHACL             OWL           Work IR
+(Runtime Types) (Closed-World)  (Open-World)    (Durable DAG)
+                    │                │
+                    ▼                ▼
+             Validation Gate     ELK / HermiT Reasoner
+                    │                │
+                    └────────┬───────┘
+                             ▼
+                    OpenWorkflow Runtime
+```
 
 ---
 
@@ -53,7 +79,7 @@ Agent Trace  ──▶  Trace IR  ──▶  Work Compiler  ──▶  Work IR  
 
 ```yaml
 work: customer-renewal
-version: 3.0
+version: "4.0"
 
 inputs:
   - customer_id
@@ -113,102 +139,12 @@ OpenWorkflow는 5가지 표준화된 프로토콜 계약을 통해 외부 표면
 
 ---
 
-## 전체 시스템 아키텍처 (v3 Kernel & Ecosystem)
-
-```
-                               ECOSYSTEM
-┌────────────────────┐   ┌────────────────────┐   ┌────────────────────┐
-│   OpenWorker Desktop│   │   OpenTag / Slack  │   │  Custom Agents     │
-│   (Local Worker)   │   │   (CopilotKit)     │   │  (LangGraph, etc.) │
-└─────────┬──────────┘   └─────────┬──────────┘   └─────────┬──────────┘
-          │ Tool (MCP)             │ Surface (AG-UI)        │ Trace / Ingress
-          ▼                        ▼                        ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                    OPENWORKFLOW GATEWAY ADAPTERS                     │
-│   Ingress Protocol · Surface Protocol (AG-UI) · Tool Protocol (MCP)  │
-│   Trace/Eval Protocol (Trace IR) · Worker Protocol                   │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │ Trace IR / Event IR
-                                   ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                         OPENWORKFLOW CORE                            │
-│                                                                      │
-│   ┌──────────────────────┐               ┌──────────────────────┐    │
-│   │    Work Compiler     │               │ Quality & Behavior   │    │
-│   │  Trace → Work IR     │               │ Contracts            │    │
-│   └──────────┬───────────┘               │ (AgentBehavior spec) │    │
-│              │                           └──────────┬───────────┘    │
-│              ▼                                      │                │
-│       ┌──────────────┐                              │                │
-│       │   Work IR    │                              │                │
-│       └──────┬───────┘                              │                │
-│              ▼                                      ▼                │
-│   ┌──────────────────────┐               ┌──────────────────────┐    │
-│   │   Durable Runtime    │ ◄──────────── │      Optimizer       │    │
-│   │ (State/Timer/Signal) │               │ Routing / SLM Promo  │    │
-│   └──────────┬───────────┘               └──────────────────────┘    │
-│              │                                                       │
-│              ▼                                                       │
-│   ┌──────────────────────┐                                           │
-│   │   Policy / Commit    │                                           │
-│   │ Validation/Approvals │                                           │
-│   └──────────────────────┘                                           │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │ Execution & Telemetry
-                                   ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│                    EXTERNAL EVAL & INFRA ADAPTERS                    │
-│   Braintrust / Langfuse / OTel  ·  HuggingFace/TRL  ·  Temporal    │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-### 컴파일 비유: LLVM IR & Late-Binding Provider Adapters
-
-OpenWorkflow는 LLVM이 개척한 전형적인 컴파일러 아키텍처 패러다임을 따릅니다:
-
-```text
-[ Classical Compiler (LLVM) ]             [ OpenWorkflow Work Compiler ]
-
-      C / C++ Source Code                       Frontier Agent Trace
-               │                                         │
-               ▼                                         ▼
-         LLVM Frontend                             Work Compiler
-               │                                         │
-               ▼                                         ▼
-   LLVM IR (Target-Agnostic)              Workflow IR + BEHAVIOR.md (Vendor-Agnostic)
-               │                                         │
-    ┌──────────┴──────────┐                   ┌──────────┴──────────┐
-    ▼                     ▼                   ▼                     ▼
-x86 Target           ARM Target          GCP Provider          AWS Provider / On-Prem
-```
-
----
-
-## 비타협적 개발 경계
-
-### ❌ OpenWorkflow가 직접 만들지 않는 것
-- 커스텀 Slack / Teams 봇 프레임워크
-- 독자적인 데스크톱 쉘 / GUI 애플리케이션
-- 시각적 드래그 앤 드롭 워크플로우 캔버스
-- 전용 LLM 관측성 / 트레이싱 플랫폼
-- 파인튜닝 & GPU 클러스터 인프라
-- 자체 벡터 데이터베이스
-
-### ✅ OpenWorkflow가 직접 만들고 소유하는 핵심
-- **Trace → Work IR 컴파일러**: 에이전트 트레이스를 결정론적 Work IR로 분해
-- **Work IR → Compiled Workflow**: 최적화된 실행 DAG 합성
-- **Behavior → 실행 불변식**: `BEHAVIOR.md`를 룰, 제약조건, 검증 판정기로 컴파일
-- **실행 주체 최적화 및 통합**: Code, Rule, SLM, LLM 간 동적 라우팅 및 모델/행위 통합
-- **Durable Runtime & 인간 승인 루프**: 지속적 상태 관리, 중단, 시그널, 인간 결과 품질 평가
-- **지속적 재컴파일 백엔드**: 품질 신호 및 드리프트에 따른 백그라운드 재컴파일 루프
-
----
-
-## 리포지토리 레이아웃 (v3)
+## 리포지토리 레이아웃 (v4)
 
 ```
 openworkflow/
 ├── core/                        # 얇고 강력한 OpenWorkflow 커널
+│   ├── semantic_ir/             # [v4] LinkML 파서, Semantic IR AST, OWL/SHACL 생성기
 │   ├── work_ir/                 # Work IR 스키마, 파서, AST
 │   ├── compiler/                # Trace IR → Work IR 컴파일러
 │   ├── runtime/                 # Durable 상태 머신 & 체크포인팅
@@ -222,10 +158,14 @@ openworkflow/
 │   ├── workers/                 # Worker Protocol
 │   └── surfaces/                # AG-UI Surface Protocol
 │
-├── adapters/                    # 생태계 연동 어댑터
+├── adapters/                    # 생태계 및 시맨틱 연동 어댑터
+│   ├── linkml/                  # [v4] LinkML 저작 & 생성기 어댑터
+│   ├── owl/                     # [v4] OWL 2 온톨로지 & ELK/HermiT 추론기 어댑터
+│   ├── shacl/                   # [v4] SHACL 데이터 제약 검증기 어댑터
 │   ├── agui/                    # AG-UI 스트리밍 어댑터
 │   ├── mcp/                     # MCP 도구 어댑터
-│   ├── opentag/                 # OpenTag 슬랙/티어스 어댑터
+│   ├── proxy/                   # Zero-code LLM API 프록시 어댑터
+│   ├── opentag/                 # OpenTag 슬랙/팀즈 어댑터
 │   ├── openworker/              # OpenWorker 데스크톱 어댑터
 │   ├── agentbehavior/           # AgentBehavior BEHAVIOR.md 임포터
 │   ├── braintrust/              # Braintrust 트레이스/평가 어댑터
@@ -234,7 +174,7 @@ openworkflow/
 ├── agents/                      # 가이드 및 측정 에이전트 규격
 ├── docs/                        # 명세서, 아키텍처, 다이어그램
 ├── conversations/               # 설계 아카이브
-└── examples/                    # Sample Work IR, Traces & Behavior specs
+└── examples/                    # Sample Work IR, LinkML 스키마, Behavior specs
 ```
 
 ---
@@ -245,6 +185,9 @@ OpenWorkflow는 다음 오픈소스 프로젝트, 표준 규격 및 연구 이�
 
 | 카테고리 | 프로젝트 / 표준 | 링크 | 설명 |
 | :--- | :--- | :--- | :--- |
+| **모델 저작 DSL** | **LinkML** | [linkml/linkml](https://github.com/linkml/linkml) | YAML 모델링 기반 시맨틱 schema 표현 언어 |
+| **시맨틱 온톨로지** | **OWL 2 / W3C** | [w3.org/TR/owl2-overview](https://www.w3.org/TR/owl2-overview/) | W3C 웹 온톨로지 시맨틱 추론 언어 표준 |
+| **제약 조건 검증** | **SHACL / W3C** | [w3.org/TR/shacl](https://www.w3.org/TR/shacl/) | W3C RDF 폐쇄 세계 데이터 제약 조건 검증 규격 |
 | **데스크톱 쉘 / 로컬 워커** | **OpenWorker** | [baryonlabs/openworker](https://github.com/baryonlabs/openworker) | 데스크톱 AI 에이전트 쉘 및 로컬 실행 워커 |
 | **엔터프라이즈 채널 UX** | **OpenTag** | [baryonlabs/opentag](https://github.com/baryonlabs/opentag) | 슬랙 및 팀즈 채널 연동 AI 워크플로우 인터페이스 |
 | **UI 스트리밍 프로토콜** | **AG-UI** | [agui-protocol/agui](https://github.com/agui-protocol/agui) | AI 워크플로우 상태를 UI에 스트리밍하는 표준 프로토콜 |

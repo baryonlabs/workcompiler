@@ -7,9 +7,9 @@ Project-specific guidance for AI coding agents working on OpenWorkflow.
 OpenWorkflow is **the execution layer for AI work**: a system that turns proven agent executions into reliable, optimized, compiled workflows.
 
 - An agent performs work → a human approves the output → OpenWorkflow compiles the trace into deterministic workflow + rules + code + SLMs → the runtime executes it → the system measures quality and optimizes itself.
-- One core philosophy: **"Build the kernel, integrate the ecosystem."**
-  - *"Bring your agent. Bring your UI. Bring your evals. OpenWorkflow compiles the work."*
-- Full vision and architecture live in `README.md` and `docs/v3-architecture-kernel-ecosystem.md`. Read them before making design decisions.
+- One core philosophy: **"Build the kernel, integrate the ecosystem, enrich with semantic truth."**
+  - *"LinkML is the front door for human/LLM model authoring; OWL is the semantic truth layer; SHACL validates constraints; OpenWorkflow executes durable work."*
+- Full vision and architecture live in `README.md` and `docs/v4-architecture-semantic-layer.md`. Read them before making design decisions.
 - Behavior Contract design: `docs/behavior-contracts-v2.md` (integration of the AgentBehavior standard).
 
 ## Non-negotiable product principles
@@ -25,12 +25,13 @@ These constraints must survive every change. If a change violates one, flag it a
 7. **Escalate, don't duplicate.** Exceptions and quality degradation escalate to frontier LLM + human; everything else runs compiled.
 8. **The loop is visible, but no one operates it.** Users see automation level / quality / cost / execution mix as outcomes, not internals.
 
-## Repository layout (v3)
+## Repository layout (v4)
 
 ```
 README.md          Product vision, core vs ecosystem loops, architecture
 AGENTS.md          This file — agent instructions
 core/              Thin, strong OpenWorkflow kernel
+  semantic_ir/     LinkML parser, Semantic IR AST, OWL/SHACL generators
   work_ir/         Work IR schema, AST parser, work.yaml validator
   compiler/        Trace IR → Work IR compilation & invariant extraction
   runtime/         Durable state machine, checkpointing, signals, timers, interrupts
@@ -42,9 +43,13 @@ protocols/         Standard protocol contract definitions
   traces/          Trace/Eval Protocol (Trace IR & import adapters)
   workers/         Worker Protocol (local/remote worker orchestration)
   surfaces/        Surface Protocol (AG-UI real-time streaming)
-adapters/          Ecosystem integration adapters
+adapters/          Ecosystem & Semantic integration adapters
+  linkml/          LinkML authoring & generator adapter
+  owl/             OWL 2 ontology & ELK/HermiT reasoner adapter
+  shacl/           SHACL constraint validator adapter
   agui/            AG-UI surface adapter for OpenTag / CopilotKit
   mcp/             MCP tool protocol adapter for OpenWorker / Claude
+  proxy/           Zero-code LLM API proxy adapter
   opentag/         OpenTag channel & approval adapter
   openworker/      OpenWorker desktop & local execution adapter
   agentbehavior/   AgentBehavior BEHAVIOR.md spec importer
@@ -53,7 +58,7 @@ adapters/          Ecosystem integration adapters
 agents/            Sub-agent definitions (guide + measurement fleet)
 docs/              Design docs, diagrams, and rendered assets
 conversations/     Archived design conversations (ChatGPT share exports + assets)
-examples/          Sample workflows, traces, and behavior contracts
+examples/          Sample workflows, LinkML schemas, traces, and behavior contracts
 ```
 
 ## Before you write code
