@@ -7,9 +7,10 @@ Project-specific guidance for AI coding agents working on OpenWorkflow.
 OpenWorkflow is **the execution layer for AI work**: a system that turns proven agent executions into reliable, optimized, compiled workflows.
 
 - An agent performs work → a human approves the output → OpenWorkflow compiles the trace into deterministic workflow + rules + code + SLMs → the runtime executes it → the system measures quality and optimizes itself.
-- One core phrase: **AI performs. Humans evaluate outcome quality. OpenWorkflow evaluates behavior, compiles the work, and continuously optimizes execution.**
-- Full vision and architecture live in `README.md`. Read it before making design decisions.
-- Behavior Contract design: `docs/behavior-contracts-v2.md` (integration of the AgentBehavior standard). Read it before making decisions that touch evaluation, compilation, or executor selection.
+- One core philosophy: **"Build the kernel, integrate the ecosystem."**
+  - *"Bring your agent. Bring your UI. Bring your evals. OpenWorkflow compiles the work."*
+- Full vision and architecture live in `README.md` and `docs/v3-architecture-kernel-ecosystem.md`. Read them before making design decisions.
+- Behavior Contract design: `docs/behavior-contracts-v2.md` (integration of the AgentBehavior standard).
 
 ## Non-negotiable product principles
 
@@ -24,44 +25,44 @@ These constraints must survive every change. If a change violates one, flag it a
 7. **Escalate, don't duplicate.** Exceptions and quality degradation escalate to frontier LLM + human; everything else runs compiled.
 8. **The loop is visible, but no one operates it.** Users see automation level / quality / cost / execution mix as outcomes, not internals.
 
-## Repository layout
+## Repository layout (v3)
 
 ```
-README.md          Product vision, loops, architecture
+README.md          Product vision, core vs ecosystem loops, architecture
 AGENTS.md          This file — agent instructions
+core/              Thin, strong OpenWorkflow kernel
+  work_ir/         Work IR schema, AST parser, work.yaml validator
+  compiler/        Trace IR → Work IR compilation & invariant extraction
+  runtime/         Durable state machine, checkpointing, signals, timers, interrupts
+  policy/          Permissions, approvals, write locks, and confidence thresholds
+  validation/      Behavior contract judges & outcome quality evaluation
+  optimizer/       Executor routing, SLM promotion gate, model/behavior consolidation
+protocols/         Standard protocol contract definitions
+  events/          Ingress Protocol (webhooks, cron, Slack events)
+  traces/          Trace/Eval Protocol (Trace IR & import adapters)
+  workers/         Worker Protocol (local/remote worker orchestration)
+  surfaces/        Surface Protocol (AG-UI real-time streaming)
+adapters/          Ecosystem integration adapters
+  agui/            AG-UI surface adapter for OpenTag / CopilotKit
+  mcp/             MCP tool protocol adapter for OpenWorker / Claude
+  opentag/         OpenTag channel & approval adapter
+  openworker/      OpenWorker desktop & local execution adapter
+  agentbehavior/   AgentBehavior BEHAVIOR.md spec importer
+  braintrust/      Braintrust trace import & eval telemetry adapter
+  opentelemetry/   OpenTelemetry export adapter
 agents/            Sub-agent definitions (guide + measurement fleet)
-conversations/     Archived design conversations (ChatGPT share exports + assets)
 docs/              Design docs, diagrams, and rendered assets
+conversations/     Archived design conversations (ChatGPT share exports + assets)
+examples/          Sample workflows, traces, and behavior contracts
 ```
-
-Behavior specs live under `workflows/<name>/behaviors/<name>/BEHAVIOR.md` once the first workflow lands (see `docs/behavior-contracts-v2.md`).
-
-Code directories will be added as the stack lands; keep layout changes documented here.
 
 ## Before you write code
 
-- Confirm the change only touches the layer you intend (workflow / executor / model factory / runtime / UI). If it crosses layers, propose where the boundary should be first.
+- **Keep `core/` thin and clean**: Do NOT import external vendor libraries, Slack SDKs, Desktop UI shells, or LLM observability frameworks into `core/`. Everything external belongs in `adapters/`.
+- Confirm the change only touches the layer you intend (`core/`, `protocols/`, or `adapters/`). If it crosses layers, define the protocol boundary in `protocols/` first.
 - Ask yourself: does this add a knob the backend cannot already turn? If a design exposes FSM, thresholds, or model choice to a human, that is a red flag, not a feature.
 
-## Conventions (apply once a stack is introduced)
+## Conventions
 
-- This file is authoring guidance for the repo as it stands today; update the commands and style sections below as the stack lands.
-
-### Commands
-
-- No build system exists yet. Do not invent `npm`/`pnpm`/`cargo` commands that are not defined in this repo. When the stack lands, document: setup commands, dev server, tests, lint, and build here.
-
-### Code style
-
-- To be defined with the first commit. Prefer explicit, boring, testable code over clever abstractions.
-
-## Archiving design conversations
-
-- Design/vision discussions (e.g. ChatGPT shares) are archived under `conversations/` as dated Markdown files with any referenced images as siblings.
-- Naming: `YYYY-MM-DD_short-title.md`. Include the source URL and archive date in a blockquote header.
-- Agent-generated images from such conversations are stored alongside and referenced by relative path.
-
-## Communication
-
-- Repo is maintained in English (README, AGENTS.md, and commit messages). Team conversation may happen in Korean; summarize into English for artifacts.
+- Repo is maintained in English (README, AGENTS.md, code comments, and commit messages). Team conversation may happen in Korean; summarize into English for artifacts.
 - Ask before committing; do not push or open PRs unprompted.
