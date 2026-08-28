@@ -1,6 +1,6 @@
 # OpenWorkflow Behavior Contract Layer (v2)
 
-Status: design · Supersedes the v1 integration analysis of [AgentBehavior](https://github.com/braintrustdata/agentbehavior)
+Status: design (v2/v3) · Integrated into v3 Architecture via `adapters/agentbehavior/` and `core/validation/` (see `docs/v3-architecture-kernel-ecosystem.md`)
 
 AgentBehavior is **not** a competing execution layer. It is a standard layer that sits in front of OpenWorkflow's Work Compilation: it defines and validates what a *good execution* is, before compilation. This document improves the v1 analysis into a concrete, buildable design and lands the decisions.
 
