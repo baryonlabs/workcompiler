@@ -162,7 +162,28 @@ Orchestrates remote or local execution workers (e.g. OpenWorker Desktop executin
 
 ---
 
-## 5. Core Native Abstraction: `Work IR`
+
+### 6) Zero-Code Agent Proxy Adapter (`adapters/proxy/`)
+Inspired by transparent LLM proxy architectures (e.g. `opencodex`), OpenWorkflow provides a lightweight reverse proxy interceptor:
+
+```text
+Existing Agent (Cursor, Claude Code, AutoGen, LangChain)
+                      │
+  API Request (OPENAI_BASE_URL=http://localhost:8080/v1)
+                      │
+                      ▼
+       OpenWorkflow Proxy Adapter (adapters/proxy/)
+         ├── 1. Forward request to Upstream LLM (OpenAI / Anthropic)
+         ├── 2. Intercept trajectory (Tool Calls, Prompts, Outputs)
+         └── 3. Stream trajectory into Trace IR
+                      │
+                      ▼
+            OpenWorkflow Work Compiler  ──▶  Work IR (work.yaml)
+```
+
+Existing agents require **zero code modifications**—simply changing the API base URL allows OpenWorkflow to capture agent trajectories and compile them into deterministic `Work IR`.
+
+## 5. Core Native Abstraction: `Work IR``)
 
 The **Work IR** (`work.yaml`) is OpenWorkflow's primary asset. It represents the compiled, executable definition of business work, decoupled from any specific LLM, UI, or infrastructure.
 
