@@ -24,7 +24,7 @@ A **real interactive Codex session**, not a mock-up. Point Codex at the OpenWork
 | 2 | `$ow-traces` | Sessions captured by the proxy — **this very Codex session** appears as `shell_python3, shell_sed, respond, …` steps |
 | 3 | `$ow-compile-trace codex-session` | The captured Codex session compiles into `build/codex-session.work.yaml` |
 
-Setup and the exact commands each step runs are in the [Zero-Code Agent Proxy](#zero-code-agent-proxy-adaptersproxy) section.
+Setup and the exact commands each step runs are in the [Zero-Code Agent Proxy](#zero-code-agent-proxy-adaptersproxy) section; the prompts, Codex transcripts and compiled artifacts are in [`examples/demo/`](examples/demo/).
 
 ---
 

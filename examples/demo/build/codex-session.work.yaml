@@ -1,0 +1,58 @@
+work: codex-session
+version: '3.0'
+description: Compiled workflow for automating codex session
+inputs:
+  - content
+  - raw_args
+  - cmd
+outputs:
+  - content
+  - tool_calls
+  - role
+  - response_id
+  - status
+states:
+  - initialized
+  - python3_shelled
+  - sed_shelled
+  - respond_completed
+actions:
+  - shell_python3
+  - shell_sed
+  - respond
+dependencies:
+  shell_sed:
+    - shell_python3
+  respond:
+    - shell_sed
+invariants:
+  - use_current_pricing_policy
+  - verify_current_contract
+quality:
+  reviewer_acceptance: '>=0.95'
+  factual_accuracy: '>=0.99'
+behaviors:
+  - name: use-current-pricing-policy
+    path: behaviors/use-current-pricing-policy/BEHAVIOR.md
+  - name: verify-current-contract
+    path: behaviors/verify-current-contract/BEHAVIOR.md
+escalation:
+  on_error: fallback_to_frontier_llm
+  on_quality_drop: require_human_review
+  on_timeout: escalate_to_human
+executors:
+  shell_python3:
+    type: frontier_llm
+    preferred: claude-3-5-sonnet
+    fallback:
+      - human
+  shell_sed:
+    type: frontier_llm
+    preferred: claude-3-5-sonnet
+    fallback:
+      - human
+  respond:
+    type: frontier_llm
+    preferred: claude-3-5-sonnet
+    fallback:
+      - human

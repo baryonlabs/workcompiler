@@ -1,0 +1,39 @@
+id: https://w3id.org/openworkflow/schemas/quality_analyst
+name: quality_analyst
+description: Analyze production line quality anomaly root causes and generate remediation plans
+imports:
+  - linkml:types
+classes:
+  QualityAnalystInput:
+    slots:
+      - production_data
+      - quality_inspection_data
+      - equipment_logs
+  QualityAnalystOutput:
+    slots:
+      - root_cause
+      - evidence
+      - confidence_score
+      - remediation_plan
+slots:
+  remediation_plan:
+    range: string
+    required: false
+  root_cause:
+    range: string
+    required: false
+  confidence_score:
+    range: string
+    required: false
+  evidence:
+    range: string
+    required: false
+  production_data:
+    range: string
+    required: false
+  equipment_logs:
+    range: string
+    required: false
+  quality_inspection_data:
+    range: string
+    required: false

@@ -1,0 +1,60 @@
+work: quality_analyst
+version: '4.0'
+description: Analyze production line quality anomaly root causes and generate remediation
+  plans
+inputs:
+  - production_data
+  - quality_inspection_data
+  - equipment_logs
+outputs:
+  - root_cause
+  - evidence
+  - confidence_score
+  - remediation_plan
+states:
+  - initialized
+  - collect_data_completed
+  - detect_anomaly_completed
+  - find_correlation_completed
+  - determine_root_cause_completed
+  - create_report_completed
+actions:
+  - collect_data
+  - detect_anomaly
+  - find_correlation
+  - determine_root_cause
+  - create_report
+dependencies:
+  detect_anomaly:
+    - collect_data
+  find_correlation:
+    - detect_anomaly
+  determine_root_cause:
+    - find_correlation
+  create_report:
+    - determine_root_cause
+invariants:
+  - verify_sensor_calibration
+  - require_human_approval_for_remediation
+quality: {}
+executors:
+  collect_data:
+    type: code
+    handler: services.collect_data
+  detect_anomaly:
+    type: rule
+    handler: rules.detect_anomaly
+  find_correlation:
+    type: ml
+  determine_root_cause:
+    type: slm
+    preferred: models/quality_analyst-determine_root_cause-slm
+    fallback:
+      - frontier_llm
+      - human
+  create_report:
+    type: slm
+    preferred: models/quality_analyst-create_report-slm
+    fallback:
+      - frontier_llm
+      - human

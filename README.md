@@ -24,7 +24,7 @@ AI가 한 번 작업하게 하세요. OpenWorkflow는 이후 작업을 안정적
 | 2 | `$ow-traces` | 프록시가 캡처한 세션 목록 — **이 Codex 세션 자체**가 `shell_python3, shell_sed, respond, …` 스텝으로 잡힘 |
 | 3 | `$ow-compile-trace codex-session` | 캡처된 Codex 세션이 `build/codex-session.work.yaml`로 컴파일됨 |
 
-설정 방법과 각 단계가 실행하는 명령은 [Zero-Code 에이전트 프록시](#zero-code-에이전트-프록시-adaptersproxy) 섹션을 참조하세요.
+설정 방법과 각 단계가 실행하는 명령은 [Zero-Code 에이전트 프록시](#zero-code-에이전트-프록시-adaptersproxy) 섹션을, 입력 프롬프트·Codex 출력·컴파일 산출물 원본은 [`examples/demo/`](examples/demo/)를 참조하세요.
 
 ---
 
