@@ -37,6 +37,45 @@ UPSTREAM_OPENAI_URL = os.getenv("OPENAI_UPSTREAM_URL", "https://api.openai.com/v
 UPSTREAM_ANTHROPIC_URL = os.getenv("ANTHROPIC_UPSTREAM_URL", "https://api.anthropic.com/v1")
 
 
+def _workspace_root() -> Path:
+    """Return the only directory the proxy may write compiled workflows into."""
+    return Path(os.getenv("OPENWORKFLOW_WORKSPACE_DIR", os.getcwd())).resolve()
+
+
+def _workspace_output_path(output_path: Any) -> Path:
+    """Resolve an output path and reject paths outside the configured workspace."""
+    if not isinstance(output_path, str) or not output_path.strip():
+        raise HTTPException(status_code=422, detail="output_path must be a non-empty string.")
+
+    workspace = _workspace_root()
+    candidate = Path(output_path)
+    resolved = (workspace / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
+    try:
+        resolved.relative_to(workspace)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=403,
+            detail="output_path must resolve inside OPENWORKFLOW_WORKSPACE_DIR.",
+        ) from exc
+    return resolved
+
+
+async def _json_object(request: Request) -> Dict[str, Any]:
+    """Parse a JSON object, returning a client error instead of a server error."""
+    try:
+        payload = await request.json()
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise HTTPException(status_code=400, detail="Request body must contain valid JSON.") from exc
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=422, detail="Request JSON body must be an object.")
+    return payload
+
+
+def _synthetic_headers() -> Dict[str, str]:
+    """Make the development-only synthetic response mode visible to callers."""
+    return {"X-OpenWorkflow-Response-Mode": "synthetic"}
+
+
 def discover_behavior_contracts(workspace_dir: Optional[str] = None) -> List[Dict[str, Any]]:
     """Auto-scan local workspace for BEHAVIOR.md specifications."""
     search_paths = []
@@ -109,10 +148,11 @@ async def list_intercepted_traces() -> Dict[str, Any]:
 
 @app.post("/v1/workcompiler/compile")
 async def trigger_work_compilation(
-    request_data: Dict[str, Any],
+    request: Request,
     x_openworkflow_behavior: Optional[str] = Header(None, alias="X-OpenWorkflow-Behavior"),
 ) -> Dict[str, Any]:
     """Dual-Trigger: Compile intercepted trajectory into WorkIR (work.yaml)."""
+    request_data = await _json_object(request)
     run_id = request_data.get("run_id")
     target_name = request_data.get("target_name", "compiled-proxy-work")
 
@@ -144,7 +184,7 @@ async def trigger_work_compilation(
     # Optionally save to disk if output_path is provided
     output_path = request_data.get("output_path")
     if output_path:
-        save_work_ir(work_ir, output_path)
+        save_work_ir(work_ir, _workspace_output_path(output_path))
 
     return {
         "status": "compiled",
@@ -163,7 +203,7 @@ async def proxy_openai_chat_completions(
     x_openworkflow_behavior: Optional[str] = Header(None, alias="X-OpenWorkflow-Behavior"),
 ) -> JSONResponse:
     """Reverse proxy interceptor for OpenAI /v1/chat/completions."""
-    payload = await request.json()
+    payload = await _json_object(request)
     start_time = time.perf_counter()
 
     interceptor = get_or_create_interceptor(
@@ -220,7 +260,7 @@ async def proxy_openai_chat_completions(
     duration_ms = (time.perf_counter() - start_time) * 1000.0
     interceptor.intercept_openai_request_response(payload, synthetic_response, duration_ms=duration_ms)
 
-    return JSONResponse(content=synthetic_response)
+    return JSONResponse(content=synthetic_response, headers=_synthetic_headers())
 
 
 @app.post("/v1/messages")
@@ -230,7 +270,7 @@ async def proxy_anthropic_messages(
     x_openworkflow_behavior: Optional[str] = Header(None, alias="X-OpenWorkflow-Behavior"),
 ) -> JSONResponse:
     """Reverse proxy interceptor for Anthropic /v1/messages."""
-    payload = await request.json()
+    payload = await _json_object(request)
     start_time = time.perf_counter()
 
     interceptor = get_or_create_interceptor(
@@ -275,4 +315,4 @@ async def proxy_anthropic_messages(
     duration_ms = (time.perf_counter() - start_time) * 1000.0
     interceptor.intercept_anthropic_request_response(payload, synthetic_response, duration_ms=duration_ms)
 
-    return JSONResponse(content=synthetic_response)
+    return JSONResponse(content=synthetic_response, headers=_synthetic_headers())

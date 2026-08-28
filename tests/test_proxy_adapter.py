@@ -57,6 +57,7 @@ def test_openai_chat_completions_interception(client):
     res_data = response.json()
     assert "choices" in res_data
     assert res_data["choices"][0]["message"]["role"] == "assistant"
+    assert response.headers["X-OpenWorkflow-Response-Mode"] == "synthetic"
 
     # Verify session interceptor recorded the turn
     assert "test_run_openai_01" in active_interceptors
@@ -96,6 +97,7 @@ def test_anthropic_messages_interception(client):
     assert response.status_code == 200
     res_data = response.json()
     assert res_data["type"] == "message"
+    assert response.headers["X-OpenWorkflow-Response-Mode"] == "synthetic"
 
     assert "test_run_anthropic_01" in active_interceptors
     interceptor = active_interceptors["test_run_anthropic_01"]
@@ -143,3 +145,42 @@ def test_list_traces_and_compile_trigger(client):
     assert "lookup_contract" in compile_data["actions"]
     assert "price_offer" in compile_data["actions"]
     assert "executors_summary" in compile_data
+
+
+@pytest.mark.parametrize("endpoint", ["/v1/chat/completions", "/v1/messages", "/v1/workcompiler/compile"])
+def test_proxy_returns_4xx_for_malformed_json(client, endpoint):
+    """Invalid JSON is a client error and must never become a 500 response."""
+    response = client.post(endpoint, content=b'{"model":', headers={"Content-Type": "application/json"})
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Request body must contain valid JSON."
+
+
+def test_compile_output_path_is_restricted_to_workspace(client, tmp_path, monkeypatch):
+    """Compilation may write artifacts only beneath the explicit workspace root."""
+    monkeypatch.setenv("OPENWORKFLOW_WORKSPACE_DIR", str(tmp_path))
+    client.post(
+        "/v1/chat/completions",
+        json={"model": "gpt-4o", "messages": [], "tools": []},
+        headers={"X-OpenWorkflow-Run-ID": "workspace_path_test"},
+    )
+
+    blocked = client.post(
+        "/v1/workcompiler/compile",
+        json={
+            "run_id": "workspace_path_test",
+            "target_name": "path-test",
+            "output_path": "../outside.yaml",
+        },
+    )
+    assert blocked.status_code == 403
+
+    allowed = client.post(
+        "/v1/workcompiler/compile",
+        json={
+            "run_id": "workspace_path_test",
+            "target_name": "path-test",
+            "output_path": "compiled/path-test.yaml",
+        },
+    )
+    assert allowed.status_code == 200
+    assert (tmp_path / "compiled" / "path-test.yaml").is_file()

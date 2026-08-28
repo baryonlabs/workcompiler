@@ -16,10 +16,12 @@ from __future__ import annotations
 
 import abc
 import importlib
+import ipaddress
 import inspect
 import json
 import logging
 import re
+import socket
 import time
 import urllib.error
 import urllib.parse
@@ -293,7 +295,7 @@ class CodeExecutor(BaseExecutor):
         1. Explicit handler in inputs ('__handler__' or 'handler')
         2. Registered handler under handler name
         3. Registered handler under action_name
-        4. Dynamic dot-delimited import string (e.g., 'math.sqrt')
+        4. Explicitly enabled, allowlisted dynamic import string.
         """
         handler_ref = inputs.get("__handler__") or inputs.get("handler")
         if isinstance(handler_ref, str):
@@ -310,6 +312,10 @@ class CodeExecutor(BaseExecutor):
         if "." in action_name:
             try:
                 return self._import_callable(action_name)
+            except PermissionError:
+                # Do not hide a policy decision behind the generic
+                # "handler not found" error.
+                raise
             except Exception:
                 pass
 
@@ -319,13 +325,35 @@ class CodeExecutor(BaseExecutor):
         )
 
     def _import_callable(self, path: str) -> Callable[..., Any]:
-        """Dynamically import a callable from a module path (e.g., 'math.sqrt' or 'os.path:join')."""
+        """Import an explicitly allowlisted callable.
+
+        Workflow inputs are data, so they must not be able to select arbitrary
+        Python code. Deployments that need import-based handlers must opt in and
+        name the module prefixes they trust; registered handlers remain the
+        normal production integration boundary.
+        """
         if ":" in path:
             module_name, attr_name = path.split(":", 1)
         elif "." in path:
             module_name, attr_name = path.rsplit(".", 1)
         else:
             raise ValueError(f"Invalid handler import path: {path}")
+
+        if not self.config.get("allow_dynamic_imports", False):
+            raise PermissionError(
+                "Dynamic callable imports are disabled. Register the handler "
+                "on CodeExecutor or explicitly enable an allowlisted module."
+            )
+
+        allowed_modules = self.config.get("allowed_import_modules", [])
+        if not isinstance(allowed_modules, (list, tuple, set)) or not any(
+            module_name == prefix or module_name.startswith(f"{prefix}.")
+            for prefix in allowed_modules
+            if isinstance(prefix, str) and prefix
+        ):
+            raise PermissionError(
+                f"Dynamic callable import from module '{module_name}' is not allowlisted."
+            )
 
         module = importlib.import_module(module_name)
         target = getattr(module, attr_name)
@@ -620,6 +648,57 @@ class HTTPExecutor(BaseExecutor):
     def executor_type(self) -> str:
         return "http"
 
+    @staticmethod
+    def _is_public_address(address: str) -> bool:
+        """Return whether an IP address is safe for outbound workflow requests."""
+        ip = ipaddress.ip_address(address)
+        # ``is_global`` also excludes loopback, private, link-local, multicast,
+        # reserved, unspecified, and carrier-grade NAT ranges.
+        return ip.is_global
+
+    def _validate_url(self, url: str) -> None:
+        """Reject malformed and private-network destinations before connecting.
+
+        HTTP executors are an egress boundary.  Private and loopback ranges are
+        blocked by default so a workflow definition cannot be used to query
+        local services or cloud metadata endpoints.  An operator can opt in for
+        a controlled internal deployment with ``allow_private_network``.
+        """
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            raise ValueError("HTTPExecutor requires an absolute http(s) URL with a hostname.")
+        if parsed.username or parsed.password:
+            raise ValueError("HTTPExecutor does not allow credentials in URLs.")
+        if self.config.get("allow_private_network", False):
+            return
+
+        try:
+            addresses = {
+                info[4][0]
+                for info in socket.getaddrinfo(parsed.hostname, parsed.port or 0, type=socket.SOCK_STREAM)
+            }
+        except socket.gaierror as exc:
+            raise ValueError(f"HTTPExecutor could not resolve host '{parsed.hostname}'.") from exc
+        if not addresses:
+            raise ValueError(f"HTTPExecutor could not resolve host '{parsed.hostname}'.")
+        blocked = [address for address in addresses if not self._is_public_address(address)]
+        if blocked:
+            raise PermissionError(
+                f"HTTPExecutor blocked private or non-routable destination '{parsed.hostname}'."
+            )
+
+    def _safe_opener(self) -> urllib.request.OpenerDirector:
+        """Create an opener that validates every redirect target as egress."""
+        validate_url = self._validate_url
+
+        class ValidatingRedirectHandler(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req: Any, fp: Any, code: int, msg: str,
+                                 headers: Any, newurl: str) -> Any:
+                validate_url(newurl)
+                return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+        return urllib.request.build_opener(ValidatingRedirectHandler())
+
     def execute(
         self,
         action_name: str,
@@ -658,6 +737,18 @@ class HTTPExecutor(BaseExecutor):
             sep = "&" if "?" in url else "?"
             url = f"{url}{sep}{query_string}"
 
+        try:
+            self._validate_url(url)
+        except (ValueError, PermissionError) as exc:
+            duration_ms = (time.perf_counter() - start_time) * 1000.0
+            logs.append(f"HTTPExecutor: Blocked URL - {exc}")
+            return ActionResult.fail(
+                error=str(exc),
+                metadata={"executor": self.name, "url": url, "method": str(inputs.get("method", "GET")).upper()},
+                logs=logs,
+                execution_time_ms=duration_ms,
+            )
+
         # Body data
         data_bytes = None
         json_body = inputs.get("json") or inputs.get("body") or inputs.get("data")
@@ -676,7 +767,9 @@ class HTTPExecutor(BaseExecutor):
         req = urllib.request.Request(url=url, data=data_bytes, headers=headers, method=method)
 
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as response:
+            # urllib follows redirects by default; use a validating handler so
+            # an otherwise safe public URL cannot pivot into a private address.
+            with self._safe_opener().open(req, timeout=timeout) as response:
                 status_code = response.getcode()
                 resp_headers = dict(response.info())
                 raw_body = response.read().decode("utf-8", errors="replace")

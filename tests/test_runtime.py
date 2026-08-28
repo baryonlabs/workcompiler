@@ -85,10 +85,25 @@ class TestExecutors(unittest.TestCase):
         self.assertEqual(res.output, 42)
 
     def test_code_executor_dynamic_import(self):
-        executor = CodeExecutor()
+        executor = CodeExecutor(
+            config={"allow_dynamic_imports": True, "allowed_import_modules": ["math"]}
+        )
         res = executor.execute(action_name="math.sqrt", inputs={"x": 16})
         self.assertTrue(res.success)
         self.assertEqual(res.output, 4.0)
+
+    def test_code_executor_blocks_dynamic_import_by_default(self):
+        res = CodeExecutor().execute(action_name="math.sqrt", inputs={"x": 16})
+        self.assertFalse(res.success)
+        self.assertIn("Dynamic callable imports are disabled", res.error)
+
+    def test_code_executor_blocks_non_allowlisted_dynamic_import(self):
+        executor = CodeExecutor(
+            config={"allow_dynamic_imports": True, "allowed_import_modules": ["math"]}
+        )
+        res = executor.execute(action_name="os.system", inputs={"command": "echo unsafe"})
+        self.assertFalse(res.success)
+        self.assertIn("not allowlisted", res.error)
 
     def test_code_executor_error_handling(self):
         executor = CodeExecutor()
@@ -133,6 +148,18 @@ class TestExecutors(unittest.TestCase):
         res = executor_no_url.execute(action_name="bad_action", inputs={})
         self.assertFalse(res.success)
         self.assertIn("No URL provided", res.error)
+
+    def test_http_executor_blocks_loopback_ssrf_before_request(self):
+        executor = HTTPExecutor()
+        res = executor.execute(action_name="probe", inputs={"url": "http://127.0.0.1:8080/health"})
+        self.assertFalse(res.success)
+        self.assertIn("blocked private or non-routable", res.error)
+
+    def test_http_executor_blocks_private_hostname_ssrf_before_request(self):
+        executor = HTTPExecutor()
+        res = executor.execute(action_name="probe", inputs={"url": "http://localhost:8080/health"})
+        self.assertFalse(res.success)
+        self.assertIn("blocked private or non-routable", res.error)
 
     def test_ml_executor(self):
         class MockModel:
@@ -339,7 +366,12 @@ class TestDurableRuntimeEngine(unittest.TestCase):
         self.engine.signal_event(
             "wf-human-01",
             "human_approval",
-            {"approved": True, "reviewer": "underwriter_bob", "decision": "approve"},
+            {
+                "approved": True,
+                "reviewer": "underwriter_bob",
+                "decision": "approve",
+                "comments": "Risk review passed.",
+            },
         )
         self.assertEqual(wf.status, WorkflowStatus.RUNNING)
         self.assertIn("human_review", wf.completed_steps)
@@ -497,6 +529,52 @@ class TestDurableRuntimeEngine(unittest.TestCase):
             self.engine.execute_step("wf-dep-01", "step2")
         self.assertIn("unmet dependencies", str(ctx.exception))
 
+    def test_start_rejects_invalid_dependency_dag(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.engine.start_workflow(
+                "wf-cycle-01",
+                {
+                    "work": "invalid-cycle",
+                    "actions": ["first", "second"],
+                    "dependencies": {"first": ["second"], "second": ["first"]},
+                },
+            )
+        self.assertIn("contains a cycle", str(ctx.exception))
+        self.assertEqual(self.engine.list_workflows(), [])
+
+    def test_human_signal_requires_contract_fields_before_resuming(self):
+        work_def = {
+            "work": "contracted-human-review",
+            "actions": ["human_review"],
+            "executors": {
+                "human_review": {
+                    "type": "human",
+                    "required_fields": ["approved", "reviewer"],
+                }
+            },
+        }
+        workflow = self.engine.start_workflow("wf-human-contract-01", work_def)
+        self.engine.execute_step("wf-human-contract-01", "human_review")
+
+        with self.assertRaises(ValueError) as ctx:
+            self.engine.signal_event("wf-human-contract-01", "human_approval", {"approved": True})
+        self.assertIn("missing required fields", str(ctx.exception))
+        self.assertEqual(workflow.status, WorkflowStatus.WAITING_HUMAN)
+        self.assertEqual(workflow.signals, [])
+
+        self.engine.signal_event(
+            "wf-human-contract-01", "human_approval", {"approved": True, "reviewer": "alice"}
+        )
+        self.assertEqual(workflow.status, WorkflowStatus.RUNNING)
+        self.assertEqual(workflow.completed_steps, ["human_review"])
+
+    def test_checkpoint_write_leaves_no_partial_temp_file(self):
+        work_def = {"work": "checkpoint", "actions": ["step"]}
+        self.engine.start_workflow("wf-atomic-checkpoint", work_def)
+        checkpoint_path = Path(self.temp_dir.name) / "wf-atomic-checkpoint.json"
+        self.assertTrue(checkpoint_path.exists())
+        self.assertEqual(list(Path(self.temp_dir.name).glob("*.tmp")), [])
+
     def test_customer_renewal_end_to_end(self):
         work_def = {
             "work": "customer-renewal",
@@ -537,4 +615,3 @@ class TestDurableRuntimeEngine(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

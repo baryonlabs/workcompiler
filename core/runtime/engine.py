@@ -18,6 +18,7 @@ import datetime
 import json
 import logging
 import os
+import tempfile
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Union
@@ -409,6 +410,8 @@ class DurableRuntimeEngine:
         if hasattr(work_definition, "to_dict"):
             work_definition = work_definition.to_dict()
 
+        self._validate_work_definition(work_definition)
+
         work_name = work_definition.get("work", "unnamed_workflow")
         inputs = initial_inputs or {}
 
@@ -676,6 +679,11 @@ class DurableRuntimeEngine:
         """
         instance = self.get_workflow(workflow_id)
 
+        # A rejected human response must not become part of workflow state or
+        # audit history as if it had been accepted.
+        if instance.status == WorkflowStatus.WAITING_HUMAN and instance.pending_wait:
+            self._validate_human_signal_payload(instance.pending_wait, payload)
+
         signal_record = {
             "timestamp": _utc_now_iso(),
             "event_name": event_name,
@@ -848,6 +856,70 @@ class DurableRuntimeEngine:
     # DAG & Auto Execution Helpers
     # -------------------------------------------------------------------------
 
+    @staticmethod
+    def _validate_work_definition(work_definition: Dict[str, Any]) -> None:
+        """Reject malformed dependency graphs before creating durable state.
+
+        WorkIR objects normally provide this validation at compile time, but the
+        runtime also accepts raw dictionaries from protocol adapters and restored
+        integrations.  Validating here prevents workflows that can never make
+        progress from being checkpointed as RUNNING.
+        """
+        actions = work_definition.get("actions", [])
+        dependencies = work_definition.get("dependencies", {})
+        if not isinstance(actions, list) or not all(isinstance(action, str) for action in actions):
+            raise ValueError("Work definition 'actions' must be a list of action names.")
+        if len(actions) != len(set(actions)):
+            raise ValueError("Work definition 'actions' must not contain duplicate action names.")
+        if not isinstance(dependencies, dict):
+            raise ValueError("Work definition 'dependencies' must be a mapping of action names.")
+
+        action_set = set(actions)
+        in_degree = {action: 0 for action in actions}
+        downstream: Dict[str, List[str]] = {action: [] for action in actions}
+        for action, prerequisites in dependencies.items():
+            if action not in action_set:
+                raise ValueError(f"Dependency target '{action}' is not listed in actions.")
+            if not isinstance(prerequisites, list):
+                raise ValueError(f"Dependencies for '{action}' must be a list.")
+            for prerequisite in prerequisites:
+                if prerequisite not in action_set:
+                    raise ValueError(
+                        f"Prerequisite '{prerequisite}' for '{action}' is not listed in actions."
+                    )
+                in_degree[action] += 1
+                downstream[prerequisite].append(action)
+
+        ready = [action for action in actions if in_degree[action] == 0]
+        visited = 0
+        while ready:
+            action = ready.pop()
+            visited += 1
+            for dependent in downstream[action]:
+                in_degree[dependent] -= 1
+                if in_degree[dependent] == 0:
+                    ready.append(dependent)
+        if visited != len(actions):
+            cyclic = [action for action in actions if in_degree[action] > 0]
+            raise ValueError(f"Work definition dependency DAG contains a cycle: {cyclic}.")
+
+    @staticmethod
+    def _validate_human_signal_payload(wait: WaitCondition, payload: Any) -> None:
+        """Ensure a human response satisfies the fields requested by its wait."""
+        required_fields = wait.required_fields
+        if not required_fields:
+            return
+        if not isinstance(payload, dict):
+            raise ValueError(
+                "Human response payload must be an object containing the required fields: "
+                f"{required_fields}."
+            )
+        missing = [field for field in required_fields if field not in payload]
+        if missing:
+            raise ValueError(
+                f"Human response for step '{wait.step_name}' is missing required fields: {missing}."
+            )
+
     def get_executable_steps(self, workflow_id: str) -> List[str]:
         """Return the list of actions whose dependencies are fulfilled and are not yet completed."""
         instance = self.get_workflow(workflow_id)
@@ -948,8 +1020,21 @@ class DurableRuntimeEngine:
 
         if filepath is not None:
             filepath.parent.mkdir(parents=True, exist_ok=True)
-            with open(filepath, "w", encoding="utf-8") as f:
-                f.write(instance.to_json())
+            temp_path: Optional[Path] = None
+            try:
+                with tempfile.NamedTemporaryFile(
+                    mode="w", encoding="utf-8", dir=filepath.parent,
+                    prefix=f".{filepath.name}.", suffix=".tmp", delete=False,
+                ) as f:
+                    temp_path = Path(f.name)
+                    f.write(instance.to_json())
+                    f.flush()
+                    os.fsync(f.fileno())
+                os.replace(temp_path, filepath)
+            except Exception:
+                if temp_path is not None:
+                    temp_path.unlink(missing_ok=True)
+                raise
             instance.log_event("CHECKPOINT_SAVED", {"filepath": str(filepath)})
             return str(filepath)
 
