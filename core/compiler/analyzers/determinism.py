@@ -713,6 +713,16 @@ class DeterminismAnalyzer:
                         reasoning=f"Step analysis detected deterministic pattern: {step_res['pattern_type']}",
                     )
 
+        # 2b. Recorded shell commands (Codex / agent tool calls) are replayable deterministic code
+        if steps and all(self._shell_command_of(step) for step in steps):
+            return DeterminismAnalysisResult(
+                is_deterministic=True,
+                tier="code",
+                confidence=0.9,
+                handler=f"handlers.{action_name}",
+                reasoning=f"Action '{action_name}' replays a recorded shell command",
+            )
+
         # 3. Heuristic Action Name Analysis
         if any(k in act_lower for k in self.RULE_KEYWORDS):
             return DeterminismAnalysisResult(
@@ -767,6 +777,19 @@ class DeterminismAnalyzer:
             handler=None,
             reasoning=f"Action '{action_name}' did not match deterministic patterns",
         )
+
+    @staticmethod
+    def _shell_command_of(step: Any) -> Optional[str]:
+        """Return the shell command recorded in a step's input, if any."""
+        inp = getattr(step, "input", None) if not isinstance(step, dict) else step.get("input")
+        if hasattr(inp, "model_dump"):
+            inp = inp.model_dump()
+        if not isinstance(inp, dict):
+            return None
+        cmd = inp.get("cmd") or inp.get("command")
+        if isinstance(cmd, list) and cmd:
+            return " ".join(str(c) for c in cmd)
+        return cmd if isinstance(cmd, str) and cmd.strip() else None
 
     def is_deterministic(
         self,

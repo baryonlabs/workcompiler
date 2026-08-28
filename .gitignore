@@ -3,6 +3,5 @@ __pycache__/
 .pytest_cache/
 .venv/
 dist/
-build/
-!examples/demo/build/
+/build/
 *.egg-info/

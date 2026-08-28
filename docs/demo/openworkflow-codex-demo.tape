@@ -21,11 +21,11 @@
 #
 # The $ow-* skills are discovered automatically from .agents/skills/ in this repository.
 #
-# Post-process to keep the GIF small (vhs output is ~8 MB; this brings it to ~3.5 MB):
+# Post-process to keep the GIF small (raw vhs output is ~24 MB; this brings it to ~6.8 MB):
 #
 #   ffmpeg -y -i docs/demo/openworkflow-codex-demo.gif \
-#     -vf "fps=8,split[a][b];[a]palettegen=max_colors=96:stats_mode=diff[p];[b][p]paletteuse=dither=none:diff_mode=rectangle" \
-#     build/codex-demo.gif && gifsicle -O3 --lossy=90 build/codex-demo.gif -o docs/demo/openworkflow-codex-demo.gif
+#     -vf "fps=6,scale=1000:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=64:stats_mode=diff[p];[b][p]paletteuse=dither=none:diff_mode=rectangle" \
+#     build/codex-demo.gif && gifsicle -O3 --lossy=120 build/codex-demo.gif -o docs/demo/openworkflow-codex-demo.gif
 
 Output docs/demo/openworkflow-codex-demo.gif
 
@@ -60,7 +60,7 @@ Type " examples/quality_analysis.work"
 Sleep 1s
 Enter
 # fixed waits: vhs screen matching is unreliable once the Codex TUI scrolls
-Sleep 45s
+Sleep 60s
 
 # 2) What did the proxy capture from this very session?
 Type "$ow-traces"
@@ -77,7 +77,7 @@ Enter
 Type " codex-session"
 Sleep 1s
 Enter
-Sleep 60s
+Sleep 80s
 
 Type "/quit"
 Sleep 500ms

@@ -36,7 +36,7 @@ codex                                                   # use it normally
 curl -s localhost:8787/v1/workcompiler/traces | jq       # captured sessions + actions
 curl -s localhost:8787/v1/workcompiler/traces/<run_id>   # full TraceIR (add ?include_raw=true for raw payloads)
 curl -s -X POST localhost:8787/v1/workcompiler/compile -H 'Content-Type: application/json' \
-  -d '{"run_id":"<run_id>","target_name":"my-work","output_path":"build/my-work.yaml"}'
+  -d '{"run_id":"<run_id>","target_name":"my-work","build_dir":"build"}'   # -> build/my_work/ (work.yaml, handlers/, rules/, models/, prompts/)
 ```
 
 Inside the Codex TUI the same operations are available as repository skills (`.agents/skills/`):

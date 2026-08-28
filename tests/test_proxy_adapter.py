@@ -416,7 +416,42 @@ def test_looping_agent_session_compiles_without_dependency_cycle(client, monkeyp
     assert compiled.status_code == 200, compiled.text
     body = compiled.json()
     assert body["actions"] == ["shell_python3", "shell_sed", "respond", "shell_curl"]
+    assert body["build"] is None
+    # recorded shell commands lower to replayable code handlers
+    assert body["executors_summary"]["shell_python3"] == "code"
     deps = body["work_ir"]["dependencies"]
     assert deps["respond"] == ["shell_sed"]
     assert deps["shell_curl"] == ["respond"]
     assert "respond" not in deps.get("shell_python3", [])
+
+
+def test_compile_emits_build_tree_when_build_dir_given(client, monkeypatch, tmp_path):
+    import httpx
+    from adapters.proxy import server as proxy_server
+
+    monkeypatch.setenv("OPENWORKFLOW_WORKSPACE_DIR", str(tmp_path))
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        output = [{"type": "custom_tool_call", "name": "exec", "call_id": "c",
+                   "input": 'await tools.exec_command({ "cmd": "ls examples", "workdir": "/r" })'}]
+        body = _sse([{"type": "response.output_item.done", "item": output[0]},
+                     {"type": "response.completed", "response": {"id": "r", "status": "completed", "output": [],
+                                                                  "usage": {"input_tokens": 1, "output_tokens": 1}}}])
+        return httpx.Response(200, content=body, headers={"content-type": "text/event-stream"})
+
+    _install_mock_upstream(monkeypatch, handler)
+    client.post("/backend-api/codex/responses", json={"model": "gpt-5-codex", "stream": True, "input": "go"},
+                headers={"session_id": "build-thread"})
+
+    compiled = client.post("/v1/workcompiler/compile",
+                           json={"run_id": "build-thread", "target_name": "ls-bot", "build_dir": "build"})
+    assert compiled.status_code == 200, compiled.text
+    build = compiled.json()["build"]
+    assert build["by_tier"]["code"] == ["handlers/shell_ls.py"]
+    handler_py = (tmp_path / "build" / "ls_bot" / "handlers" / "shell_ls.py").read_text()
+    assert "COMMAND = 'ls examples'" in handler_py
+
+    # build_dir must stay inside the workspace
+    escaped = client.post("/v1/workcompiler/compile",
+                          json={"run_id": "build-thread", "target_name": "ls-bot", "build_dir": "../outside"})
+    assert escaped.status_code == 403

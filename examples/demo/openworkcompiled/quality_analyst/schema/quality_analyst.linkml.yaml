@@ -19,19 +19,19 @@ slots:
   remediation_plan:
     range: string
     required: false
+  production_data:
+    range: string
+    required: false
   root_cause:
+    range: string
+    required: false
+  equipment_logs:
     range: string
     required: false
   confidence_score:
     range: string
     required: false
   evidence:
-    range: string
-    required: false
-  production_data:
-    range: string
-    required: false
-  equipment_logs:
     range: string
     required: false
   quality_inspection_data:

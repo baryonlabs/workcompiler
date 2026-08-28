@@ -1,0 +1,36 @@
+{
+  "work": "codex-session",
+  "build_dir": "examples/demo/build/codex_session",
+  "artifact_count": 3,
+  "by_tier": {
+    "work_ir": [
+      "work.yaml"
+    ],
+    "code": [
+      "handlers/shell_curl.py"
+    ],
+    "frontier_llm": [
+      "prompts/respond.prompt.md"
+    ]
+  },
+  "artifacts": [
+    {
+      "action": "*",
+      "tier": "work_ir",
+      "kind": "work.yaml",
+      "path": "work.yaml"
+    },
+    {
+      "action": "shell_curl",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_curl.py"
+    },
+    {
+      "action": "respond",
+      "tier": "frontier_llm",
+      "kind": "prompt",
+      "path": "prompts/respond.prompt.md"
+    }
+  ]
+}

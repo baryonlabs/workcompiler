@@ -20,9 +20,9 @@ A **real interactive Codex session**, not a mock-up. Point Codex at the OpenWork
 
 | Step | Typed in Codex | Result |
 | :--- | :--- | :--- |
-| 1 | `$ow-compile-work examples/quality_analysis.work` | OpenWorkLang (`.work`) → `work.yaml` + LinkML schema, with executor lowering (code/rule/ml/slm) |
+| 1 | `$ow-compile-work examples/quality_analysis.work` | OpenWorkLang (`.work`) → **executable build tree** `build/quality_analyst/` — `work.yaml` + `handlers/*.py` (code) + `rules/*.rule.yaml` (rule) + `models/ml|slm/<action>/` (model card · dataset · train.py) + LinkML schema |
 | 2 | `$ow-traces` | Sessions captured by the proxy — **this very Codex session** appears as `shell_python3, shell_sed, respond, …` steps |
-| 3 | `$ow-compile-trace codex-session` | The captured Codex session compiles into `build/codex-session.work.yaml` |
+| 3 | `$ow-compile-trace codex-session` | The captured Codex session compiles into `build/codex_session/` — shell steps become `handlers/shell_*.py` that replay the recorded command, non-deterministic steps become `prompts/*.prompt.md` |
 
 Setup and the exact commands each step runs are in the [Zero-Code Agent Proxy](#zero-code-agent-proxy-adaptersproxy) section; the prompts, Codex transcripts and compiled artifacts are in [`examples/demo/`](examples/demo/).
 
@@ -122,9 +122,9 @@ The [30-second demo](#30-second-demo-use-it-from-inside-codex) at the top of thi
 
 | Step | Typed in Codex | What Codex runs | Result |
 | :--- | :--- | :--- | :--- |
-| 1 | `$ow-compile-work examples/quality_analysis.work` | `python3 -m core.openworklang compile … --linkml …` | OpenWorkLang → `build/quality_analysis.work.yaml` + LinkML schema, with the 8-tier executor lowering (code/rule/ml/slm) explained |
+| 1 | `$ow-compile-work examples/quality_analysis.work` | `python3 -m core.openworklang compile …` | OpenWorkLang → `build/quality_analyst/` build tree (work.yaml, handlers/, rules/, models/ml|slm/, schema/), with the 8-tier executor lowering explained |
 | 2 | `$ow-traces` | `curl localhost:8787/v1/workcompiler/traces` | Sessions captured by the proxy — **this very Codex session** shows up as `shell_python3, shell_sed, respond, …` steps |
-| 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` | The captured Codex session compiles into `build/codex-session.work.yaml` (actions: `shell_python3 → shell_sed → respond → shell_curl`) |
+| 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` (`build_dir`) | The captured Codex session compiles into `build/codex_session/` — `handlers/shell_*.py` replay the recorded commands, `respond` becomes `prompts/respond.prompt.md` |
 
 The recording script is [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/openworkflow-codex-demo.tape).
 
@@ -159,11 +159,12 @@ The recording script is [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/ope
    The commands the skills run work from a plain shell too:
 
    ```bash
-   python3 -m core.openworklang compile examples/quality_analysis.work --linkml build/quality_analysis.linkml.yaml
+   python3 -m core.openworklang compile examples/quality_analysis.work        # -> build/quality_analyst/
    curl -s localhost:8787/v1/workcompiler/traces | jq                # run_id, actions, token usage
    curl -s localhost:8787/v1/workcompiler/traces/<run_id> | jq       # full TraceIR for the session
    curl -s -X POST localhost:8787/v1/workcompiler/compile -H 'Content-Type: application/json' \
-     -d '{"run_id":"<run_id>","target_name":"codex-session","output_path":"build/codex-session.work.yaml"}'
+     -d '{"run_id":"<run_id>","target_name":"codex-session","build_dir":"build"}'   # -> build/codex_session/
+   python3 -m core.build from-trace trace.json --target codex-session   # build from a TraceIR JSON without the proxy
    ```
 
    API-key clients (OpenAI SDK, Agents SDK, ...) only need `OPENAI_BASE_URL=http://127.0.0.1:8787/v1`; `/v1/responses` is captured the same way.
@@ -297,9 +298,29 @@ Human Intent ──▶ OpenWorkLang (.work) ──▶ OpenWorkLang Compiler ─�
 Compile from the command line:
 
 ```bash
-python3 -m core.openworklang compile examples/quality_analysis.work --linkml build/quality_analysis.linkml.yaml
-# -> build/quality_analysis.work.yaml (+ LinkML schema); prints actions / invariants / executors
+python3 -m core.openworklang compile examples/quality_analysis.work
+# -> build/quality_analyst/ build tree; prints actions / invariants / executors / artifacts
 ```
+
+### Build output: executable assets per tier, not just `work.yaml`
+
+Compilation does not stop at the `work.yaml` definition: for every action the compiler emits the concrete asset of its executor tier under `build/<work>/` (`core/build`).
+
+```text
+build/quality_analyst/
+├── work.yaml                                  # Work IR (source of truth for the runtime)
+├── MANIFEST.json                              # action → tier → artifact index
+├── handlers/collect_data.py                   # code   : def run(**inputs) — replays the recorded shell command when the trace has one, otherwise a contract-bearing scaffold
+├── rules/detect_anomaly.rule.yaml             # rule   : declarative branch list evaluated as-is by RuleExecutor
+├── models/ml/find_correlation/                # ml     : model_card.yaml + dataset.jsonl (trace I/O) + train.py
+├── models/slm/determine_root_cause/           # slm    : training_candidate.yaml + dataset.jsonl (SFT pairs) + train.py (TRL SFTTrainer)
+├── models/slm/create_report/
+├── prompts/<action>.prompt.md                 # frontier_llm : prompt contract + invariants + recorded example
+├── human/<action>.review.md                   # human  : review checklist
+└── schema/quality_analyst.linkml.yaml         # LinkML schema
+```
+
+`core.build.load_build_into_engine(engine, "build/quality_analyst")` registers `handlers/` and `rules/` on the `DurableRuntimeEngine`, so a filled-in tree runs immediately. Real examples live in [`examples/demo/openworkcompiled/`](examples/demo/openworkcompiled/) and [`examples/demo/build/`](examples/demo/build/).
 
 See **[OpenWorkLang Spec](docs/openworklang-spec.md)** for full language grammar and compiler details.
 
@@ -419,7 +440,8 @@ openworkflow/
 ├── agents/                      # Guide and measurement fleet specs
 ├── docs/                        # Specifications, architecture, usage guides, and diagrams
 ├── .agents/skills/              # Codex skills: $ow-compile-work · $ow-traces · $ow-compile-trace
-├── tests/                       # Complete pytest suite (134 tests)
+├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + runtime loader
+├── tests/                       # Complete pytest suite (138 tests)
 └── examples/                    # Sample workflows, LinkML schemas, and runnable demo scripts
 ```
 

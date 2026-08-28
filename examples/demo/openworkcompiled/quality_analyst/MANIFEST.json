@@ -1,0 +1,112 @@
+{
+  "work": "quality_analyst",
+  "build_dir": "examples/demo/openworkcompiled/quality_analyst",
+  "artifact_count": 13,
+  "by_tier": {
+    "work_ir": [
+      "work.yaml"
+    ],
+    "code": [
+      "handlers/collect_data.py"
+    ],
+    "rule": [
+      "rules/detect_anomaly.rule.yaml"
+    ],
+    "ml": [
+      "models/ml/find_correlation/model_card.yaml",
+      "models/ml/find_correlation/dataset.jsonl",
+      "models/ml/find_correlation/train.py"
+    ],
+    "slm": [
+      "models/slm/determine_root_cause/training_candidate.yaml",
+      "models/slm/determine_root_cause/dataset.jsonl",
+      "models/slm/determine_root_cause/train.py",
+      "models/slm/create_report/training_candidate.yaml",
+      "models/slm/create_report/dataset.jsonl",
+      "models/slm/create_report/train.py"
+    ],
+    "schema": [
+      "schema/quality_analyst.linkml.yaml"
+    ]
+  },
+  "artifacts": [
+    {
+      "action": "*",
+      "tier": "work_ir",
+      "kind": "work.yaml",
+      "path": "work.yaml"
+    },
+    {
+      "action": "collect_data",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/collect_data.py"
+    },
+    {
+      "action": "detect_anomaly",
+      "tier": "rule",
+      "kind": "rule",
+      "path": "rules/detect_anomaly.rule.yaml"
+    },
+    {
+      "action": "find_correlation",
+      "tier": "ml",
+      "kind": "model_card.yaml",
+      "path": "models/ml/find_correlation/model_card.yaml"
+    },
+    {
+      "action": "find_correlation",
+      "tier": "ml",
+      "kind": "dataset.jsonl",
+      "path": "models/ml/find_correlation/dataset.jsonl"
+    },
+    {
+      "action": "find_correlation",
+      "tier": "ml",
+      "kind": "train.py",
+      "path": "models/ml/find_correlation/train.py"
+    },
+    {
+      "action": "determine_root_cause",
+      "tier": "slm",
+      "kind": "training_candidate.yaml",
+      "path": "models/slm/determine_root_cause/training_candidate.yaml"
+    },
+    {
+      "action": "determine_root_cause",
+      "tier": "slm",
+      "kind": "dataset.jsonl",
+      "path": "models/slm/determine_root_cause/dataset.jsonl"
+    },
+    {
+      "action": "determine_root_cause",
+      "tier": "slm",
+      "kind": "train.py",
+      "path": "models/slm/determine_root_cause/train.py"
+    },
+    {
+      "action": "create_report",
+      "tier": "slm",
+      "kind": "training_candidate.yaml",
+      "path": "models/slm/create_report/training_candidate.yaml"
+    },
+    {
+      "action": "create_report",
+      "tier": "slm",
+      "kind": "dataset.jsonl",
+      "path": "models/slm/create_report/dataset.jsonl"
+    },
+    {
+      "action": "create_report",
+      "tier": "slm",
+      "kind": "train.py",
+      "path": "models/slm/create_report/train.py"
+    },
+    {
+      "action": "*",
+      "tier": "schema",
+      "kind": "linkml",
+      "path": "schema/quality_analyst.linkml.yaml"
+    }
+  ]
+}

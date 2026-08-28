@@ -20,9 +20,9 @@ AI가 한 번 작업하게 하세요. OpenWorkflow는 이후 작업을 안정적
 
 | 순서 | Codex 입력 | 결과 |
 | :--- | :--- | :--- |
-| 1 | `$ow-compile-work examples/quality_analysis.work` | OpenWorkLang(`.work`) → `work.yaml` + LinkML 스키마 컴파일, executor 하위 통합(code/rule/ml/slm) |
+| 1 | `$ow-compile-work examples/quality_analysis.work` | OpenWorkLang(`.work`) → **실행 가능한 빌드 트리** `build/quality_analyst/` — `work.yaml` + `handlers/*.py`(code) + `rules/*.rule.yaml`(rule) + `models/ml|slm/<action>/`(model card·dataset·train.py) + LinkML 스키마 |
 | 2 | `$ow-traces` | 프록시가 캡처한 세션 목록 — **이 Codex 세션 자체**가 `shell_python3, shell_sed, respond, …` 스텝으로 잡힘 |
-| 3 | `$ow-compile-trace codex-session` | 캡처된 Codex 세션이 `build/codex-session.work.yaml`로 컴파일됨 |
+| 3 | `$ow-compile-trace codex-session` | 캡처된 Codex 세션이 `build/codex_session/`로 컴파일됨 — 셸 스텝은 기록된 명령을 재실행하는 `handlers/shell_*.py`, 비결정 스텝은 `prompts/*.prompt.md` |
 
 설정 방법과 각 단계가 실행하는 명령은 [Zero-Code 에이전트 프록시](#zero-code-에이전트-프록시-adaptersproxy) 섹션을, 입력 프롬프트·Codex 출력·컴파일 산출물 원본은 [`examples/demo/`](examples/demo/)를 참조하세요.
 
@@ -148,9 +148,9 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
 
 | 순서 | Codex 입력 | Codex가 실행하는 것 | 결과 |
 | :--- | :--- | :--- | :--- |
-| 1 | `$ow-compile-work examples/quality_analysis.work` | `python3 -m core.openworklang compile … --linkml …` | OpenWorkLang → `build/quality_analysis.work.yaml` + LinkML 스키마, 8단계 executor 하위 통합(code/rule/ml/slm) 설명 |
+| 1 | `$ow-compile-work examples/quality_analysis.work` | `python3 -m core.openworklang compile …` | OpenWorkLang → `build/quality_analyst/` 빌드 트리(work.yaml, handlers/, rules/, models/ml|slm/, schema/), 8단계 executor 하위 통합 설명 |
 | 2 | `$ow-traces` | `curl localhost:8787/v1/workcompiler/traces` | 프록시가 캡처한 세션 목록 — **지금 이 Codex 세션 자체**가 `shell_python3, shell_sed, respond, …` 스텝으로 잡혀 있음 |
-| 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` | 캡처된 Codex 세션이 `build/codex-session.work.yaml`로 컴파일됨 (actions: `shell_python3 → shell_sed → respond → shell_curl`) |
+| 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` (`build_dir`) | 캡처된 Codex 세션이 `build/codex_session/`로 컴파일됨 — `handlers/shell_*.py`가 기록된 명령을 재실행, `respond`는 `prompts/respond.prompt.md` |
 
 녹화 스크립트는 [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/openworkflow-codex-demo.tape)입니다.
 
@@ -185,11 +185,12 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
    스킬이 실행하는 명령은 셸에서 직접 써도 동일합니다:
 
    ```bash
-   python3 -m core.openworklang compile examples/quality_analysis.work --linkml build/quality_analysis.linkml.yaml
+   python3 -m core.openworklang compile examples/quality_analysis.work        # -> build/quality_analyst/
    curl -s localhost:8787/v1/workcompiler/traces | jq                # run_id, actions, 토큰 사용량
    curl -s localhost:8787/v1/workcompiler/traces/<run_id> | jq       # 세션의 TraceIR 전체
    curl -s -X POST localhost:8787/v1/workcompiler/compile -H 'Content-Type: application/json' \
-     -d '{"run_id":"<run_id>","target_name":"codex-session","output_path":"build/codex-session.work.yaml"}'
+     -d '{"run_id":"<run_id>","target_name":"codex-session","build_dir":"build"}'   # -> build/codex_session/
+   python3 -m core.build from-trace trace.json --target codex-session   # 프록시 없이 TraceIR JSON에서 빌드
    ```
 
    API 키 기반 클라이언트(OpenAI SDK, Agents SDK 등)는 `OPENAI_BASE_URL=http://127.0.0.1:8787/v1`만 지정하면 `/v1/responses`가 같은 방식으로 캡처됩니다.
@@ -323,9 +324,29 @@ Human Intent ──▶ OpenWorkLang (.work) ──▶ OpenWorkLang Compiler ─�
 명령줄에서 바로 컴파일할 수 있습니다:
 
 ```bash
-python3 -m core.openworklang compile examples/quality_analysis.work --linkml build/quality_analysis.linkml.yaml
-# -> build/quality_analysis.work.yaml (+ LinkML 스키마), actions / invariants / executors 요약 출력
+python3 -m core.openworklang compile examples/quality_analysis.work
+# -> build/quality_analyst/ 빌드 트리 + actions / invariants / executors / artifacts 요약 출력
 ```
+
+### 빌드 산출물: `work.yaml`만이 아니라 계층별 실행 자산
+
+컴파일 결과는 실행 정의서 `work.yaml`에 그치지 않고, 각 액션에 배정된 executor 계층마다 실제 실행 자산을 `build/<work>/`에 냅니다 (`core/build`).
+
+```text
+build/quality_analyst/
+├── work.yaml                                  # Work IR (런타임의 진실 원천)
+├── MANIFEST.json                              # action → tier → artifact 색인
+├── handlers/collect_data.py                   # code   : def run(**inputs) — 트레이스에 셸 명령이 있으면 재실행 코드, 없으면 계약이 담긴 스캐폴드
+├── rules/detect_anomaly.rule.yaml             # rule   : RuleExecutor가 그대로 평가하는 선언적 분기 목록
+├── models/ml/find_correlation/                # ml     : model_card.yaml + dataset.jsonl(트레이스 I/O) + train.py
+├── models/slm/determine_root_cause/           # slm    : training_candidate.yaml + dataset.jsonl(SFT 쌍) + train.py(TRL SFTTrainer)
+├── models/slm/create_report/
+├── prompts/<action>.prompt.md                 # frontier_llm : 프롬프트 계약 + invariants + 기록된 예시
+├── human/<action>.review.md                   # human  : 검토 체크리스트
+└── schema/quality_analyst.linkml.yaml         # LinkML 스키마
+```
+
+`core.build.load_build_into_engine(engine, "build/quality_analyst")`가 `handlers/`와 `rules/`를 `DurableRuntimeEngine`에 등록하므로, 트리를 채우는 즉시 런타임에서 실행됩니다. 실제 예시는 [`examples/demo/openworkcompiled/`](examples/demo/openworkcompiled/)와 [`examples/demo/build/`](examples/demo/build/)에 있습니다.
 
 상세한 문법 사양과 Python API는 **[OpenWorkLang 명세서(docs/openworklang-spec.md)](docs/openworklang-spec.md)**를 참조하세요.
 
@@ -445,7 +466,8 @@ openworkflow/
 ├── agents/                      # 가이드 및 측정 에이전트 규격
 ├── docs/                        # 명세서, 아키텍처, 사용 가이드, 다이어그램
 ├── .agents/skills/              # Codex 스킬: $ow-compile-work · $ow-traces · $ow-compile-trace
-├── tests/                       # pytest 테스트 수트 (134개 테스트 전원 통과)
+├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + 런타임 로더
+├── tests/                       # pytest 테스트 수트 (138개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트
 ```
 

@@ -2,11 +2,12 @@
 
 Usage::
 
-    python3 -m core.openworklang compile examples/quality_analysis.work \
-        --out build/quality_analysis.work.yaml --linkml build/quality_analysis.linkml.yaml
+    python3 -m core.openworklang compile examples/quality_analysis.work [--build-dir build]
 
-Prints a compact summary (work name, actions, invariants, executors) so the
-command is convenient to run from agent shells such as Codex CLI.
+Emits the full artifact tree ``build/<work>/`` (work.yaml, handlers/, rules/,
+models/ml|slm/, prompts/, schema/<work>.linkml.yaml, MANIFEST.json) and prints a
+compact summary so the command is convenient to run from agent shells such as
+Codex CLI. ``--out`` additionally writes a flat copy of work.yaml.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ import json
 import sys
 from pathlib import Path
 
+from core.build.emitter import emit_build
 from core.openworklang.compiler import OpenWorkLangCompiler
 from core.openworklang.parser import parse_openworklang
 from core.work_ir import save_work_ir
@@ -30,16 +32,21 @@ def _cmd_compile(args: argparse.Namespace) -> int:
     ast = parse_openworklang(source)
     compiler = OpenWorkLangCompiler()
     work_ir = compiler.compile_ast_to_work_ir(ast)
+    linkml_text = compiler.compile_to_linkml_yaml(ast)
 
-    out = Path(args.out) if args.out else Path("build") / f"{source.stem}.work.yaml"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    save_work_ir(work_ir, out)
+    manifest = emit_build(work_ir, args.build_dir, linkml_yaml=linkml_text)
+    build_dir = Path(manifest.build_dir)
+    out = build_dir / "work.yaml"
+    if args.out:
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        save_work_ir(work_ir, out)
 
-    linkml_path = None
+    linkml_path = build_dir / "schema" / f"{build_dir.name}.linkml.yaml"
     if args.linkml:
         linkml_path = Path(args.linkml)
         linkml_path.parent.mkdir(parents=True, exist_ok=True)
-        linkml_path.write_text(compiler.compile_to_linkml_yaml(ast), encoding="utf-8")
+        linkml_path.write_text(linkml_text, encoding="utf-8")
 
     summary = {
         "work": work_ir.work,
@@ -50,20 +57,24 @@ def _cmd_compile(args: argparse.Namespace) -> int:
         "invariants": list(work_ir.invariants),
         "executors": {name: cfg.type.value for name, cfg in work_ir.executors.items()},
         "work_yaml": str(out),
-        "linkml_yaml": str(linkml_path) if linkml_path else None,
+        "linkml_yaml": str(linkml_path),
+        "build_dir": str(build_dir),
+        "artifacts": manifest.by_tier(),
     }
     if args.json:
         print(json.dumps(summary, indent=2, ensure_ascii=False))
     else:
-        print(f"[OpenWorkLang] {source} -> {out}")
+        print(f"[OpenWorkLang] {source} -> {build_dir}/")
         print(f"  work:       {summary['work']} (v{summary['version']})")
         print(f"  inputs:     {', '.join(summary['inputs']) or '-'}")
         print(f"  outputs:    {', '.join(summary['outputs']) or '-'}")
         print(f"  actions:    {', '.join(summary['actions']) or '-'}")
         print(f"  invariants: {', '.join(summary['invariants']) or '-'}")
         print("  executors:  " + (", ".join(f"{k}={v}" for k, v in summary["executors"].items()) or "-"))
-        if linkml_path:
-            print(f"  linkml:     {linkml_path}")
+        print(f"  linkml:     {linkml_path}")
+        print("  artifacts:")
+        for tier, paths in manifest.by_tier().items():
+            print(f"    {tier:13s} " + ", ".join(paths))
     return 0
 
 
@@ -72,8 +83,9 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     c = sub.add_parser("compile", help="Compile a .work file into Work IR (work.yaml) and optionally a LinkML schema")
     c.add_argument("source", help="Path to the .work source file")
-    c.add_argument("--out", "-o", help="Output work.yaml path (default: build/<name>.work.yaml)")
-    c.add_argument("--linkml", help="Also write the generated LinkML schema YAML to this path")
+    c.add_argument("--build-dir", default="build", help="Root for the artifact tree (default: build/<work>/)")
+    c.add_argument("--out", "-o", help="Also write a flat copy of work.yaml to this path")
+    c.add_argument("--linkml", help="Also write the LinkML schema YAML to this path")
     c.add_argument("--json", action="store_true", help="Print the summary as JSON")
     c.set_defaults(func=_cmd_compile)
 

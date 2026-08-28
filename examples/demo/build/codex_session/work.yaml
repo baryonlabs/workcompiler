@@ -13,18 +13,14 @@ outputs:
   - status
 states:
   - initialized
-  - python3_shelled
-  - sed_shelled
+  - curl_shelled
   - respond_completed
 actions:
-  - shell_python3
-  - shell_sed
+  - shell_curl
   - respond
 dependencies:
-  shell_sed:
-    - shell_python3
   respond:
-    - shell_sed
+    - shell_curl
 invariants:
   - use_current_pricing_policy
   - verify_current_contract
@@ -41,16 +37,9 @@ escalation:
   on_quality_drop: require_human_review
   on_timeout: escalate_to_human
 executors:
-  shell_python3:
-    type: frontier_llm
-    preferred: claude-3-5-sonnet
-    fallback:
-      - human
-  shell_sed:
-    type: frontier_llm
-    preferred: claude-3-5-sonnet
-    fallback:
-      - human
+  shell_curl:
+    type: code
+    handler: services.shell_curl
   respond:
     type: frontier_llm
     preferred: claude-3-5-sonnet

@@ -31,6 +31,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.responses import Response
 
 from adapters.proxy.interceptor import TrajectoryInterceptor, responses_object_from_sse
+from core.build.emitter import emit_build
 from adapters.agentbehavior import parse_behavior_md
 from core.compiler import WorkCompiler
 from core.work_ir import save_work_ir, WorkIR
@@ -224,12 +225,25 @@ async def trigger_work_compilation(
     if output_path:
         save_work_ir(work_ir, _workspace_output_path(output_path))
 
+    # Optionally emit the full artifact tree (handlers/, rules/, models/, prompts/ ...)
+    build_info: Optional[Dict[str, Any]] = None
+    build_dir = request_data.get("build_dir")
+    if build_dir:
+        manifest = emit_build(
+            work_ir,
+            _workspace_output_path(build_dir),
+            traces=[trace_ir],
+            training_candidates=compiler.training_candidates,
+        )
+        build_info = {"build_dir": manifest.build_dir, "artifact_count": len(manifest.artifacts), "by_tier": manifest.by_tier()}
+
     return {
         "status": "compiled",
         "work_name": work_ir.work,
         "actions_count": len(work_ir.actions),
         "actions": work_ir.actions,
         "executors_summary": {act: cfg.type.value for act, cfg in work_ir.executors.items()},
+        "build": build_info,
         "work_ir": compiled_dict,
     }
 
