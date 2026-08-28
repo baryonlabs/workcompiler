@@ -1,0 +1,43 @@
+flowchart TB
+    FA["Frontier Agent"]
+    RT["Raw Work Trace"]
+    RQ["Result Quality<br/>(Human evaluates)"]
+    BE["Behavior Eval<br/>(Automated judges)"]
+    AT["Approved Traces"]
+    LC["LLM-as-Compiler"]
+    BI["Behavior Invariants<br/>(locked)"]
+    WG["Workflow Graph<br/>(synthesis)"]
+    EC["Executor Candidates<br/>(Code / ML / SLM)"]
+    OW["OpenWorkflow Runtime"]
+    PR["Production"]
+    BJ["Behavior Judge<br/>(post-hoc)"]
+    HS["Human Sample Review"]
+    FB["Feedback"]
+    RC["Recompile / Optimize"]
+
+    FA --> RT
+    RT --> RQ
+    RT --> BE
+    RQ --> AT
+    BE --> AT
+    AT --> LC
+    LC --> BI
+    LC --> WG
+    LC --> EC
+    BI --> OW
+    WG --> OW
+    EC --> OW
+    OW --> PR
+    PR --> BJ
+    PR --> HS
+    BJ --> FB
+    HS --> FB
+    FB --> RC
+    RC --> LC
+
+    classDef human fill:#fff3e0,stroke:#e65100,color:#333
+    classDef auto fill:#e3f2fd,stroke:#1565c0,color:#333
+    classDef backend fill:#f3e5f5,stroke:#6a1b9a,color:#333
+    class RQ,HS human
+    class BE,BJ auto
+    class BI,WG,EC,LC backend

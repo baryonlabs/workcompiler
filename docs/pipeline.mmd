@@ -1,0 +1,38 @@
+flowchart TB
+    subgraph LEFT["LEGACY — Agent re-derives every time"]
+        direction TB
+        L1["User request"]
+        L2["Frontier LLM + Agent<br/>(per-task reasoning &amp; tools)"]
+        L3["Work execution<br/>(repeats from scratch)"]
+        L4["Result<br/>(unmeasured quality)"]
+        L1 --> L2 --> L3 --> L4
+    end
+
+    subgraph RIGHT["OPENWORKFLOW — Compiled execution"]
+        direction TB
+        R1["User request"]
+        R2["Input → Output → Expected quality"]
+        R3["Compiled Workflow<br/>(Workflow / State / Policy / Audit)"]
+        R4["Deterministic runtime<br/>(Code • Rules • ML • SLM)"]
+        R5["Frontier fallback / Human<br/>(exceptions only)"]
+        R6["Output + Quality signal"]
+        R1 --> R2 --> R3 --> R4 --> R6
+        R4 -. "if quality drops" .-> R5
+        R5 -. "resolve / feedback" .-> R4
+        R6 -. "feedback" .-> R3
+    end
+
+    subgraph BG["BACKGROUND — Invisible optimization loop"]
+        direction TB
+        B1["Work Compiler<br/>(trace → workflow synthesis)"]
+        B2["Executor Optimizer<br/>(code vs rule vs SLM)"]
+        B3["SLM Factory / Consolidation<br/>(distill / merge / retire)"]
+        B4["Quality eval → recompile<br/>(canary → production)"]
+        B1 --- B2 --- B3 --- B4
+    end
+
+    L4 -. "approved example, compiles" .-> R3
+    B1 -. "feeds" .-> R3
+    B2 -. "tunes" .-> R4
+    B3 -. "serves" .-> R4
+    B4 -. "consumes" .-> R6
