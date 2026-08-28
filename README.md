@@ -106,10 +106,11 @@ Behavior contracts (invariant + process expectations) are compiled alongside wor
 7. **Model consolidation.** Model count stays at a healthy level. The backend continuously evaluates merge / split / retire / promote / rollback across tasks so `300 workflows` never becomes `280 runaway SLMs`.
 8. **Escalate, don't duplicate.** Quality degradation and exceptions escalate to frontier LLM + human. Everything else is compiled.
 
-## Architecture
+## Architecture & Multi-Vendor Infrastructure
 
 ```
                        FRONTIER AGENT
+             (OpenAI / Anthropic / Gemini / Bedrock)
                             │
                      performs new work
                             │
@@ -123,32 +124,83 @@ Behavior contracts (invariant + process expectations) are compiled alongside wor
                             │                       │
                             ▼                       │
         ┌────────────────────────────────┐          │
-        │        WORK COMPILER        │             ◀──── feedback: recompile
-        │  decomposition / rules /    │             │
-        │  workflow synthesis / schema│             │
-        └──────────────┬──────────────┘             │
+        │        WORK COMPILER           │          ◀──── feedback: recompile
+        │  decomposition / rules /       │          │
+        │  synthesis of Workflow IR      │          │
+        │  & Behavior Specs (BEHAVIOR.md)│          │
+        └──────────────┬─────────────────┘          │
+                       │ Vendor-Agnostic IR         │
+                       ▼                            │
+┌──────────────────────────────────────────────────────────────┐
+│       PLUGGABLE INFRASTRUCTURE PROVIDER ADAPTER              │
+│       (Late-Binding Target Provider: GCP / AWS / Azure / On-Prem)│
+├──────────────┬──────────────┬───────────────┬────────────────┤
+│ GCP Vertex   │ AWS Bedrock  │ Azure AI      │ On-Prem /      │
+│ AI (Gemma)   │ / SageMaker  │ Studio        │ vLLM / Ollama  │
+└──────────────┴───────┬──────┴───────────────┴────────────────┘
+                       │ Provider Pricing & Native APIs
                        ▼                            │
         ┌────────────────────────────────┐          │
-        │      EXECUTOR OPTIMIZER      │            ◀──── feedback: retune
-        │  code vs rule vs ML / SLM /  │            │
-        │  thresholds / cost policy    │            │
-        └──────────────┬──────────────┘             │
+        │      EXECUTOR OPTIMIZER        │          ◀──── feedback: retune
+        │  code vs rule vs ML / SLM /    │          │
+        │  provider cost & latency policy│          │
+        └──────────────┬─────────────────┘          │
                        ▼                            │
         ┌────────────────────────────────┐          │
-        │          MODEL FACTORY        │           │
-        │  dataset / distill / fine-tune│           │
-        │  evaluate / consolidate       │           │
-        └──────────────┬──────────────┘             │
+        │         MODEL FACTORY          │          │
+        │  dataset / distill / fine-tune │          │
+        │  provider-native SLM pipeline  │          │
+        └──────────────┬─────────────────┘          │
                        ▼                            │
-                OpenWorkflow Runtime                │
-                / Policy / Production               │
+        ┌────────────────────────────────┐          │
+        │      OpenWorkflow Runtime      │          │
+        │  deterministic engine on target│          │
+        └──────────────┬─────────────────┘          │
+                       ▼                            │
+                    Outputs                         │
                        │                            │
                        ▼                            │
-                       Outputs                      │
-                       │                            │
-                       ▼                            │
-                    Quality Eval                    ┘
+                 Quality Eval                       ┘
 ```
+
+### Compilation Analogy: LLVM IR & Late-Binding Provider Adapters
+
+OpenWorkflow adopts the classic compiler architecture pioneered by LLVM:
+
+```text
+[ Classical Compiler (LLVM) ]             [ OpenWorkflow Work Compiler ]
+
+      C / C++ Source Code                       Frontier Agent Trace
+               │                                         │
+               ▼                                         ▼
+         LLVM Frontend                             Work Compiler
+               │                                         │
+               ▼                                         ▼
+   LLVM IR (Target-Agnostic)              Workflow IR + BEHAVIOR.md (Vendor-Agnostic)
+               │                                         │
+    ┌──────────┴──────────┐                   ┌──────────┴──────────┐
+    ▼                     ▼                   ▼                     ▼
+x86 Target           ARM Target          GCP Provider          AWS Provider / On-Prem
+```
+
+1. **Vendor-Agnostic Compilation**: The **Work Compiler** translates an agent trace into a vendor-independent **Workflow Intermediate Representation (IR)** and **Behavior Contract (`BEHAVIOR.md`)**.
+2. **Late-Binding Infrastructure**: Vendor adapters (**GCP Vertex AI**, **AWS SageMaker/Bedrock**, **Azure AI Studio**, **On-Prem vLLM/Ollama**) attach late in the optimization and execution loop.
+3. **Seamless Portability**: Moving a compiled workflow from a local testbed (Ollama) to cloud production (Vertex AI or SageMaker) requires zero changes to the compiled workflow IR or behavior contracts.
+
+### Provider-Aware Work Compilation & SLM Lifecycle
+
+OpenWorkflow decouples behavior specifications (`BEHAVIOR.md`) from vendor implementation while making the compilation and optimization layers **Infrastructure-Aware**:
+
+1. **Work Compiler (Vendor-Agnostic Synthesis)**:
+   Synthesizes vendor-independent Workflow IR and Behavior Contracts (`BEHAVIOR.md`) from approved execution traces.
+2. **Pluggable Infrastructure Adapter (Late-Binding)**:
+   Binds the Workflow IR to the selected cloud or on-premise provider (GCP, AWS, Azure, On-Prem), supplying target pricing matrices, latency profiles, and native SDK adapters.
+3. **Executor Optimizer (Provider Cost & Latency Profiles)**:
+   Evaluates trade-offs using the selected provider's exact pricing matrix and latency profiles (e.g., Vertex AI Gemma pricing vs SageMaker Llama endpoints vs local GPU cluster cost).
+4. **Model Factory (Provider-Native Pipelines)**:
+   Triggers vendor-native training, distillation, and deployment pipelines (Vertex Fine-Tuning, SageMaker Training Jobs, Azure Fine-Tuning, or vLLM/KServe on-premise clusters).
+5. **Behavior Immunity**:
+   Changing the target infrastructure provider requires zero updates to Behavior Contracts (`BEHAVIOR.md`) or human evaluation cards—the system automatically recompiles the IR for the new target substrate.
 
 ## Pillars
 
