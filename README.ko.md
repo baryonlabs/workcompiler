@@ -179,6 +179,20 @@ openworkflow/
 
 ---
 
+
+---
+
+## 사용 가이드 & 데모 실행
+
+전체 파이프라인 개발자 가이드 및 상세 사용법은 **[사용 가이드(docs/usage.md)](docs/usage.md)**를 참조하세요.
+
+고객 계약 갱신 엔드투엔드 파이프라인 실시간 데모 실행:
+
+```bash
+python3 examples/run_customer_renewal_demo.py
+```
+
+
 ## 생태계 및 참고 오픈소스 링크
 
 OpenWorkflow는 다음 오픈소스 프로젝트, 표준 규격 및 연구 이니셔티브와 연동되거나 참고하여 개발됩니다.

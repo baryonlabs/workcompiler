@@ -93,7 +93,7 @@ class WorkCompiler:
         for t in traces:
             if isinstance(t, dict):
                 normalized_traces.append(TraceIR.from_dict(t))
-            elif isinstance(t, TraceIR):
+            elif isinstance(t, TraceIR) or hasattr(t, "steps"):
                 normalized_traces.append(t)
 
         # Index steps by normalized action name across all traces

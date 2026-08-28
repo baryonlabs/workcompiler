@@ -179,6 +179,20 @@ openworkflow/
 
 ---
 
+
+---
+
+## Usage & Demonstration
+
+For complete API documentation and a step-by-step developer guide, see **[Usage Guide](docs/usage.md)**.
+
+Run the end-to-end customer renewal demonstration script:
+
+```bash
+python3 examples/run_customer_renewal_demo.py
+```
+
+
 ## Ecosystem & Reference Links
 
 OpenWorkflow builds upon and integrates with the following open-source projects, standards, and research initiatives:

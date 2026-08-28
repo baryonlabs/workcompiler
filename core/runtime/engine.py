@@ -406,6 +406,9 @@ class DurableRuntimeEngine:
         if workflow_id in self._workflows:
             raise ValueError(f"Workflow with ID '{workflow_id}' already exists.")
 
+        if hasattr(work_definition, "to_dict"):
+            work_definition = work_definition.to_dict()
+
         work_name = work_definition.get("work", "unnamed_workflow")
         inputs = initial_inputs or {}
 

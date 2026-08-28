@@ -309,11 +309,18 @@ def generate_training_candidate(
         steps = trace_dict.get("steps", [])
         if steps:
             for step in steps:
-                step_action = step.get("action") or step.get("action_name")
+                if hasattr(step, "to_dict"):
+                    step_dict = step.to_dict()
+                elif isinstance(step, dict):
+                    step_dict = step
+                else:
+                    step_dict = {}
+
+                step_action = step_dict.get("action") or step_dict.get("action_name")
                 if step_action == action_name:
-                    step_input = step.get("input", {})
-                    step_output = step.get("output", {})
-                    step_sys = step.get("system_prompt", default_system_prompt)
+                    step_input = step_dict.get("input", {})
+                    step_output = step_dict.get("output", {})
+                    step_sys = step_dict.get("system_prompt", default_system_prompt)
                     example = _format_chat_example(step_sys, step_input, step_output)
                     extracted_examples.append(example)
         else:
