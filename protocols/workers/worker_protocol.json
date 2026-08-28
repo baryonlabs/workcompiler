@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenWorkflow Worker Protocol Schema",
+  "type": "object",
+  "required": [
+    "task_id",
+    "worker_type",
+    "action",
+    "params"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "worker_type": {
+      "type": "string",
+      "enum": [
+        "local_desktop",
+        "remote_worker",
+        "cloud_executor"
+      ]
+    },
+    "action": {
+      "type": "string",
+      "description": "Command e.g., exec_shell, read_file, write_file, invoke_app"
+    },
+    "params": {
+      "type": "object"
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "timeout_sec": {
+          "type": "number"
+        },
+        "sandboxed": {
+          "type": "boolean"
+        },
+        "write_locks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

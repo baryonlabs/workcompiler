@@ -1,0 +1,73 @@
+work: customer-renewal
+version: "3.0"
+description: "Compiled workflow for automating enterprise customer renewal proposals"
+
+inputs:
+  - customer_id
+
+outputs:
+  - renewal_proposal_pdf
+
+states:
+  - initialized
+  - contract_verified
+  - usage_calculated
+  - proposal_drafted
+  - approved
+  - sent
+
+actions:
+  - lookup_contract
+  - calculate_usage
+  - price_offer
+  - draft_proposal
+  - send_email
+
+dependencies:
+  calculate_usage:
+    - lookup_contract
+  price_offer:
+    - calculate_usage
+  draft_proposal:
+    - price_offer
+  send_email:
+    - draft_proposal
+
+invariants:
+  - verify_current_contract
+  - use_current_pricing_policy
+  - require_approval_before_send
+
+quality:
+  reviewer_acceptance: ">=0.95"
+  factual_accuracy: ">=0.99"
+
+behaviors:
+  - name: verify-current-contract
+    path: behaviors/verify-current-contract/BEHAVIOR.md
+  - name: use-current-pricing-policy
+    path: behaviors/use-current-pricing-policy/BEHAVIOR.md
+
+escalation:
+  on_error: fallback_to_frontier_llm
+  on_quality_drop: require_human_review
+
+executors:
+  lookup_contract:
+    type: code
+    handler: connectors.crm.lookup_contract
+  calculate_usage:
+    type: code
+    handler: services.usage.calculate
+  price_offer:
+    type: rule
+    handler: rules.pricing_v2
+  draft_proposal:
+    type: slm
+    preferred: models/renewal-draft-slm-v1
+    fallback:
+      - frontier_llm
+      - human
+  send_email:
+    type: code
+    handler: connectors.email.send

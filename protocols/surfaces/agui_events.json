@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenWorkflow AG-UI Surface Protocol Event Schema",
+  "type": "object",
+  "required": [
+    "event",
+    "workflow_id",
+    "run_id",
+    "timestamp"
+  ],
+  "properties": {
+    "event": {
+      "type": "string",
+      "enum": [
+        "workflow.started",
+        "step.started",
+        "step.completed",
+        "artifact.created",
+        "approval.requested",
+        "workflow.interrupted",
+        "workflow.completed",
+        "workflow.failed"
+      ]
+    },
+    "workflow_id": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data": {
+      "type": "object"
+    }
+  }
+}

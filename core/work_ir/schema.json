@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenWorkflow Work IR Specification",
+  "type": "object",
+  "required": [
+    "work",
+    "version",
+    "inputs",
+    "outputs",
+    "states",
+    "actions",
+    "dependencies",
+    "invariants",
+    "quality",
+    "executors"
+  ],
+  "properties": {
+    "work": {
+      "type": "string",
+      "description": "Unique identifier for the compiled work definition"
+    },
+    "version": {
+      "type": "string",
+      "description": "Work IR specification version (e.g., '3.0')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the work"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Required input parameters for the work"
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Expected output artifacts or schema fields"
+    },
+    "states": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "States defined in the durable runtime state machine"
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Atomic action steps executed within the workflow"
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "description": "Dependency DAG mapping each action to its required prerequisite actions"
+    },
+    "invariants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Non-removable process invariants extracted from approved behavior contracts"
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Outcome quality thresholds (e.g., reviewer_acceptance: '>=0.95')"
+    },
+    "behaviors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "path"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Behavior Contract BEHAVIOR.md specifications attached to this work"
+    },
+    "escalation": {
+      "type": "object",
+      "properties": {
+        "on_error": {
+          "type": "string"
+        },
+        "on_quality_drop": {
+          "type": "string"
+        },
+        "on_timeout": {
+          "type": "string"
+        }
+      },
+      "description": "Escalation rules when execution fails or quality degrades"
+    },
+    "executors": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "code",
+              "rule",
+              "slm",
+              "frontier_llm",
+              "human"
+            ]
+          },
+          "handler": {
+            "type": "string"
+          },
+          "preferred": {
+            "type": "string"
+          },
+          "fallback": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "description": "Routing definition for step execution across Code, Rule, SLM, LLM, and Human"
+    }
+  }
+}
