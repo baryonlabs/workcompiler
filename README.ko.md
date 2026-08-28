@@ -10,6 +10,51 @@ AI가 한 번 작업하게 하세요. OpenWorkflow는 이후 작업을 안정적
 
 ---
 
+## 전체 아키텍처 및 파이프라인 개요
+
+```mermaid
+flowchart TB
+    subgraph LEFT["기존 방식 — 에이전트 매번 재추론"]
+        direction TB
+        L1["사용자 요청"]
+        L2["Frontier LLM + Agent<br/>(매 작업 추론 &amp; Tool 호출)"]
+        L3["작업 실행<br/>(처음부터 다시 반복)"]
+        L4["결과물<br/>(측정되지 않는 품질)"]
+        L1 --> L2 --> L3 --> L4
+    end
+
+    subgraph RIGHT["OPENWORKFLOW — 컴파일된 정밀 실행"]
+        direction TB
+        R1["사용자 요청"]
+        R2["입력 → 출력 → 기대 품질"]
+        R3["컴파일된 워크플로우<br/>(Workflow / State / Policy / Audit)"]
+        R4["결정론적 런타임<br/>(Code • Rules • ML • SLM)"]
+        R5["Frontier fallback / Human<br/>(예외 발생 시만 에스컬레이션)"]
+        R6["출력 + 품질 피드백"]
+        R1 --> R2 --> R3 --> R4 --> R6
+        R4 -. "품질 저하 시" .-> R5
+        R5 -. "해결 / 피드백" .-> R4
+        R6 -. "품질 신호" .-> R3
+    end
+
+    subgraph BG["백그라운드 — 보이지 않는 최적화 루프"]
+        direction TB
+        B1["Work Compiler<br/>(트레이스 → 워크플로우 합성)"]
+        B2["Executor Optimizer<br/>(Code vs Rule vs SLM 하위 통합)"]
+        B3["SLM Factory / 모델 통합<br/>(증류 / 병합 / 퇴출)"]
+        B4["품질 평가 → 재컴파일<br/>(카나리 → 프로덕션)"]
+        B1 --- B2 --- B3 --- B4
+    end
+
+    L4 -. "승인된 수행 예시, 컴파일" .-> R3
+    B1 -. "워크플로우 공급" .-> R3
+    B2 -. "런타임 최적화" .-> R4
+    B3 -. "경량 SLM 서빙" .-> R4
+    B4 -. "품질 신호 수집" .-> R6
+```
+
+---
+
 ## 왜 OpenWorkflow인가?
 
 코딩 에이전트와 프론티어 LLM은 뛰어난 수행 능력을 갖추었지만, 그 출력은 반복 가능하지 않고, 비용 효율적이지 않으며, 관측 가능하지 않습니다. 매 요청마다 프론티어 비용을 지불하며 동일한 추론을 처음부터 다시 수행하지만, 품질은 지속적으로 측정되지 않습니다.
@@ -18,13 +63,35 @@ OpenWorkflow는 이를 역전시킵니다: 에이전트가 1회 작업을 수행
 
 **AI는 실행합니다. 인간은 결과 품질을 평가합니다. OpenWorkflow는 행위를 감독하고, 작업을 컴파일하며, 실행을 지속적으로 최적화합니다.**
 
-결과물이 올바른 것과 작업을 수행한 방식이 올바른 것은 동일하지 않습니다. OpenWorkflow는 결과물뿐만 아니라 과정(행위)을 감독합니다 — [Behavior Contract Layer](docs/behavior-contracts-v2.md) 및 [v4 아키텍처 명세](docs/v4-architecture-semantic-layer.md)를 참고하세요.
+---
+
+## 엔드투엔드 작업 컴파일 파이프라인 (6단계)
+
+```text
+ ┌─────────────────────────────────────────────────────────────────────────────┐
+ │                      6-STEP COMPILATION & EXECUTION PIPELINE               │
+ ├─────────────────────────────────────────────────────────────────────────────┤
+ │ 1단계: 트레이스 수집 ────────▶ 로컬/API 통신 로그를 TraceIR로 정규화       │
+ │ 2단계: 행위 규격 파싱 ───────▶ BEHAVIOR.md 프로세스 불변식 구조화            │
+ │ 3단계: Work IR 컴파일 ───────▶ 3대 분석기 기반 8단계 실행 계층 하위 통합     │
+ │ 4단계: 지속성 런타임 ────────▶ 상태 머신 실행, 체크포인팅 및 대기 상태      │
+ │ 5단계: Frugal 오라클 게이트 ──▶ JSON 스키마 & 행위 규격 객관적 에스컬레이션  │
+ │ 6단계: 품질 축약 & 최적화 ───▶ Lucky-correct 차단 & SLM 학습 데이터 산출   │
+ └─────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **1단계: 트레이스 수집 (`TraceIR`)**: OpenWorker, LangGraph, 커스텀 스크립트, 또는 OpenAI/Anthropic API 통신 로그를 표준 `TraceIR`로 정규화합니다.
+2. **2단계: 행위 규격 파싱 (`BEHAVIOR.md`)**: 프로세스 평가 사양을 파싱하여 Rule/Policy, Workflow Transition Constraint, Runtime Judge로 분류합니다.
+3. **3단계: Work IR 컴파일 (`WorkCompiler`)**: 3대 Middle-End 분석기(`DeterminismAnalyzer`, `PredictionAnalyzer`, `SLMAnalyzer`)가 액션 스텝을 8단계 최적 실행 주체로 하위 통합(Lowering)하여 `work.yaml`을 생성합니다.
+4. **4단계: 지속성 상태 머신 실행 (`DurableRuntimeEngine`)**: 자동 상태 체크포인팅 및 `WAITING_EVENT`, `WAITING_HUMAN`, `WAITING_TIMER` 대기 상태를 지원하는 런타임 상태 머신 실행.
+5. **5단계: Frugal 객관적 오라클 에스컬레이션 (`ObjectiveOracleGate`)**: 폐쇄 세계 스키마 검증 및 행위 불변식을 직접 검증하며, **검증 실패 시에만** Frontier LLM이나 인간으로 에스컬레이션합니다.
+6. **6단계: 품질 축약 평가 & 모델 승격 (`QualityRecord` & `ExecutorOptimizer`)**: `evaluate_quality_fold()`를 통해 행위 불변식을 위반한 행운의 성공(Lucky-Correct)을 거부하고, 모델 승격을 평가하며, HuggingFace SFT `TrainingCandidate` 데이터 세트를 산출합니다.
 
 ---
 
 ## Zero-Code 에이전트 프록시 (`adapters/proxy/`)
 
-OpenWorkflow는 **기존 AI 에이전트 코드 수정을 단 1줄도 요구하지 않습니다**. 투명 역방향 프록시를 실행하면 어떤 에이전트(Claude Code, Cursor, AutoGen, CrewAI, LangChain, 커스텀 파이썬 스크립트 등)든 자동으로 WorkCompiler의 입력 출처가 됩니다.
+OpenWorkflow는 **기존 AI 에이전트 코드 수정을 단 1줄도 요구하지 않습니다**. 투명 역방향 프록시 서버(`adapters/proxy/server.py`)를 실행하면 어떤 에이전트(Claude Code, Cursor, AutoGen, CrewAI, LangChain, 커스텀 파이썬 스크립트 등)든 자동으로 WorkCompiler의 입력 출처가 됩니다.
 
 ```bash
 # 기존 에이전트의 API 엔드포인트를 로컬 OpenWorkflow 프록시로 지정
@@ -74,12 +141,6 @@ Priority 3: 잔여 실행 및 품질 보증 (Residual & Human)
    ├── 8. Frontier LLM (OpenAI / Anthropic / Gemini)
    └── 9. Human-in-the-Loop (Approval / Interrupt / Review)
 ```
-
----
-
-## Objective Oracle Gate (Frugal 에스컬레이션)
-
-Frugal 아키텍처를 따라, 작업의 상위 모델 에스컬레이션은 **절대 LLM의 자기 확신도(Self-confidence)에 의존하지 않습니다.** 대신 `ObjectiveOracleGate`가 실행 결과를 폐쇄 세계 JSON 스키마 및 프로세스 행위 규격(`BEHAVIOR.md`)에 대해 직접 검증하며, **객관적 스키마 검증이나 행위 불변식이 실패한 경우에만** Frontier LLM이나 인간으로 에스컬레이션합니다.
 
 ---
 

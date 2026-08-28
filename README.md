@@ -10,6 +10,51 @@ Let AI do the work once. OpenWorkflow learns how to run it reliably thereafter.
 
 ---
 
+## High-Level Architecture & Pipeline Overview
+
+```mermaid
+flowchart TB
+    subgraph LEFT["LEGACY — Agent re-derives every time"]
+        direction TB
+        L1["User request"]
+        L2["Frontier LLM + Agent<br/>(per-task reasoning & tools)"]
+        L3["Work execution<br/>(repeats from scratch)"]
+        L4["Result<br/>(unmeasured quality)"]
+        L1 --> L2 --> L3 --> L4
+    end
+
+    subgraph RIGHT["OPENWORKFLOW — Compiled execution"]
+        direction TB
+        R1["User request"]
+        R2["Input → Output → Expected quality"]
+        R3["Compiled Workflow<br/>(Workflow / State / Policy / Audit)"]
+        R4["Deterministic runtime<br/>(Code • Rules • ML • SLM)"]
+        R5["Frontier fallback / Human<br/>(exceptions only)"]
+        R6["Output + Quality signal"]
+        R1 --> R2 --> R3 --> R4 --> R6
+        R4 -. "if quality drops" .-> R5
+        R5 -. "resolve / feedback" .-> R4
+        R6 -. "feedback" .-> R3
+    end
+
+    subgraph BG["BACKGROUND — Invisible optimization loop"]
+        direction TB
+        B1["Work Compiler<br/>(trace → workflow synthesis)"]
+        B2["Executor Optimizer<br/>(code vs rule vs SLM)"]
+        B3["SLM Factory / Consolidation<br/>(distill / merge / retire)"]
+        B4["Quality eval → recompile<br/>(canary → production)"]
+        B1 --- B2 --- B3 --- B4
+    end
+
+    L4 -. "approved example, compiles" .-> R3
+    B1 -. "feeds" .-> R3
+    B2 -. "tunes" .-> R4
+    B3 -. "serves" .-> R4
+    B4 -. "consumes" .-> R6
+```
+
+---
+
 ## Why OpenWorkflow
 
 Coding agents and frontier LLMs can perform work, but their output is not repeatable, cost-effective, or observable. Every run re-derives the same result at the same frontier cost, and quality is unmeasured.
@@ -18,16 +63,38 @@ OpenWorkflow inverts this: an agent performs the work once, a human evaluates th
 
 **AI performs. Humans evaluate outcome quality. OpenWorkflow evaluates behavior, compiles the work, and continuously optimizes execution.**
 
-The result being correct and the way it was done being correct are not the same. OpenWorkflow supervises the process, not only the outcome — see [Behavior Contract Layer](docs/behavior-contracts-v2.md) and [v4 Architecture Spec](docs/v4-architecture-semantic-layer.md).
+---
+
+## End-to-End Work Compilation Pipeline (6 Steps)
+
+```text
+ ┌─────────────────────────────────────────────────────────────────────────────┐
+ │                      6-STEP COMPILATION & EXECUTION PIPELINE               │
+ ├─────────────────────────────────────────────────────────────────────────────┤
+ │ Step 1: Trajectory Ingestion ────▶ Normalize raw logs into TraceIR         │
+ │ Step 2: Behavior Parsing ────────▶ Ingest BEHAVIOR.md process constraints   │
+ │ Step 3: Work IR Compilation ─────▶ Analyze & lower steps across 8 tiers     │
+ │ Step 4: Durable Runtime ─────────▶ State machine execution & checkpointing  │
+ │ Step 5: Frugal Oracle Gate ──────▶ Schema & behavior invariant validation   │
+ │ Step 6: Quality Fold & Opt ──────▶ Lucky-correct check & SLM dataset export │
+ └─────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Step 1: Trajectory Ingestion (`TraceIR`)**: Ingest raw agent logs (OpenWorker, LangGraph, custom scripts, or OpenAI/Anthropic API calls) and normalize them into canonical `TraceIR`.
+2. **Step 2: Behavior Spec Ingestion (`BEHAVIOR.md`)**: Parse process evaluation specifications into Rule/Policy, Workflow Transition Constraint, or Runtime Judge.
+3. **Step 3: Work IR Compilation (`WorkCompiler`)**: Middle-end analyzers (`DeterminismAnalyzer`, `PredictionAnalyzer`, `SLMAnalyzer`) lower action steps into optimal executors across the 8-tier hierarchy and produce `work.yaml`.
+4. **Step 4: Durable State Machine Execution (`DurableRuntimeEngine`)**: State machine execution with automatic state checkpointing and support for `WAITING_EVENT`, `WAITING_HUMAN`, and `WAITING_TIMER` wait states.
+5. **Step 5: Frugal Objective Oracle Escalation (`ObjectiveOracleGate`)**: Closed-world schema validation and behavior invariant checks. Escalates to Frontier LLM or Human **only when schema checks or process invariants fail**.
+6. **Step 6: Quality Fold Evaluation & Executor Promotion (`QualityRecord` & `ExecutorOptimizer`)**: Evaluates candidate runs via `evaluate_quality_fold()` (rejecting lucky-correct runs that violated process behaviors), evaluates model promotion, and generates HuggingFace SFT `TrainingCandidate` datasets.
 
 ---
 
 ## Zero-Code Agent Proxy (`adapters/proxy/`)
 
-OpenWorkflow requires **zero modifications to existing AI agent code**. By running the transparent reverse proxy, any agent (Claude Code, Cursor, AutoGen, CrewAI, LangChain, custom Python scripts) automatically becomes a input source for WorkCompiler.
+OpenWorkflow requires **zero modifications to existing AI agent code**. By running the transparent reverse proxy server (`adapters/proxy/server.py`), any agent (Claude Code, Cursor, AutoGen, CrewAI, LangChain, custom Python scripts) automatically becomes an input source for WorkCompiler.
 
 ```bash
-# Simply direct your existing agent to the local OpenWorkflow Proxy
+# Direct your existing agent to the local OpenWorkflow Proxy
 export OPENAI_BASE_URL="http://localhost:8080/v1"
 export ANTHROPIC_BASE_URL="http://localhost:8080/v1"
 ```
@@ -77,12 +144,6 @@ Priority 3: Residual Execution (Fallback & Quality Assurance)
 
 ---
 
-## Objective Oracle Gate (Frugal Escalation)
-
-Following the Frugal architecture, step escalation is **never triggered by LLM self-confidence**. Instead, the `ObjectiveOracleGate` validates execution results against closed-world JSON schemas and process behavior contracts (`BEHAVIOR.md`). Step execution escalates to Frontier LLM or Human **only when objective schema checks or behavior invariants fail**.
-
----
-
 ## Semantic Stack Architecture (v4)
 
 OpenWorkflow v4 introduces a multi-tiered semantic stack. It uses **LinkML** as the developer-friendly YAML authoring language, compiles into internal **Semantic IR**, enriches with **OWL 2** DL semantics, and validates closed-world constraints via **SHACL**:
@@ -99,7 +160,7 @@ OpenWorkflow v4 introduces a multi-tiered semantic stack. It uses **LinkML** as 
 
 ---
 
-## Compiler Pipeline: Trace → LinkML → Semantic IR → Execution
+## Semantic Compiler Pipeline: Trace → LinkML → Semantic IR → Execution
 
 ```text
                Agent Trace (Trace IR)
