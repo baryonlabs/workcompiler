@@ -49,6 +49,7 @@ def test_openai_chat_completions_interception(client):
 
     headers = {
         "X-OpenWorkCompiler-Run-ID": "test_run_openai_01",
+        "X-OpenWorkCompiler-Response-Mode": "synthetic",
         "User-Agent": "Claude-Code/1.0",
     }
 
@@ -90,6 +91,7 @@ def test_anthropic_messages_interception(client):
 
     headers = {
         "X-OpenWorkCompiler-Run-ID": "test_run_anthropic_01",
+        "X-OpenWorkCompiler-Response-Mode": "synthetic",
         "User-Agent": "Anthropic-SDK/python",
     }
 
@@ -114,7 +116,7 @@ def test_list_traces_and_compile_trigger(client):
         "messages": [{"role": "user", "content": "Check CRM contract"}],
         "tools": [{"type": "function", "function": {"name": "lookup_contract"}}],
     }
-    client.post("/v1/chat/completions", json=payload_1, headers={"X-OpenWorkCompiler-Run-ID": "session_demo"})
+    client.post("/v1/chat/completions", json=payload_1, headers={"X-OpenWorkCompiler-Run-ID": "session_demo", "X-OpenWorkCompiler-Response-Mode": "synthetic"})
 
     # 2. Send Anthropic turn
     payload_2 = {
@@ -122,7 +124,7 @@ def test_list_traces_and_compile_trigger(client):
         "messages": [{"role": "user", "content": "Compute pricing offer"}],
         "tools": [{"name": "price_offer"}],
     }
-    client.post("/v1/messages", json=payload_2, headers={"X-OpenWorkCompiler-Run-ID": "session_demo"})
+    client.post("/v1/messages", json=payload_2, headers={"X-OpenWorkCompiler-Run-ID": "session_demo", "X-OpenWorkCompiler-Response-Mode": "synthetic"})
 
     # 3. List active traces
     traces_res = client.get("/v1/workcompiler/traces")
@@ -266,7 +268,7 @@ def test_codex_backend_responses_passthrough_streams_and_captures(client, monkey
     assert seen["account"] == "acct_1"
 
     interceptor = active_interceptors["thread_abc"]
-    assert interceptor.source_agent == "codex_cli_rs"
+    assert interceptor.source_agent == "codex-cli"
     assert len(interceptor.steps) == 1
     step = interceptor.steps[0]
     assert step.action == "shell_cat"

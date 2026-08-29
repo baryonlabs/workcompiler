@@ -22,5 +22,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install -e ".[dev]"
       - run: OPENWORKCOMPILER_TELEMETRY=off python -m pytest -q
+      - run: OPENWORKCOMPILER_TELEMETRY=off owc skills install --agent claude && OPENWORKCOMPILER_TELEMETRY=off owc skills doctor --check
+      - run: OPENWORKCOMPILER_TELEMETRY=off owc agent list
       - run: OPENWORKCOMPILER_TELEMETRY=off python -m core.openworklang compile examples/quality_analysis.work --build-dir /tmp/ci-build
       - run: OPENWORKCOMPILER_TELEMETRY=off python -m core.build from-trace examples/demo/customer-renewal-bench/output/proxy-trace-*.json --target ci-renewal --build-dir /tmp/ci-build --behaviors examples/customer-renewal

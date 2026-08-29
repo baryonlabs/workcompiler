@@ -48,6 +48,25 @@ python3 -m core.build run build/customer_renewal_codex \
 
 앞단 에이전트(`bind_parameters`)가 요청에서 `customer_id=CUST-1002`를 정규식으로 바인딩했고, `PARAMS.json`에 표시된 합성 스텝(`write_pricing_cust_1001`)과 llm 계층(`respond`)만 에스컬레이션됐습니다. 에스컬레이션 프롬프트에는 컴파일 스텝이 이미 만든 상류 출력(활성 계약 JSON, 사용량·가격 계산 결과)이 그대로 들어가므로 에이전트는 탐색 없이 문서 작성만 합니다. 산출물: `hybrid-outputs/`, 베이스라인: `baseline-outputs/` + `baseline-transcript.md`, 실행 리포트: `hybrid-RUN_REPORT.md`.
 
+### 같은 빌드, 다른 에이전트: Claude Code로 에스컬레이션 ([`hybrid-CUST-1002-claude/`](hybrid-CUST-1002-claude/))
+
+Codex가 녹화한 빌드를 그대로 두고, 남은 두 스텝만 **Claude Code**(`claude -p`)에 맡겼습니다 — 코드·빌드 변경 없이 `--escalate claude`만 바꿨습니다.
+
+```bash
+python3 -m core.build run build/customer_renewal_codex \
+  --request "Prepare the annual renewal proposal for customer CUST-1002." --escalate claude
+```
+
+| CUST-1002 | 하이브리드 (빌드 + Codex 에스컬레이션) | 하이브리드 (빌드 + **Claude Code** 에스컬레이션) |
+| :-- | --: | --: |
+| LLM 토큰 | 26,481 | 517,720 (캐시 읽기 363,523 · 비캐시 154,197) |
+| 벽시계 시간 | 40.2 s | 60.7 s |
+| 스텝 | code 6 (0 토큰) + 에스컬레이션 2 | code 6 (0 토큰) + 에스컬레이션 2 (`write_pricing_cust_1001` 179,687 · `respond` 338,033) |
+| `pricing-CUST-1002.json` | 60석 · $17,100/yr · 볼륨 5% | **Codex 결과와 JSON 동일** (`hybrid-outputs/`) |
+| 백엔드가 보고한 비용 | — | $3.56 (`total_cost_usd`) |
+
+토큰이 큰 이유는 에이전트 차이가 아니라 실행 환경 차이입니다: `claude -p`는 매 호출마다 이 머신의 전역 `CLAUDE.md`(수천 줄)와 도구 스키마를 프롬프트 캐시에서 읽습니다(`RUN_REPORT.md`의 cached/uncached 분리 참고). 결과는 동일하므로, 에스컬레이션 백엔드는 비용·정책에 따라 골라 쓰면 됩니다(`--escalate auto`는 `OWC_AGENT` → 녹화한 에이전트 → 설치된 첫 에이전트 순).
+
 HOW 명세: [`build/customer_renewal_codex/customer_renewal_codex.work`](build/customer_renewal_codex/customer_renewal_codex.work) — executors(어떤 스텝이 code/llm인지)와 escalation(어떤 스텝이 `agent`로 남는지) 블록을 고쳐 재컴파일하면 분할을 바꿀 수 있습니다.
 
 ## 컴파일된 빌드가 하는 일

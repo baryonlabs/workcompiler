@@ -1,6 +1,8 @@
 """Tests for the build backend: artifact tree emission and runtime loading."""
 
 import json
+
+import pytest
 from pathlib import Path
 
 import yaml
@@ -371,3 +373,63 @@ def test_build_emits_editable_openworklang_source_that_round_trips(tmp_path, mon
     assert recompiled.actions == work_ir.actions
     assert recompiled.inputs[0] == "customer_id"
     assert recompiled.to_dict()["escalation"]["write_offer_cust_1001"] == "agent"
+
+
+def test_run_build_resolves_escalation_backend_from_registry(tmp_path, monkeypatch):
+    """`--escalate claude|auto` goes through core.agents; the mode label carries the resolved name."""
+    import shutil
+    import subprocess
+    from types import SimpleNamespace
+
+    from core.build.run import run_build
+    from core.work_ir import WorkIR
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("OWC_AGENT", raising=False)
+    trace = _renewal_like_trace(tmp_path)
+    work_ir = WorkIR.model_validate({
+        "work": "offer", "version": "3.0", "inputs": ["customer_id"], "outputs": ["files"],
+        "states": ["initialized", "jq_shelled", "write_offer_cust_1001_completed"],
+        "actions": ["shell_jq", "write_offer_cust_1001"], "dependencies": {"write_offer_cust_1001": ["shell_jq"]},
+        "executors": {"shell_jq": {"type": "code"}, "write_offer_cust_1001": {"type": "code"}},
+    })
+    manifest = emit_build(work_ir, tmp_path / "build", traces=[trace])
+
+    seen = {}
+    monkeypatch.setattr(shutil, "which", lambda exe: "/bin/claude" if exe == "claude" else None)
+
+    def fake_run(argv, **kwargs):
+        if argv[1:2] == ["--version"]:
+            return SimpleNamespace(stdout="claude 2.1.251\n", stderr="", returncode=0)
+        seen["argv"] = argv
+        body = {"result": "wrote offer", "usage": {"input_tokens": 100, "output_tokens": 50, "cache_read_input_tokens": 400},
+                "duration_ms": 900, "modelUsage": {"claude-sonnet-4-5": {}}}
+        return SimpleNamespace(stdout=json.dumps(body), stderr="", returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    report = run_build(manifest.build_dir, request="renewal offer for CUST-1002", escalate="claude", out_dir=tmp_path / "runs")
+    write_step = report.steps[1]
+    assert write_step.mode == "escalated:claude" and write_step.tokens == 550 and write_step.model == "claude-sonnet-4-5"
+    assert write_step.cached_tokens == 400 and report.totals()["uncached_tokens"] == 150
+    assert seen["argv"][0] == "claude" and "acceptEdits" in seen["argv"] and "file-writing tool" in seen["argv"][2]
+
+    # auto → the trace was recorded by codex, which is absent → first installed (claude)
+    report = run_build(manifest.build_dir, request="renewal offer for CUST-1003", escalate="auto", out_dir=tmp_path / "runs2")
+    assert report.steps[1].mode == "escalated:claude"
+
+    # explicit backend that is not installed fails loudly instead of silently skipping
+    with pytest.raises(RuntimeError, match="not installed"):
+        run_build(manifest.build_dir, request="renewal offer for CUST-1004", escalate="codex", out_dir=tmp_path / "runs3")
+
+    # binder="agent" asks the backend for values the regex cannot read
+    def fake_extract(argv, **kwargs):
+        if argv[1:2] == ["--version"]:
+            return SimpleNamespace(stdout="claude 2.1.251\n", stderr="", returncode=0)
+        if "Extract parameter values" in argv[2]:
+            return SimpleNamespace(stdout=json.dumps({"result": 'Sure: {"customer_id": "CUST-2077"}', "usage": {}}), stderr="", returncode=0)
+        return SimpleNamespace(stdout=json.dumps({"result": "ok", "usage": {}}), stderr="", returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_extract)
+    report = run_build(manifest.build_dir, request="the customer whose file says two thousand seventy seven",
+                       escalate="claude", binder="agent", out_dir=tmp_path / "runs4")
+    assert report.params == {"customer_id": "CUST-2077"} and report.binding == {"customer_id": "agent"}

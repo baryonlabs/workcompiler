@@ -61,6 +61,14 @@ conversations/     Archived design conversations (ChatGPT share exports + assets
 examples/          Sample workflows, LinkML schemas, traces, and behavior contracts
 ```
 
+## Supported coding agents
+
+The product is agent-agnostic. Two seams keep it that way — extend them instead of special-casing:
+
+- **Capture** (`adapters/proxy/`): one interceptor per wire protocol (OpenAI Responses / Codex backend, Anthropic Messages, OpenAI chat/completions); tool calls are normalized through `adapters/proxy/tools.py` (tool name → shell / write / read / glob / grep / plan) and file mutations through `core/work_ir/patchfmt.py` (V4A text). Agent identity comes from `adapters/proxy/agents.py` (`source_agent`, `run_id`).
+- **Act** (`core/agents/`): `AgentBackend` subclasses (`claude`, `codex`, `gemini`, `opencode`, `aider`) wrap each CLI's non-interactive mode; `resolve_backend("auto")` prefers `OWC_AGENT`, then the agent that recorded the trace, then `PRIORITY`. Escalation, the front-agent binder and `owc agent exec` all go through it.
+- **Skills**: `.agents/skills/` is the only committed copy; `owc skills install --agent <name>` syncs it into `.claude/skills/`, `.gemini/skills/`, `.opencode/skills/` (git-ignored). Write skill bodies agent-neutrally (`$ow-x` in Codex, `/ow-x` in Claude Code; `owc agent exec` instead of `codex exec`; `--escalate auto`).
+
 ## Before you write code
 
 - **Keep `core/` thin and clean**: Do NOT import external vendor libraries, Slack SDKs, Desktop UI shells, or LLM observability frameworks into `core/`. Everything external belongs in `adapters/`.

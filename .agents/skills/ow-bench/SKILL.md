@@ -5,7 +5,7 @@ description: Benchmark a compiled OpenWorkCompiler build against the agent sessi
 
 # ow-bench — recorded agent vs. compiled build
 
-Invoked as `$ow-bench <target_name>` (the target previously compiled with `$ow-compile-trace`).
+Invoked as `$ow-bench <target_name>` in Codex, `/ow-bench <target_name>` in Claude Code (any agent: ask for the skill by name).
 
 1. The build directory is `build/<target_name with - replaced by _>/`; it already contains `trace.json` (the session it was compiled from), so no proxy call is needed.
 2. Run the benchmark:

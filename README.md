@@ -98,6 +98,39 @@ flowchart LR
 | 최종 산출물 `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **바이트 단위 동일** | |
 
 계약 조회(`jq`)·데이터 읽기·가격 산정·제안서 작성(`apply_patch`)까지 업무 자체는 전부 code 계층으로 컴파일돼 토큰 0으로 재현됐고, 남은 비용은 사람에게 보여줄 최종 요약 한 스텝입니다.
+
+**같은 업무를 Claude Code로** ([`examples/demo/claude-code-bench/`](examples/demo/claude-code-bench/): `ANTHROPIC_BASE_URL`만 프록시로 향하게 한 실제 Claude Code v2.1.251 세션, 코드 변경 없음):
+
+| | 기록된 에이전트 (Claude Code, 7 스텝) | 컴파일된 빌드 (빈 상태에서 재실행) | 차이 |
+| :-- | --: | --: | --: |
+| LLM 토큰 (캐시 읽기 포함) | 1,426,098 | 213,044 | **−85%** |
+| 벽시계 시간 | 74.1 s | 10.7 s | **6.9×** |
+| 결과 재현 | — | **4/6 일치** (나머지 2개: `ls -la` 시각, Glob 경로 접두어) | |
+| 최종 산출물 `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **바이트 단위 동일** | |
+
+`Read`/`Glob`/`Bash`가 Codex의 `exec_command`/`apply_patch`와 같은 어휘(`read_*`, `shell_*`, `write_*`)로 정규화되므로 결과 구조가 같습니다 — 어떤 에이전트로 녹화하든 컴파일 결과는 같은 빌드 트리입니다.
+## 지원하는 코드 에이전트
+
+에이전트는 갈아끼울 수 있는 부품입니다. 캡처(프록시)와 실행(에스컬레이션 백엔드) 두 이음새가 모두 에이전트 중립이므로, 어떤 에이전트로 녹화했든 컴파일 결과는 같은 빌드 트리이고, 남은 스텝은 어떤 에이전트로든 실행할 수 있습니다.
+
+| 에이전트 | 캡처 (프록시) | 실행 (`--escalate`, 앞단 바인더) | 스킬 호출 | 프록시 연결 |
+| :-- | :-- | :-- | :-- | :-- |
+| **Codex CLI** | ✅ Responses API + ChatGPT 백엔드(구독 로그인 그대로) | ✅ `codex exec` | `$ow-define` … `$ow-bench` (`.agents/skills/`) | `~/.codex/config.toml` provider ([아래](#실제-사용-화면-codex-tui-안에서-전부-실행)) |
+| **Claude Code** | ✅ Anthropic Messages API (API 키 · 구독/OAuth 로그인 모두) | ✅ `claude -p` | `/ow-define` … `/ow-bench` (`owc skills install --agent claude`) | `export ANTHROPIC_BASE_URL=http://127.0.0.1:8787` |
+| **Cursor · Windsurf · Continue** | ✅ OpenAI chat/completions (`OPENAI_BASE_URL`) | — (CLI 없음) | — | `OPENAI_BASE_URL=http://127.0.0.1:8787/v1` (Settings → Models → Override OpenAI Base URL) |
+| **opencode** | ✅ OpenAI chat/completions | ✅ `opencode run` | `/ow-*` (`owc skills install --agent opencode`) | `export OPENAI_BASE_URL=http://127.0.0.1:8787/v1` |
+| **Aider** | ✅ OpenAI chat/completions | ✅ `aider --message` | (SKILL.md 본문을 메시지로) | `export OPENAI_BASE_URL=http://127.0.0.1:8787/v1` |
+| **Gemini CLI** | 계획 중 (Gemini API 인터셉터) | ✅ `gemini -p` | `/ow-*` (`owc skills install --agent gemini`) | — |
+
+```bash
+owc agent list                       # 설치된 에이전트 CLI · 스킬 디렉터리 · 캡처 방식
+owc agent setup claude               # 에이전트별 프록시 연결 설정 출력 (codex / claude / opencode / aider)
+owc skills install --agent claude    # 정본 .agents/skills/ → .claude/skills/ (Codex는 정본을 그대로 읽음)
+owc build run build/<work> --request "…" --escalate auto   # auto = OWC_AGENT → 녹화한 에이전트 → 설치된 첫 에이전트
+```
+
+에이전트마다 다른 도구 이름(`exec_command`·`Bash`·`run_terminal_cmd`, `apply_patch`·`Write`/`Edit`)은 프록시에서 하나의 어휘(`shell_<prog>`, `write_<stem>` + V4A 패치 텍스트, `read_*`/`glob_*`/`grep_*`)로 정규화되어 같은 컴파일러·핸들러·벤치마크를 탑니다 — [`adapters/proxy/README.md`](adapters/proxy/README.md).
+
 ### 앞단 에이전트 + 컴파일된 빌드: 새 입력(CUST-1002)에 대한 하이브리드 실행
 
 컴파일된 빌드는 기록된 세션의 입력(CUST-1001)을 재현할 뿐이므로, **앞단 에이전트**가 새 요청에서 파라미터를 바인딩하고(`PARAMS.json`의 `customer_id`), code 계층은 그 값으로 재실행하며, 에이전트가 합성했던 스텝(가격 JSON·제안서 작성, 최종 요약)만 Codex로 에스컬레이션합니다 — 유연성은 앞단 에이전트가, 효율성은 결정론적 코드가 맡는 구조입니다 ([`hybrid-CUST-1002/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002/)):
@@ -113,6 +146,8 @@ python3 -m core.build run build/customer_renewal_codex \
 | 벽시계 시간 | 83 s | 40.2 s | **2.1×** |
 | 스텝 | 에이전트 8턴 | code 6 (토큰 0) + 에스컬레이션 2 | |
 | 산정 결과 | 60석 · 연 $17,100 · 볼륨 5% | 60석 · 연 $17,100 · 볼륨 5% | 동일 |
+
+같은 빌드를 **Claude Code**로 에스컬레이션해도(`--escalate claude`, 코드·빌드 변경 없음) `pricing-CUST-1002.json`은 Codex 결과와 동일합니다 — 60.7 s, 517,720 토큰(그중 363,523은 캐시 읽기: `claude -p`가 매 호출 전역 `CLAUDE.md`·도구 스키마를 읽음), [`hybrid-CUST-1002-claude/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002-claude/).
 
 토큰 절감이 첫 벤치보다 작은 이유는 명확합니다: 남은 두 에스컬레이션이 각각 새 Codex 세션(시스템 프롬프트 포함 10–16k 토큰)이기 때문입니다. 이 두 스텝이 `models/slm/` 후보로 승격되거나 제안서 문안이 템플릿(code)으로 내려가면 그때 토큰이 0에 가까워집니다 — 어디까지 내려갈 수 있는지가 `.work` 파일의 `escalation` 블록에 명시됩니다.
 
@@ -145,7 +180,7 @@ $ow-define <업무>            # WHAT: grilling 인터뷰 → examples/<work>/TA
 codex exec 'Read examples/<work>/TASK.md …'   # 에이전트가 한 번 수행 (프록시가 캡처) → 사람이 결과 검증
 $ow-traces · $ow-compile-trace <work>         # 검증된 세션 → build/<work>/ (handlers · prompts · PARAMS.json · <work>.work = HOW)
 $ow-bench <work>                              # 에이전트 vs 빌드: 결과 · 토큰 · 속도
-python3 -m core.build run build/<work> --request "…" --escalate codex   # 새 입력: 앞단 에이전트 + 빌드
+python3 -m core.build run build/<work> --request "…" --escalate auto    # 새 입력: 앞단 에이전트 + 빌드 (auto|claude|codex|…)
 ```
 
 컴파일된 `.work`의 예 — `build/customer_renewal_codex/customer_renewal_codex.work`:
@@ -297,7 +332,16 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
 
 **직접 해보기**
 
-1. Codex provider 설정 — `~/.codex/config.toml`에 추가하거나, 별도 `CODEX_HOME` 디렉터리(`auth.json` 복사 + 아래 `config.toml`)를 사용합니다.
+1. 에이전트를 프록시로 향하게 합니다 (`owc agent setup <name>`이 아래 내용을 출력합니다).
+
+   **Claude Code** — API 키·구독 로그인 모두 그대로:
+
+   ```bash
+   owc skills install --agent claude                 # /ow-define … /ow-bench 를 슬래시 메뉴에
+   export ANTHROPIC_BASE_URL=http://127.0.0.1:8787
+   ```
+
+   **Codex CLI** — `~/.codex/config.toml`에 추가하거나, 별도 `CODEX_HOME` 디렉터리(`auth.json` 복사 + 아래 `config.toml`)를 사용합니다.
 
    ```toml
    model_provider = "openworkcompiler"
@@ -314,14 +358,16 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
    requires_openai_auth = true      # ChatGPT 로그인 토큰을 그대로 사용
    ```
 
-2. 프록시를 띄우고 저장소 루트에서 Codex를 실행합니다. 스킬은 `.agents/skills/`에서 자동으로 로드됩니다. 텔레메트리(OpenTelemetry 스타일 span)는 **기본 켜짐·로컬 파일 전용**(`build/telemetry/spans.jsonl`, 메타데이터만)이며 시작 시 안내가 출력됩니다 — 끄는 법·OTLP 내보내기는 [docs/TELEMETRY.md](docs/TELEMETRY.md).
+   **Cursor · Windsurf · opencode · Aider · OpenAI SDK** — `OPENAI_BASE_URL=http://127.0.0.1:8787/v1` (IDE는 Settings → Models → Override OpenAI Base URL).
+
+2. 프록시를 띄우고 저장소 루트에서 에이전트를 실행합니다(`codex` 또는 `claude`). 스킬은 Codex가 `.agents/skills/`에서, Claude Code가 `.claude/skills/`에서 로드합니다. 텔레메트리(OpenTelemetry 스타일 span)는 **기본 켜짐·로컬 파일 전용**(`build/telemetry/spans.jsonl`, 메타데이터만)이며 시작 시 안내가 출력됩니다 — 끄는 법·OTLP 내보내기는 [docs/TELEMETRY.md](docs/TELEMETRY.md).
 
    ```bash
-   python3 -m uvicorn adapters.proxy.server:app --port 8787 &
-   codex
+   owc proxy --port 8787 &          # = python3 -m uvicorn adapters.proxy.server:app --port 8787
+   codex                            # 또는: claude
    ```
 
-3. Codex 안에서 스킬을 호출합니다 — `$ow-define <업무>`(WHAT 정의), `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`. 외부 스킬(grill-me/grilling)은 `npx skills add https://github.com/mattpocock/skills --skill grilling --skill grill-me --agent codex --copy -y`로 재설치할 수 있습니다(`skills-lock.json`).
+3. 에이전트 안에서 스킬을 호출합니다 — Codex는 `$ow-define <업무>`(WHAT 정의), `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`; Claude Code는 같은 이름을 `/ow-…`로. 외부 스킬(grill-me/grilling)은 `npx skills add https://github.com/mattpocock/skills --skill grilling --skill grill-me --agent codex --copy -y`로 재설치할 수 있습니다(`skills-lock.json`).
 
    스킬이 실행하는 명령은 셸에서 직접 써도 동일합니다:
 
@@ -333,13 +379,13 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
      -d '{"run_id":"<run_id>","target_name":"codex-session","build_dir":"build"}'   # -> build/codex_session/
    python3 -m core.build from-trace trace.json --target codex-session   # 프록시 없이 TraceIR JSON에서 빌드
    python3 -m core.build bench build/codex_session                       # 에이전트 vs 빌드: 결과 · 토큰 · 속도
-   python3 -m core.build run build/<work> --request "..." --escalate codex  # 앞단 에이전트: 파라미터 바인딩 → code 무료 실행 → 합성 스텝만 에스컬레이션
+   python3 -m core.build run build/<work> --request "..." --escalate auto   # 앞단 에이전트: 파라미터 바인딩 → code 무료 실행 → 합성 스텝만 에스컬레이션 (auto|claude|codex|…)
    ```
 
    API 키 기반 클라이언트(OpenAI SDK, Agents SDK 등)는 `OPENAI_BASE_URL=http://127.0.0.1:8787/v1`만 지정하면 `/v1/responses`가 같은 방식으로 캡처됩니다.
 
 ```text
-Existing AI Agent (Codex CLI, Claude Code, Cursor, AutoGen, LangChain, Custom Script)
+Existing AI Agent (Codex CLI · Claude Code · Cursor/Windsurf · opencode · Aider · OpenAI/Anthropic SDK)
                                 │
         Standard LLM API Calls (OPENAI_BASE_URL=http://localhost:8787/v1)
                                 │
@@ -600,7 +646,7 @@ openworkcompiler/
 │   └── surfaces/                # AG-UI Surface Protocol
 │
 ├── adapters/                    # 생태계 및 시맨틱 연동 어댑터
-│   ├── proxy/                   # Zero-code LLM API 프록시 어댑터 (OpenAI & Anthropic)
+│   ├── proxy/                   # Zero-code LLM API 프록시: Responses/Codex · Anthropic Messages(Claude Code) · chat/completions(Cursor·opencode·Aider) 패스스루, tools.py(도구 어휘 정규화), agents.py(source_agent·run_id)
 │   ├── linkml/                  # LinkML 저작 & 생성기 어댑터
 │   ├── owl/                     # OWL 2 온톨로지 & ELK/HermiT 추론기 어댑터
 │   ├── shacl/                   # SHACL 데이터 제약 검증기 어댑터
@@ -614,11 +660,12 @@ openworkcompiler/
 │
 ├── agents/                      # 가이드 및 측정 에이전트 규격
 ├── docs/                        # 명세서, 아키텍처, 사용 가이드, 다이어그램
-├── .agents/skills/              # Codex 스킬: $ow-define(WHAT, grilling 인터뷰) · $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench · grill-me/grilling(mattpocock/skills, skills-lock.json)
+├── .agents/skills/              # 에이전트 스킬 정본(owc skills install 로 .claude/skills 등에 동기화): ow-define(WHAT, grilling 인터뷰) · ow-compile-work · ow-traces · ow-compile-trace · ow-bench · grill-me/grilling(mattpocock/skills, skills-lock.json)
+├── core/agents/                 # 에이전트 백엔드 레지스트리: claude · codex · gemini · opencode · aider (`--escalate auto`, `owc agent …`) · core/skills.py(스킬 동기화)
 ├── vendor/openworklang/         # 서브모듈: OpenWorkLang 언어 (baryonlabs/openworklang)
 ├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + 로더 + 벤치마크(토큰 원장) + 앞단 에이전트 실행
 ├── examples/cases/              # 4가지 업무 사례: 초보자 자료 → $ow-define → 에이전트 수행 → 컴파일 → 벤치 (transcript · 트레이스 · 빌드 포함)
-├── tests/                       # pytest 테스트 수트 (154개 테스트 전원 통과)
+├── tests/                       # pytest 테스트 수트 (191개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트
 ```
 
@@ -641,10 +688,11 @@ owc proxy --port 8787                                   # Zero-code 프록시 (l
 owc compile examples/quality_analysis.work              # .work → build/quality_analyst/
 owc build from-trace trace.json --target my-work        # 캡처한 세션 → 빌드 트리
 owc build bench build/my_work                           # 에이전트 vs 빌드: 결과 · 토큰 · 속도
-owc build run build/my_work --request "…" --escalate codex   # 앞단 에이전트 + 빌드
+owc build run build/my_work --request "…" --escalate auto    # 앞단 에이전트 + 빌드 (auto|claude|codex|gemini|opencode|aider)
+owc agent list · owc agent setup claude · owc skills install --agent claude   # 에이전트 탐지 · 프록시 연결 · 스킬 동기화
 ```
 
-Codex 스킬(`$ow-*`)은 저장소를 클론해 `.agents/skills/`가 있는 디렉터리에서 Codex를 실행할 때 로드됩니다: `git clone --recurse-submodules https://github.com/baryonlabs/workcompiler.git`. 개발용 설치는 `pip install -e ".[dev]"`, OTLP 텔레메트리 내보내기는 `".[telemetry]"`(기본은 로컬 파일, [docs/TELEMETRY.md](docs/TELEMETRY.md)).
+스킬은 저장소를 클론한 디렉터리에서 로드됩니다 — Codex는 `.agents/skills/`(`$ow-*`)를 바로 읽고, Claude Code·Gemini·opencode는 `owc skills install --agent <name>`으로 동기화한 사본(`/ow-*`)을 읽습니다: `git clone --recurse-submodules https://github.com/baryonlabs/workcompiler.git`. 개발용 설치는 `pip install -e ".[dev]"`, OTLP 텔레메트리 내보내기는 `".[telemetry]"`(기본은 로컬 파일, [docs/TELEMETRY.md](docs/TELEMETRY.md)).
 
 전체 파이프라인 개발자 가이드 및 상세 사용법은 **[사용 가이드(docs/usage.md)](docs/usage.md)**를 참조하세요.
 

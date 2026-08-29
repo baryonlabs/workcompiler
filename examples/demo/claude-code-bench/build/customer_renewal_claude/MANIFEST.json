@@ -1,0 +1,122 @@
+{
+  "work": "customer-renewal-claude",
+  "build_dir": "/Users/hongmartin/orca/projects/open-workflow/build/customer_renewal_claude",
+  "artifact_count": 11,
+  "by_tier": {
+    "work_ir": [
+      "work.yaml"
+    ],
+    "code": [
+      "handlers/read_task.py",
+      "handlers/read_contracts.py",
+      "handlers/read_behavior.py",
+      "handlers/shell_cd.py",
+      "handlers/shell_mkdir.py",
+      "handlers/shell_cat.py"
+    ],
+    "frontier_llm": [
+      "prompts/respond.prompt.md"
+    ],
+    "params": [
+      "PARAMS.json"
+    ],
+    "trace": [
+      "trace.json"
+    ],
+    "openworklang": [
+      "customer_renewal_claude.work"
+    ]
+  },
+  "params": [
+    {
+      "name": "customer_id",
+      "recorded_value": "CUST-1001",
+      "kind": "id",
+      "steps": [
+        "step_4",
+        "step_5",
+        "step_6"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "contract_id",
+      "recorded_value": "CTR-2024-0917",
+      "kind": "id",
+      "steps": [
+        "step_5",
+        "step_6"
+      ],
+      "source": "command"
+    }
+  ],
+  "synthesized_actions": [],
+  "artifacts": [
+    {
+      "action": "*",
+      "tier": "work_ir",
+      "kind": "work.yaml",
+      "path": "work.yaml"
+    },
+    {
+      "action": "read_task",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/read_task.py"
+    },
+    {
+      "action": "read_contracts",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/read_contracts.py"
+    },
+    {
+      "action": "read_behavior",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/read_behavior.py"
+    },
+    {
+      "action": "shell_cd",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_cd.py"
+    },
+    {
+      "action": "shell_mkdir",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_mkdir.py"
+    },
+    {
+      "action": "shell_cat",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_cat.py"
+    },
+    {
+      "action": "respond",
+      "tier": "frontier_llm",
+      "kind": "prompt",
+      "path": "prompts/respond.prompt.md"
+    },
+    {
+      "action": "*",
+      "tier": "params",
+      "kind": "PARAMS.json",
+      "path": "PARAMS.json"
+    },
+    {
+      "action": "*",
+      "tier": "trace",
+      "kind": "trace.json",
+      "path": "trace.json"
+    },
+    {
+      "action": "*",
+      "tier": "openworklang",
+      "kind": "work_source",
+      "path": "customer_renewal_claude.work"
+    }
+  ]
+}

@@ -5,7 +5,7 @@ description: Turn a raw, unrefined request into the WHAT of an OpenWorkCompiler 
 
 # ow-define — WHAT before HOW
 
-Invoked as `$ow-define <short description of the work>` (e.g. `$ow-define customer renewal proposals`).
+Invoked as `$ow-define <short description of the work>` in Codex, `/ow-define <short description of the work>` in Claude Code (any agent: ask for the skill by name).
 
 OpenWorkCompiler compiles a *verified* agent session into an executable build. That only pays off when the goal,
 the rules and the acceptance criteria are written down first — otherwise the compiler faithfully freezes a
@@ -13,12 +13,12 @@ vague run. This skill produces those two artifacts:
 
 | artifact | what it fixes | consumed by |
 | :-- | :-- | :-- |
-| `examples/<work>/TASK.md` | goal, inputs (data/paths), ordered steps, required outputs, acceptance criteria | the agent's first run (`codex exec 'Read examples/<work>/TASK.md and carry it out exactly as written.'`) |
+| `examples/<work>/TASK.md` | goal, inputs (data/paths), ordered steps, required outputs, acceptance criteria | the agent's first run (`owc agent exec 'Read examples/<work>/TASK.md and carry it out exactly as written.'` (any installed agent; `--agent claude|codex|…`)) |
 | `examples/<work>/behaviors/<rule>/BEHAVIOR.md` (one per rule) | non-negotiable process rules with evidence and decision criteria | the compiler (`invariants`), the Oracle Gate, the benchmark |
 
 ## Procedure
 
-1. **Grill.** Run the `$grilling` interview (installed from mattpocock/skills; `$grill-me` is its alias) on the
+1. **Grill.** Run the `grilling` skill's interview (`$grilling` in Codex, `/grilling` in Claude Code; installed from mattpocock/skills, `grill-me` is its alias) on the
    user's description. Do not stop at the first plausible plan — keep asking until every item below has a
    concrete answer or an explicit "unknown / decided by the agent":
    - the single sentence goal and who consumes the result
@@ -43,10 +43,10 @@ vague run. This skill produces those two artifacts:
 
    ```bash
    python3 -m uvicorn adapters.proxy.server:app --port 8787 &
-   codex exec 'Read examples/<work>/TASK.md and carry it out exactly as written.'   # first run, captured by the proxy
+   owc agent exec 'Read examples/<work>/TASK.md and carry it out exactly as written.'   # first run with any agent, captured by the proxy
    # verify the outputs by hand, then:
    $ow-traces · $ow-compile-trace <work> · $ow-bench <work>
-   python3 -m core.build run build/<work_dir> --request "..." --escalate codex        # new inputs via the front agent
+   python3 -m core.build run build/<work_dir> --request "..." --escalate auto        # new inputs via the front agent
    ```
 
    and explain that the compiled `build/<work_dir>/<work_dir>.work` is the HOW: it states which steps became

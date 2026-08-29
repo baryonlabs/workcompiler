@@ -13,8 +13,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import shutil
-import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -36,12 +34,14 @@ def _id_pattern(recorded: str) -> re.Pattern:
 
 
 def bind_parameters(build_dir: Path | str, request: Optional[str] = None,
-                    overrides: Optional[Dict[str, str]] = None, binder: str = "regex") -> Dict[str, Any]:
+                    overrides: Optional[Dict[str, str]] = None, binder: str = "regex",
+                    escalator: Optional[Escalator] = None) -> Dict[str, Any]:
     """Front agent: decide the parameter values for this run.
 
     * ``overrides`` win.
     * ``binder="regex"`` finds values shaped like the recorded ones in the request text.
-    * ``binder="codex"`` asks Codex to extract the values (for requests the regex cannot read).
+    * ``binder="agent"`` (alias ``"codex"``) asks the escalation backend to extract the values
+      for requests the regex cannot read.
     Unbound parameters fall back to the recorded value and are reported as ``defaulted``.
     """
     spec = json.loads((Path(build_dir) / "PARAMS.json").read_text(encoding="utf-8"))
@@ -60,23 +60,26 @@ def bind_parameters(build_dir: Path | str, request: Optional[str] = None,
                 bound[name], detail[name] = m.group(0), "regex"
                 continue
         pending.append(p)
-    if pending and request and binder == "codex":
-        extracted = _codex_extract(request, pending)
+    if pending and request and binder in ("agent", "codex"):
+        if escalator is None:
+            from core.agents import as_escalator, resolve_backend
+            escalator = as_escalator(resolve_backend("codex" if binder == "codex" else "auto"))
+        extracted = _agent_extract(request, pending, escalator)
         for p in pending:
             if p["name"] in extracted:
-                bound[p["name"]], detail[p["name"]] = extracted[p["name"]], "codex"
+                bound[p["name"]], detail[p["name"]] = extracted[p["name"]], "agent"
     for p in params:
         if p["name"] not in bound:
             bound[p["name"]], detail[p["name"]] = p["recorded_value"], "defaulted"
     return {"values": bound, "how": detail, "synthesized_actions": spec.get("synthesized_actions", [])}
 
 
-def _codex_extract(request: str, params: List[Dict[str, Any]]) -> Dict[str, str]:
+def _agent_extract(request: str, params: List[Dict[str, Any]], escalator: Escalator) -> Dict[str, str]:
     prompt = ("Extract parameter values from the request below. Reply with a single JSON object mapping "
               "parameter name to value (string); omit parameters that are not present.\n\nParameters:\n"
               + "\n".join(f"- {p['name']} (example: {p['recorded_value']})" for p in params)
               + f"\n\nRequest:\n{request}\n")
-    result = codex_escalator(prompt, {"read_only": True})
+    result = escalator(prompt, {"read_only": True})
     m = re.search(r"\{.*\}", result.get("output", ""), re.S)
     try:
         data = json.loads(m.group(0)) if m else {}
@@ -88,31 +91,11 @@ def _codex_extract(request: str, params: List[Dict[str, Any]]) -> Dict[str, str]
 # --------------------------------------------------------------------------- escalation backends
 
 def codex_escalator(prompt: str, context: Dict[str, Any]) -> Dict[str, Any]:
-    """Escalate to Codex CLI (non-interactive). Returns output text and the tokens it reports."""
-    if shutil.which("codex") is None:
-        raise RuntimeError("codex CLI not found on PATH")
-    cmd = ["codex", "exec", "--skip-git-repo-check", "-c", "notify=[]"]
-    if context.get("read_only"):
-        cmd += ["--sandbox", "read-only"]
-    else:
-        cmd += ["--sandbox", "workspace-write"]
-    t0 = time.perf_counter()
-    # codex prints the transcript (incl. "tokens used") on stderr; merge both streams
-    proc = subprocess.run(cmd + [prompt], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                          timeout=900, stdin=subprocess.DEVNULL)
-    elapsed = (time.perf_counter() - t0) * 1000.0
-    text = proc.stdout
-    tokens = 0
-    m = re.search(r"tokens used\n([\d,]+)", text)
-    if m:
-        tokens = int(m.group(1).replace(",", ""))
-    model_m = re.search(r"^model:\s*(\S+)", text, re.M)
-    model = model_m.group(1) if model_m else "codex"
-    # the final assistant message follows the last "codex" marker
-    parts = re.split(r"^codex\n", text, flags=re.M)
-    answer = parts[-1].split("\ntokens used\n")[0].strip() if len(parts) > 1 else text.strip()
-    return {"output": answer, "tokens": tokens, "latency_ms": elapsed, "exit_code": proc.returncode,
-            "model": model, "raw": text if proc.returncode else ""}
+    """Escalate to Codex CLI (kept for compatibility; see ``core.agents``)."""
+    from core.agents import get_backend
+
+    return get_backend("codex").run(prompt, read_only=bool(context.get("read_only")),
+                                    cwd=context.get("cwd")).to_escalation_dict()
 
 
 # --------------------------------------------------------------------------- run
@@ -130,6 +113,8 @@ class RunStep:
     model: str = ""               # what executed this step now: "code" / "rule" / a model id
     recorded_model: str = ""      # what executed it in the recorded session
     recorded_tokens: int = 0
+    cached_tokens: int = 0        # part of `tokens` served from the backend's prompt cache (Claude Code, OpenAI)
+    cost_usd: Optional[float] = None
 
 
 @dataclass
@@ -146,8 +131,11 @@ class RunReport:
     def totals(self) -> Dict[str, Any]:
         tokens = sum(s.tokens for s in self.steps)
         latency = sum(s.latency_ms for s in self.steps)
+        cached = sum(s.cached_tokens for s in self.steps)
+        costs = [s.cost_usd for s in self.steps if s.cost_usd is not None]
         return {
-            "tokens": tokens, "latency_ms": round(latency, 1),
+            "tokens": tokens, "cached_tokens": cached, "uncached_tokens": tokens - cached, "latency_ms": round(latency, 1),
+            "cost_usd": round(sum(costs), 4) if costs else None,
             "code_steps": sum(1 for s in self.steps if s.mode == "code"),
             "escalated_steps": sum(1 for s in self.steps if s.mode.startswith("escalated")),
             "needs_agent_steps": sum(1 for s in self.steps if s.mode == "needs_agent"),
@@ -165,7 +153,8 @@ class RunReport:
 
     def ledger_rows(self) -> List[Dict[str, Any]]:
         return [{"step": s.step_id, "action": s.action, "recorded_model": s.recorded_model, "recorded_tokens": s.recorded_tokens,
-                 "run_executor": s.model, "run_tokens": s.tokens, "mode": s.mode, "params": self.params} for s in self.steps]
+                 "run_executor": s.model, "run_tokens": s.tokens, "run_cached_tokens": s.cached_tokens, "mode": s.mode,
+                 "params": self.params} for s in self.steps]
 
     def to_dict(self) -> Dict[str, Any]:
         return {"work": self.work, "build_dir": self.build_dir, "request": self.request, "params": self.params,
@@ -180,13 +169,16 @@ class RunReport:
                  "| parameter | value | how |", "| :-- | :-- | :-- |"]
         lines += [f"| `{k}` | `{v}` | {self.binding.get(k, '')} |" for k, v in self.params.items()]
         lines += ["", "## Totals", "", "| | this run (compiled build + front agent) | recorded agent session |", "| :-- | --: | --: |",
-                  f"| LLM tokens | {t['tokens']:,} | {t['recorded_tokens']:,} |",
+                  f"| LLM tokens | {t['tokens']:,}" + (f" ({t['cached_tokens']:,} cached · {t['uncached_tokens']:,} uncached)" if t['cached_tokens'] else "") + f" | {t['recorded_tokens']:,} |",
                   f"| wall time | {t['latency_ms']/1000:.1f} s | {t['recorded_latency_ms']/1000:.1f} s |",
                   f"| steps: code / escalated / needs agent | {t['code_steps']} / {t['escalated_steps']} / {t['needs_agent_steps']} | — |"]
         if t["token_savings_pct"] is not None:
-            lines.append(f"| token savings | −{t['token_savings_pct']}% | |")
+            pct = t["token_savings_pct"]
+            lines.append(f"| token savings | {'−' if pct >= 0 else '+'}{abs(pct)}% | |")
         if t["speedup_x"]:
             lines.append(f"| speedup | {t['speedup_x']}× | |")
+        if t["cost_usd"] is not None:
+            lines.append(f"| cost reported by the backend | ${t['cost_usd']:.4f} | |")
         lines += ["", "## Steps", "", "| step | action | mode | recorded model → tokens | this run: executor → tokens | latency | ok | note |",
                   "| :-- | :-- | :-- | :-- | :-- | --: | :-- | :-- |"]
         lines += [f"| {s.step_id} | `{s.action}` | {s.mode} | {s.recorded_model or '?'} → {s.recorded_tokens:,} | {s.model or '?'} → {s.tokens:,} | "
@@ -206,16 +198,31 @@ def _escalation_prompt(build_dir: Path, action: str, params: Dict[str, Any], ups
     return (f"{contract_text}\n\n## This run's parameters\n```json\n{json.dumps(params, ensure_ascii=False)}\n```\n\n"
             f"## Outputs already produced by the compiled steps of this run (use these; do not recompute or re-read files)\n{ctx}\n\n"
             f"## Instruction\nDo exactly what the recorded example did, for this run's parameters. Where the example wrote files "
-            f"(apply_patch), write the corresponding files for these parameters (same directory, parameter values substituted in "
+            f"(via its file-writing tool, e.g. apply_patch / Write), write the corresponding files for these parameters (same directory, parameter values substituted in "
             f"file names) with the same structure, using the numbers from the outputs above. Then reply with a short summary.\n")
 
 
 def run_build(build_dir: Path | str, request: Optional[str] = None, params: Optional[Dict[str, str]] = None,
               escalate: str = "none", binder: str = "regex", escalator: Optional[Escalator] = None,
-              out_dir: Optional[Path | str] = None) -> RunReport:
+              out_dir: Optional[Path | str] = None, model: Optional[str] = None) -> RunReport:
     root = Path(build_dir)
     work_ir = load_work_ir(root / "work.yaml")
-    binding = bind_parameters(root, request, params, binder=binder)
+
+    trace_path = root / "trace.json"
+    trace = None
+    if trace_path.exists():
+        payload = json.loads(trace_path.read_text(encoding="utf-8"))
+        trace = TraceIR.model_validate(payload["traces"][0] if "traces" in payload else payload.get("trace", payload))
+
+    # Escalation backend: injected callable, or a coding-agent CLI picked from the registry
+    backend_name = escalate if escalate not in (None, "none") else "none"
+    backend: Optional[Escalator] = escalator
+    if backend is None and escalate not in (None, "none"):
+        from core.agents import as_escalator, resolve_backend
+        agent = resolve_backend(escalate, trace_source_agent=getattr(trace, "source_agent", None))
+        backend, backend_name = as_escalator(agent, model=model), agent.name
+
+    binding = bind_parameters(root, request, params, binder=binder, escalator=backend)
     values, synthesized = binding["values"], set(binding["synthesized_actions"])
 
     from core.runtime.engine import DurableRuntimeEngine
@@ -224,18 +231,11 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
     executors = work_ir.to_dict().get("executors", {})
     norm = _normalizer()
 
-    trace_path = root / "trace.json"
-    trace = None
-    if trace_path.exists():
-        payload = json.loads(trace_path.read_text(encoding="utf-8"))
-        trace = TraceIR.model_validate(payload["traces"][0] if "traces" in payload else payload.get("trace", payload))
-
     report = RunReport(work=work_ir.work, build_dir=str(root), request=request or "", params=values, binding=binding["how"])
     if trace is not None:
         report.recorded_tokens = sum(int(getattr(s.token_usage, "total_tokens", 0) or 0) for s in trace.steps)
         report.recorded_latency_ms = sum(float(getattr(s, "latency_ms", 0.0) or 0.0) for s in trace.steps)
 
-    backend = escalator or (codex_escalator if escalate == "codex" else None)
     steps_src = trace.steps if trace is not None else []
 
     for step in steps_src:
@@ -275,24 +275,26 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
         reason = "synthesized content (agent computed it)" if action in synthesized else f"{tier} tier"
         if backend is None:
             report.steps.append(RunStep(step.step_id, action, "needs_agent", 0, 0.0, True, "",
-                                        f"{reason}; run with --escalate codex to execute", model="(not run)",
+                                        f"{reason}; run with --escalate auto (or codex|claude|gemini|opencode|aider) to execute", model="(not run)",
                                         recorded_model=str(getattr(step, "model", "") or ""),
                                         recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0)))
             continue
         prompt = _escalation_prompt(root, action, values, report.steps, recorded_example)
         try:
             with telemetry.span("run.escalation", work=work_ir.work, step=step.step_id, action=action, tier=tier,
-                                backend=escalate) as tspan:
+                                backend=backend_name) as tspan:
                 res = backend(prompt, {"action": action, "params": values})
-                tspan.update({"model": res.get("model"), "tokens": res.get("tokens", 0), "exit_code": res.get("exit_code", 0)})
+                tspan.update({"model": res.get("model"), "tokens": res.get("tokens", 0), "cached_tokens": res.get("cached_tokens", 0),
+                              "exit_code": res.get("exit_code", 0)})
             ok = res.get("exit_code", 0) == 0
-            report.steps.append(RunStep(step.step_id, action, f"escalated:{escalate}", int(res.get("tokens", 0)),
+            report.steps.append(RunStep(step.step_id, action, f"escalated:{backend_name}", int(res.get("tokens", 0)),
                                         float(res.get("latency_ms", 0.0)), ok, str(res.get("output", "")),
                                         reason if ok else f"{reason}; escalation failed: {_clip(res.get('raw', ''), 300)}",
-                                        model=str(res.get("model") or escalate), recorded_model=str(getattr(step, "model", "") or ""),
-                                        recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0)))
+                                        model=str(res.get("model") or backend_name), recorded_model=str(getattr(step, "model", "") or ""),
+                                        recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0),
+                                        cached_tokens=int(res.get("cached_tokens", 0) or 0), cost_usd=res.get("cost_usd")))
         except Exception as exc:  # noqa: BLE001
-            report.steps.append(RunStep(step.step_id, action, f"escalated:{escalate}", 0, 0.0, False, "", f"{reason}; {exc}"))
+            report.steps.append(RunStep(step.step_id, action, f"escalated:{backend_name}", 0, 0.0, False, "", f"{reason}; {exc}"))
 
     t = report.totals()
     telemetry.event("run.report", work=work_ir.work, tokens=t["tokens"], latency_ms=t["latency_ms"], code_steps=t["code_steps"],

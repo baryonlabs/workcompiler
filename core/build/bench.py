@@ -14,6 +14,7 @@ runtime would pay before the SLM/ML candidates are trained and promoted.
 from __future__ import annotations
 
 import json
+import re
 import os
 import time
 from dataclasses import dataclass, field, asdict
@@ -235,33 +236,33 @@ def _norm(text: Any) -> str:
 
 
 def _verify_patch_files(patch: str, build_root: Path) -> tuple[bool, str]:
-    """After replaying an apply_patch handler, check the files on disk equal the recorded patch."""
-    cwd = str(Path.cwd().resolve()) + "/"
-    ok, checked = True, 0
-    current = None
-    blocks: List[tuple[str, str, List[str]]] = []
-    for line in patch.replace(cwd, "").splitlines():
-        if line.startswith("*** Begin Patch") or line.startswith("*** End Patch"):
-            continue
-        if line.startswith("*** "):
-            op, _, path = line[4:].partition(" File: ")
-            current = (op, path.strip(), [])
-            blocks.append(current)
-        elif current is not None:
-            current[2].append(line)
-    for op, path, lines in blocks:
-        if op != "Add":
-            continue
-        checked += 1
-        expected = "\n".join(l[1:] if l.startswith("+") else l for l in lines) + "\n"
-        actual = Path(path).read_text(encoding="utf-8") if Path(path).exists() else None
-        ok = ok and actual == expected
-    return (ok and checked > 0), f"{checked} file(s) verified on disk" if ok else "written file differs from recorded patch"
+    """After replaying a file-writing handler, check the workspace matches the recorded patch."""
+    import os
+    from core.work_ir.patchfmt import verify_patch_text
+
+    text = patch.replace(str(Path.cwd().resolve()) + "/", "")
+    ws = os.environ.get("OPENWORKCOMPILER_WORKSPACE_DIR")
+    if ws:
+        text = text.replace(str(Path(ws).resolve()) + "/", "")
+    ok, checked, note = verify_patch_text(text, ".")
+    return ok, (f"{checked} file(s) verified on disk" if ok else f"written files differ from recorded patch ({note})")
+
+
+_READ_NUMBER_RE = re.compile(r"^\s*\d+(?:→|\t)")
+
+
+def _strip_read_numbers(text: str) -> str:
+    """Claude Code's Read tool prefixes every line with its number (``12→`` / ``12<TAB>``); the replay
+    (``cat``) does not. Strip only when every non-empty line is numbered."""
+    lines = text.splitlines()
+    if not lines or not all(_READ_NUMBER_RE.match(l) for l in lines if l.strip()):
+        return text
+    return "\n".join(_READ_NUMBER_RE.sub("", l, count=1) for l in lines)
 
 
 def _compare(recorded: str, compiled: str) -> tuple[bool, str]:
     """(match, note): exact line sequence first, then order-insensitive line multiset."""
-    rec, comp = _lines(recorded), _lines(compiled)
+    rec, comp = _lines(_strip_read_numbers(recorded)), _lines(compiled)
     if rec == comp:
         return True, ""
     if sorted(rec) == sorted(comp):

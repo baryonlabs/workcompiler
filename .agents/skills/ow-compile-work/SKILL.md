@@ -5,7 +5,7 @@ description: Compile an OpenWorkLang (.work) file into an executable OpenWorkCom
 
 # ow-compile-work — OpenWorkLang → build tree
 
-Invoked as `$ow-compile-work <path/to/file.work>`.
+Invoked as `$ow-compile-work <path/to/file.work>` in Codex, `/ow-compile-work <path/to/file.work>` in Claude Code (any agent: ask for the skill by name).
 
 Run exactly:
 

@@ -98,6 +98,39 @@ The two shell steps (`shell_python3`, `shell_find`) lowered to the code tier and
 | deliverables `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **byte-identical** | |
 
 Contract lookup (`jq`), data reads, pricing and writing the proposal (`apply_patch`) — the work itself — all compiled to the code tier and replayed with zero tokens; the only remaining cost is the one final summary step shown to a human.
+
+**The same task with Claude Code** ([`examples/demo/claude-code-bench/`](examples/demo/claude-code-bench/): a real Claude Code v2.1.251 session with only `ANTHROPIC_BASE_URL` pointed at the proxy, no code changes):
+
+| | recorded agent (Claude Code, 7 steps) | compiled build (replayed from a clean state) | delta |
+| :-- | --: | --: | --: |
+| LLM tokens (incl. cache reads) | 1,426,098 | 213,044 | **−85%** |
+| wall time | 74.1 s | 10.7 s | **6.9×** |
+| outputs reproduced | — | **4/6** (the other two: `ls -la` timestamps, Glob path prefix) | |
+| deliverables `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **byte-identical** | |
+
+`Read`/`Glob`/`Bash` are normalized into the same vocabulary as Codex's `exec_command`/`apply_patch` (`read_*`, `shell_*`, `write_*`), so the result has the same shape — whichever agent records the session, it compiles to the same build tree.
+## Supported coding agents
+
+Agents are interchangeable parts. Both seams — capture (the proxy) and act (the escalation backend) — are agent-neutral, so a session recorded with any agent compiles to the same build tree, and the steps that stay with an agent can be executed by any of them.
+
+| Agent | Capture (proxy) | Act (`--escalate`, front-agent binder) | Skills | Wiring |
+| :-- | :-- | :-- | :-- | :-- |
+| **Codex CLI** | ✅ Responses API + ChatGPT backend (subscription login as-is) | ✅ `codex exec` | `$ow-define` … `$ow-bench` (`.agents/skills/`) | `~/.codex/config.toml` provider ([below](#real-usage-everything-inside-the-codex-tui)) |
+| **Claude Code** | ✅ Anthropic Messages API (API key *and* subscription/OAuth login) | ✅ `claude -p` | `/ow-define` … `/ow-bench` (`owc skills install --agent claude`) | `export ANTHROPIC_BASE_URL=http://127.0.0.1:8787` |
+| **Cursor · Windsurf · Continue** | ✅ OpenAI chat/completions (`OPENAI_BASE_URL`) | — (no CLI) | — | `OPENAI_BASE_URL=http://127.0.0.1:8787/v1` (Settings → Models → Override OpenAI Base URL) |
+| **opencode** | ✅ OpenAI chat/completions | ✅ `opencode run` | `/ow-*` (`owc skills install --agent opencode`) | `export OPENAI_BASE_URL=http://127.0.0.1:8787/v1` |
+| **Aider** | ✅ OpenAI chat/completions | ✅ `aider --message` | (paste the SKILL.md body as the message) | `export OPENAI_BASE_URL=http://127.0.0.1:8787/v1` |
+| **Gemini CLI** | planned (Gemini API interceptor) | ✅ `gemini -p` | `/ow-*` (`owc skills install --agent gemini`) | — |
+
+```bash
+owc agent list                       # installed agent CLIs · skills directory · capture mode
+owc agent setup claude               # per-agent proxy wiring (codex / claude / opencode / aider)
+owc skills install --agent claude    # canonical .agents/skills/ → .claude/skills/ (Codex reads the canonical copy)
+owc build run build/<work> --request "…" --escalate auto   # auto = OWC_AGENT → the agent that recorded the trace → first installed
+```
+
+Each agent's tool names (`exec_command` · `Bash` · `run_terminal_cmd`, `apply_patch` · `Write`/`Edit`) are normalized by the proxy into one vocabulary (`shell_<prog>`, `write_<stem>` + V4A patch text, `read_*`/`glob_*`/`grep_*`) so the same compiler, handlers and benchmark apply — see [`adapters/proxy/README.md`](adapters/proxy/README.md).
+
 ### Front agent + compiled build: hybrid run for a new input (CUST-1002)
 
 A compiled build only replays the recorded inputs (CUST-1001). A **front agent** therefore binds the parameters of a new request (`customer_id` from `PARAMS.json`), the code tier re-runs with those values, and only the steps the agent had synthesized (writing the pricing JSON/proposal, the final summary) are escalated to Codex — flexibility stays with the front agent, efficiency comes from deterministic code ([`hybrid-CUST-1002/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002/)):
@@ -113,6 +146,8 @@ python3 -m core.build run build/customer_renewal_codex \
 | wall time | 83 s | 40.2 s | **2.1×** |
 | steps | 8 agent turns | 6 code (0 tokens) + 2 escalated | |
 | pricing result | 60 seats · $17,100/yr · 5% volume | 60 seats · $17,100/yr · 5% volume | identical |
+
+Escalating the same build with **Claude Code** instead (`--escalate claude`, no code or build changes) yields an identical `pricing-CUST-1002.json` — 60.7 s, 517,720 tokens (363,523 of them cache reads: `claude -p` loads the global `CLAUDE.md` and tool schemas on every call), see [`hybrid-CUST-1002-claude/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002-claude/).
 
 The token saving is smaller than in the first benchmark for an obvious reason: each remaining escalation is a fresh Codex session (10–16k tokens with its system prompt). Once those two steps are promoted to `models/slm/` candidates or the proposal wording is lowered to a template (code), tokens approach zero — and how far that lowering may go is stated explicitly in the `.work` file's `escalation` block.
 
@@ -145,7 +180,7 @@ $ow-define <work>            # WHAT: grilling interview → examples/<work>/TASK
 codex exec 'Read examples/<work>/TASK.md …'   # the agent's first run (captured by the proxy) → a human verifies the result
 $ow-traces · $ow-compile-trace <work>         # verified session → build/<work>/ (handlers · prompts · PARAMS.json · <work>.work = HOW)
 $ow-bench <work>                              # agent vs. build: outputs · tokens · speed
-python3 -m core.build run build/<work> --request "…" --escalate codex   # new inputs: front agent + build
+python3 -m core.build run build/<work> --request "…" --escalate auto    # new inputs: front agent + build (auto|claude|codex|…)
 ```
 
 Example of a compiled `.work` — `build/customer_renewal_codex/customer_renewal_codex.work`:
@@ -271,7 +306,16 @@ The recording script is [`docs/demo/openworkcompiler-codex-demo.tape`](docs/demo
 
 **Try it**
 
-1. Configure the Codex provider — add to `~/.codex/config.toml`, or use a separate `CODEX_HOME` directory (copy `auth.json` + the `config.toml` below).
+1. Point the agent at the proxy (`owc agent setup <name>` prints exactly this).
+
+   **Claude Code** — API key and subscription login both work as-is:
+
+   ```bash
+   owc skills install --agent claude                 # /ow-define … /ow-bench in the slash menu
+   export ANTHROPIC_BASE_URL=http://127.0.0.1:8787
+   ```
+
+   **Codex CLI** — add to `~/.codex/config.toml`, or use a separate `CODEX_HOME` directory (copy `auth.json` + the `config.toml` below).
 
    ```toml
    model_provider = "openworkcompiler"
@@ -288,14 +332,16 @@ The recording script is [`docs/demo/openworkcompiler-codex-demo.tape`](docs/demo
    requires_openai_auth = true      # reuse the ChatGPT login token as-is
    ```
 
-2. Start the proxy and launch Codex from the repository root; the skills load from `.agents/skills/` automatically. Telemetry (OpenTelemetry-style spans) is **on by default and local-only** (`build/telemetry/spans.jsonl`, metadata only) and announced at startup — opt-out and OTLP export: [docs/TELEMETRY.md](docs/TELEMETRY.md).
+   **Cursor · Windsurf · opencode · Aider · OpenAI SDK** — `OPENAI_BASE_URL=http://127.0.0.1:8787/v1` (IDEs: Settings → Models → Override OpenAI Base URL).
+
+2. Start the proxy and launch the agent from the repository root (`codex` or `claude`); Codex loads the skills from `.agents/skills/`, Claude Code from `.claude/skills/`. Telemetry (OpenTelemetry-style spans) is **on by default and local-only** (`build/telemetry/spans.jsonl`, metadata only) and announced at startup — opt-out and OTLP export: [docs/TELEMETRY.md](docs/TELEMETRY.md).
 
    ```bash
-   python3 -m uvicorn adapters.proxy.server:app --port 8787 &
-   codex
+   owc proxy --port 8787 &          # = python3 -m uvicorn adapters.proxy.server:app --port 8787
+   codex                            # or: claude
    ```
 
-3. Inside Codex, invoke the skills — `$ow-define <work>` (define the WHAT), `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`. The external skills (grill-me/grilling) can be reinstalled with `npx skills add https://github.com/mattpocock/skills --skill grilling --skill grill-me --agent codex --copy -y` (`skills-lock.json`).
+3. Inside the agent, invoke the skills — Codex: `$ow-define <work>` (define the WHAT), `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`; Claude Code: the same names as `/ow-…`. The external skills (grill-me/grilling) can be reinstalled with `npx skills add https://github.com/mattpocock/skills --skill grilling --skill grill-me --agent codex --copy -y` (`skills-lock.json`).
 
    The commands the skills run work from a plain shell too:
 
@@ -307,13 +353,13 @@ The recording script is [`docs/demo/openworkcompiler-codex-demo.tape`](docs/demo
      -d '{"run_id":"<run_id>","target_name":"codex-session","build_dir":"build"}'   # -> build/codex_session/
    python3 -m core.build from-trace trace.json --target codex-session   # build from a TraceIR JSON without the proxy
    python3 -m core.build bench build/codex_session                       # agent vs. build: outputs · tokens · speed
-   python3 -m core.build run build/<work> --request "..." --escalate codex  # front agent: bind params → code runs free → escalate only synthesized steps
+   python3 -m core.build run build/<work> --request "..." --escalate auto   # front agent: bind params → code runs free → escalate only synthesized steps (auto|claude|codex|…)
    ```
 
    API-key clients (OpenAI SDK, Agents SDK, ...) only need `OPENAI_BASE_URL=http://127.0.0.1:8787/v1`; `/v1/responses` is captured the same way.
 
 ```text
-Existing AI Agent (Codex CLI, Claude Code, Cursor, AutoGen, LangChain, Custom Script)
+Existing AI Agent (Codex CLI · Claude Code · Cursor/Windsurf · opencode · Aider · OpenAI/Anthropic SDK)
                                 │
         Standard LLM API Calls (OPENAI_BASE_URL=http://localhost:8787/v1)
                                 │
@@ -574,7 +620,7 @@ openworkcompiler/
 │   └── surfaces/                # AG-UI surface event contracts
 │
 ├── adapters/                    # Ecosystem & Semantic Adapters
-│   ├── proxy/                   # Zero-code LLM API proxy adapter (OpenAI & Anthropic)
+│   ├── proxy/                   # zero-code LLM API proxy: Responses/Codex · Anthropic Messages (Claude Code) · chat/completions (Cursor · opencode · Aider) passthrough, tools.py (tool vocabulary), agents.py (source_agent · run_id)
 │   ├── linkml/                  # LinkML authoring & generator adapter
 │   ├── owl/                     # OWL 2 ontology & ELK/HermiT reasoner adapter
 │   ├── shacl/                   # SHACL constraint validator adapter
@@ -588,11 +634,12 @@ openworkcompiler/
 │
 ├── agents/                      # Guide and measurement fleet specs
 ├── docs/                        # Specifications, architecture, usage guides, and diagrams
-├── .agents/skills/              # Codex skills: $ow-define (WHAT, grilling interview) · $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench · grill-me/grilling (mattpocock/skills, skills-lock.json)
+├── .agents/skills/              # canonical agent skills (synced into .claude/skills etc. by owc skills install): ow-define (WHAT, grilling interview) · ow-compile-work · ow-traces · ow-compile-trace · ow-bench · grill-me/grilling (mattpocock/skills, skills-lock.json)
+├── core/agents/                 # agent backend registry: claude · codex · gemini · opencode · aider (`--escalate auto`, `owc agent …`) · core/skills.py (skills sync)
 ├── vendor/openworklang/         # submodule: the OpenWorkLang language (baryonlabs/openworklang)
 ├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + loader + benchmark (token ledger) + front-agent runner
 ├── examples/cases/              # four business cases: beginner materials → $ow-define → agent run → compile → bench (transcripts · traces · builds)
-├── tests/                       # Complete pytest suite (154 tests)
+├── tests/                       # Complete pytest suite (191 tests)
 └── examples/                    # Sample workflows, LinkML schemas, and runnable demo scripts
 ```
 
@@ -615,10 +662,11 @@ owc proxy --port 8787                                   # zero-code proxy (local
 owc compile examples/quality_analysis.work              # .work → build/quality_analyst/
 owc build from-trace trace.json --target my-work        # captured session → build tree
 owc build bench build/my_work                           # agent vs. build: outputs · tokens · speed
-owc build run build/my_work --request "…" --escalate codex   # front agent + build
+owc build run build/my_work --request "…" --escalate auto    # front agent + build (auto|claude|codex|gemini|opencode|aider)
+owc agent list · owc agent setup claude · owc skills install --agent claude   # detect agents · proxy wiring · skills sync
 ```
 
-The Codex skills (`$ow-*`) load when Codex runs in a directory containing `.agents/skills/` — clone the repository: `git clone --recurse-submodules https://github.com/baryonlabs/workcompiler.git`. Development install: `pip install -e ".[dev]"`; OTLP telemetry export: `".[telemetry]"` (local file by default, see [docs/TELEMETRY.md](docs/TELEMETRY.md)).
+The skills load from a clone of the repository — Codex reads `.agents/skills/` (`$ow-*`) directly; Claude Code, Gemini and opencode read the copy synced with `owc skills install --agent <name>` (`/ow-*`): `git clone --recurse-submodules https://github.com/baryonlabs/workcompiler.git`. Development install: `pip install -e ".[dev]"`; OTLP telemetry export: `".[telemetry]"` (local file by default, see [docs/TELEMETRY.md](docs/TELEMETRY.md)).
 
 For complete API documentation and a step-by-step developer guide, see **[Usage Guide](docs/usage.md)**.
 

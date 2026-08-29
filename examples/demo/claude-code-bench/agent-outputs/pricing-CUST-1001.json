@@ -1,0 +1,26 @@
+{
+  "customer_id": "CUST-1001",
+  "contract_id": "CTR-2024-0917",
+  "pricing_policy": "pricing_v2",
+  "as_of": "2026-08-29",
+  "plan": "enterprise",
+  "current_contract_seats": 240,
+  "peak_seats_active_3m": 262,
+  "recommended_committed_seats": 270,
+  "list_price_per_seat_month_usd": 40.0,
+  "monthly_list_total_usd": 10800.0,
+  "volume_discount_pct": 10,
+  "loyalty": {
+    "contract_start_date": "2024-09-01",
+    "years_of_continuous_service": 1.99,
+    "min_years_required": 2,
+    "applied": false,
+    "pct": 0
+  },
+  "total_discount_pct": 10,
+  "max_total_discount_pct": 20,
+  "monthly_total_usd": 9720.0,
+  "annual_total_usd": 116640.0,
+  "renewal_term_months": 12,
+  "currency": "USD"
+}

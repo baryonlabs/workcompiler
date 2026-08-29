@@ -5,7 +5,7 @@ description: Compile the agent session captured by the OpenWorkCompiler proxy (t
 
 # ow-compile-trace — captured session → build tree
 
-Invoked as `$ow-compile-trace <target_name>`.
+Invoked as `$ow-compile-trace <target_name>` in Codex, `/ow-compile-trace <target_name>` in Claude Code (any agent: ask for the skill by name).
 
 1. Run `curl -s localhost:8787/v1/workcompiler/traces` and pick the run_id with the largest steps_count.
 2. Compile it (substitute TARGET with the requested target name):

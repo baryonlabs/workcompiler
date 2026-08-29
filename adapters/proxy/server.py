@@ -18,19 +18,22 @@ Two modes coexist:
 """
 
 import os
+from dataclasses import dataclass
 import json
 import glob
 import time
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import httpx
 from fastapi import FastAPI, Request, Header, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
 from starlette.responses import Response
 
-from adapters.proxy.interceptor import TrajectoryInterceptor, responses_object_from_sse
+from adapters.proxy.agents import detect_source_agent, resolve_run_id
+from adapters.proxy.interceptor import (TrajectoryInterceptor, anthropic_message_from_sse, chat_completion_from_sse,
+                                        is_side_call, responses_object_from_sse)
 from core.build.emitter import emit_build
 from core import telemetry
 from adapters.agentbehavior import parse_behavior_md
@@ -53,6 +56,8 @@ UPSTREAM_OPENAI_URL = os.getenv("OPENAI_UPSTREAM_URL", "https://api.openai.com/v
 UPSTREAM_ANTHROPIC_URL = os.getenv("ANTHROPIC_UPSTREAM_URL", "https://api.anthropic.com/v1")
 # Codex CLI with ChatGPT login talks to this backend instead of api.openai.com.
 UPSTREAM_CHATGPT_CODEX_URL = os.getenv("CHATGPT_CODEX_UPSTREAM_URL", "https://chatgpt.com/backend-api/codex")
+ANTHROPIC_UPSTREAM_ROOT = os.getenv("ANTHROPIC_UPSTREAM_ROOT", UPSTREAM_ANTHROPIC_URL.rsplit("/v1", 1)[0])
+OPENAI_UPSTREAM_ROOT = os.getenv("OPENAI_UPSTREAM_ROOT", UPSTREAM_OPENAI_URL.rsplit("/v1", 1)[0])
 UPSTREAM_TIMEOUT_SECONDS = float(os.getenv("OPENWORKCOMPILER_UPSTREAM_TIMEOUT", "600"))
 
 # Hop-by-hop / transport headers that must not be forwarded verbatim.
@@ -133,13 +138,18 @@ def discover_behavior_contracts(workspace_dir: Optional[str] = None) -> List[Dic
 
 def get_or_create_interceptor(
     run_id: Optional[str] = None,
-    source_agent: str = "zero-code-proxy"
+    source_agent: str = "zero-code-proxy",
+    *,
+    protocol: str = "unknown",
+    agent_version: Optional[str] = None,
+    user_agent: Optional[str] = None,
 ) -> TrajectoryInterceptor:
     """Retrieve existing session interceptor or create a new session."""
-    session_id = run_id or f"session_{time.strftime('%Y%m%d_%H%M%S')}"
+    session_id = run_id or f"session_{uuid.uuid4().hex[:12]}"
     if session_id not in active_interceptors:
         active_interceptors[session_id] = TrajectoryInterceptor(
-            run_id=session_id, source_agent=source_agent
+            run_id=session_id, source_agent=source_agent, protocol=protocol,
+            agent_version=agent_version, user_agent=user_agent,
         )
     return active_interceptors[session_id]
 
@@ -162,8 +172,11 @@ async def list_intercepted_traces() -> Dict[str, Any]:
         traces_summary.append({
             "run_id": run_id,
             "source_agent": interceptor.source_agent,
+            "protocol": interceptor.protocol,
+            "agent_version": interceptor.agent_version,
             "steps_count": len(interceptor.steps),
             "actions": [step.action for step in interceptor.steps],
+            "aux_tokens": interceptor.aux_prompt_tokens + interceptor.aux_completion_tokens,
             "prompt_tokens": interceptor.prompt_tokens_accumulated,
             "completion_tokens": interceptor.completion_tokens_accumulated,
         })
@@ -262,33 +275,28 @@ def _upstream_client() -> httpx.AsyncClient:
     return httpx.AsyncClient(timeout=httpx.Timeout(UPSTREAM_TIMEOUT_SECONDS, connect=30.0))
 
 
-def _resolve_run_id(request: Request, payload: Dict[str, Any]) -> Optional[str]:
-    """Group Responses API calls into one trajectory per agent conversation.
+@dataclass(frozen=True)
+class ProtocolAdapter:
+    """How one wire protocol is captured: SSE reconstruction + interceptor method."""
 
-    Priority: explicit ``X-OpenWorkCompiler-Run-ID`` header → Codex ``session_id`` /
-    ``conversation_id`` headers → ``prompt_cache_key`` in the payload (Codex sets it
-    to the thread id) → ``previous_response_id`` chain is not stable, so fall back to a
-    fresh per-process session.
-    """
-    for header in ("x-openworkcompiler-run-id", "session_id", "conversation_id"):
-        value = request.headers.get(header)
-        if value:
-            return value
-    cache_key = payload.get("prompt_cache_key")
-    if isinstance(cache_key, str) and cache_key:
-        return cache_key
-    return None
+    name: str
+    from_sse: Callable[[str], Optional[Dict[str, Any]]]
+    intercept: str
 
 
-def _source_agent(request: Request, default: str) -> str:
-    originator = request.headers.get("originator")
-    if originator:
-        return originator
-    return request.headers.get("user-agent", default)
+PROTOCOLS: Dict[str, ProtocolAdapter] = {
+    "responses": ProtocolAdapter("responses", responses_object_from_sse, "intercept_responses_request_response"),
+    "anthropic": ProtocolAdapter("anthropic", anthropic_message_from_sse, "intercept_anthropic_request_response"),
+    "chat": ProtocolAdapter("chat", chat_completion_from_sse, "intercept_openai_request_response"),
+}
 
 
-async def _relay_responses_api(request: Request, upstream_url: str) -> Response:
-    """Forward a Responses API call upstream, relay the (SSE) reply, capture the turn."""
+def _wants_synthetic(request: Request) -> bool:
+    return request.headers.get("x-openworkcompiler-response-mode", "").lower() == "synthetic"
+
+
+async def _relay(request: Request, upstream_url: str, protocol: ProtocolAdapter) -> Response:
+    """Forward an LLM API call upstream, relay the (SSE) reply byte-for-byte, capture the turn."""
     body = await request.body()
     try:
         payload = json.loads(body) if body else {}
@@ -298,10 +306,13 @@ async def _relay_responses_api(request: Request, upstream_url: str) -> Response:
         raise HTTPException(status_code=422, detail="Request JSON body must be an object.")
 
     forward_headers = {k: v for k, v in request.headers.items() if k.lower() not in _STRIP_REQUEST_HEADERS}
+    agent, version = detect_source_agent(request.headers, protocol.name)
     interceptor = get_or_create_interceptor(
-        run_id=_resolve_run_id(request, payload),
-        source_agent=_source_agent(request, "openai-responses-client"),
+        run_id=resolve_run_id(request.headers, payload, protocol.name),
+        source_agent=agent, protocol=protocol.name, agent_version=version,
+        user_agent=request.headers.get("user-agent"),
     )
+    side_call = protocol.name != "responses" and is_side_call(payload)
 
     client = _upstream_client()
     start_time = time.perf_counter()
@@ -333,18 +344,20 @@ async def _relay_responses_api(request: Request, upstream_url: str) -> Response:
                 raw = b"".join(chunks).decode("utf-8", errors="replace")
                 final_response: Optional[Dict[str, Any]] = None
                 if is_stream:
-                    final_response = responses_object_from_sse(raw)
+                    final_response = protocol.from_sse(raw)
                 else:
                     try:
                         parsed = json.loads(raw)
                         final_response = parsed if isinstance(parsed, dict) else None
                     except Exception:
                         final_response = None
-                if final_response is not None:
-                    step = interceptor.intercept_responses_request_response(payload, final_response, duration_ms=duration_ms)
+                if final_response is not None and side_call:
+                    interceptor.record_side_call(final_response)
+                elif final_response is not None:
+                    step = getattr(interceptor, protocol.intercept)(payload, final_response, duration_ms=duration_ms)
                     usage = step.token_usage
                     telemetry.event("proxy.turn", run_id=interceptor.run_id, source_agent=interceptor.source_agent,
-                                    action=step.action, model=getattr(step, "model", ""),
+                                    protocol=protocol.name, action=step.action, model=getattr(step, "model", ""),
                                     prompt_tokens=usage.prompt_tokens, completion_tokens=usage.completion_tokens,
                                     total_tokens=usage.total_tokens, cached_tokens=getattr(step, "cached_tokens", 0),
                                     latency_ms=round(duration_ms, 1), upstream_status=upstream_response.status_code)
@@ -355,6 +368,36 @@ async def _relay_responses_api(request: Request, upstream_url: str) -> Response:
         headers=response_headers,
         media_type=content_type or None,
     )
+
+
+async def _relay_responses_api(request: Request, upstream_url: str) -> Response:
+    return await _relay(request, upstream_url, PROTOCOLS["responses"])
+
+
+async def _forward_plain(request: Request, url: str) -> Response:
+    """Forward a non-captured call untouched (usage, models, token counting, ...)."""
+    body = await request.body()
+    forward_headers = {k: v for k, v in request.headers.items() if k.lower() not in _STRIP_REQUEST_HEADERS}
+    if request.url.query:
+        url = f"{url}?{request.url.query}"
+    async with _upstream_client() as client:
+        try:
+            upstream = await client.request(request.method, url, content=body, headers=forward_headers)
+        except httpx.HTTPError as exc:
+            raise HTTPException(status_code=502, detail=f"Upstream request failed: {exc}") from exc
+    headers = {k: v for k, v in upstream.headers.items() if k.lower() not in _STRIP_RESPONSE_HEADERS}
+    headers.update(_passthrough_headers())
+    return Response(content=upstream.content, status_code=upstream.status_code, headers=headers)
+
+
+def _upstream_root_for(request: Request, path: str) -> str:
+    """Pick the upstream for an uncaptured path: Codex backend, Anthropic, or OpenAI."""
+    if path.startswith("backend-api/codex"):
+        return UPSTREAM_CHATGPT_CODEX_URL.rsplit("/backend-api/codex", 1)[0]
+    h = request.headers
+    if h.get("x-api-key") or h.get("anthropic-version") or h.get("anthropic-beta") or (h.get("user-agent", "").lower().startswith("claude-cli")):
+        return ANTHROPIC_UPSTREAM_ROOT
+    return OPENAI_UPSTREAM_ROOT
 
 
 @app.post("/v1/responses")
@@ -378,26 +421,7 @@ async def proxy_chatgpt_codex_responses(request: Request) -> Response:
     return await _relay_responses_api(request, f"{UPSTREAM_CHATGPT_CODEX_URL.rstrip('/')}/responses")
 
 
-@app.api_route("/backend-api/codex/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
-async def proxy_chatgpt_codex_other(path: str, request: Request) -> Response:
-    """Forward any other Codex backend call (usage, config bundles, ...) untouched."""
-    body = await request.body()
-    forward_headers = {k: v for k, v in request.headers.items() if k.lower() not in _STRIP_REQUEST_HEADERS}
-    url = f"{UPSTREAM_CHATGPT_CODEX_URL.rstrip('/')}/{path}"
-    if request.url.query:
-        url = f"{url}?{request.url.query}"
-    async with _upstream_client() as client:
-        try:
-            upstream = await client.request(request.method, url, content=body, headers=forward_headers)
-        except httpx.HTTPError as exc:
-            raise HTTPException(status_code=502, detail=f"Upstream request failed: {exc}") from exc
-    headers = {k: v for k, v in upstream.headers.items() if k.lower() not in _STRIP_RESPONSE_HEADERS}
-    headers.update(_passthrough_headers())
-    return Response(content=upstream.content, status_code=upstream.status_code, headers=headers)
-
-
-@app.post("/v1/chat/completions")
-async def proxy_openai_chat_completions(
+async def _synthetic_openai_chat_completions(
     request: Request,
     x_openworkcompiler_run_id: Optional[str] = Header(None, alias="X-OpenWorkCompiler-Run-ID"),
     x_openworkcompiler_behavior: Optional[str] = Header(None, alias="X-OpenWorkCompiler-Behavior"),
@@ -463,8 +487,7 @@ async def proxy_openai_chat_completions(
     return JSONResponse(content=synthetic_response, headers=_synthetic_headers())
 
 
-@app.post("/v1/messages")
-async def proxy_anthropic_messages(
+async def _synthetic_anthropic_messages(
     request: Request,
     x_openworkcompiler_run_id: Optional[str] = Header(None, alias="X-OpenWorkCompiler-Run-ID"),
     x_openworkcompiler_behavior: Optional[str] = Header(None, alias="X-OpenWorkCompiler-Behavior"),
@@ -516,3 +539,33 @@ async def proxy_anthropic_messages(
     interceptor.intercept_anthropic_request_response(payload, synthetic_response, duration_ms=duration_ms)
 
     return JSONResponse(content=synthetic_response, headers=_synthetic_headers())
+
+
+@app.post("/v1/chat/completions")
+async def proxy_openai_chat_completions(request: Request) -> Response:
+    """OpenAI chat/completions: transparent passthrough (Cursor, opencode, Aider, SDKs).
+
+    Send ``X-OpenWorkCompiler-Response-Mode: synthetic`` for the development-only synthetic reply.
+    """
+    if _wants_synthetic(request):
+        return await _synthetic_openai_chat_completions(
+            request, request.headers.get("X-OpenWorkCompiler-Run-ID"), request.headers.get("X-OpenWorkCompiler-Behavior"))
+    return await _relay(request, f"{UPSTREAM_OPENAI_URL.rstrip('/')}/chat/completions", PROTOCOLS["chat"])
+
+
+@app.post("/v1/messages")
+async def proxy_anthropic_messages(request: Request) -> Response:
+    """Anthropic Messages: transparent passthrough (Claude Code with ``ANTHROPIC_BASE_URL``).
+
+    Send ``X-OpenWorkCompiler-Response-Mode: synthetic`` for the development-only synthetic reply.
+    """
+    if _wants_synthetic(request):
+        return await _synthetic_anthropic_messages(
+            request, request.headers.get("X-OpenWorkCompiler-Run-ID"), request.headers.get("X-OpenWorkCompiler-Behavior"))
+    return await _relay(request, f"{UPSTREAM_ANTHROPIC_URL.rstrip('/')}/messages", PROTOCOLS["anthropic"])
+
+
+@app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
+async def proxy_catch_all(path: str, request: Request) -> Response:
+    """Forward every other call (models, token counting, Codex usage/config, ...) to its upstream."""
+    return await _forward_plain(request, f"{_upstream_root_for(request, path).rstrip('/')}/{path}")

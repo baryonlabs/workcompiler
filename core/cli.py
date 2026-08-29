@@ -3,6 +3,8 @@
     owc proxy [--port 8787]                 start the zero-code proxy (Codex / Responses API passthrough)
     owc compile <file.work> [...]           OpenWorkLang → build/<work>/ (same as python -m core.openworklang compile)
     owc build <from-work|from-trace|bench|run|show> ...   the build backend (same as python -m core.build)
+    owc agent <list|doctor|setup|exec> ...  coding-agent backends (Claude Code, Codex, Gemini, opencode, Aider)
+    owc skills <install|list|doctor> ...    sync .agents/skills into each agent's skills directory
     owc version
 """
 
@@ -32,14 +34,22 @@ def main(argv=None) -> int:
 
     sub.add_parser("compile", help="Compile an OpenWorkLang .work file into a build tree", add_help=False)
     sub.add_parser("build", help="Build backend: from-work | from-trace | bench | run | show", add_help=False)
+    sub.add_parser("agent", help="Agent backends: list | doctor | setup <name> | exec <prompt>", add_help=False)
+    sub.add_parser("skills", help="Skills sync: install [--agent …] | list | doctor [--check]", add_help=False)
     sub.add_parser("version", help="Print the version")
 
     # let sub-CLIs own their arguments
-    if argv and argv[0] in ("compile", "build"):
+    if argv and argv[0] in ("compile", "build", "agent", "skills"):
         rest = argv[1:]
         if argv[0] == "compile":
             from core.openworklang.__main__ import main as compile_main
             return compile_main(["compile", *rest])
+        if argv[0] == "agent":
+            from core.agents.__main__ import main as agent_main
+            return agent_main(rest)
+        if argv[0] == "skills":
+            from core.skills import main as skills_main
+            return skills_main(rest)
         from core.build.__main__ import main as build_main
         return build_main(rest)
 
@@ -55,7 +65,11 @@ def main(argv=None) -> int:
         if args.workspace:
             os.environ["OPENWORKCOMPILER_WORKSPACE_DIR"] = args.workspace
         telemetry.notice("proxy")
-        print(f"[owc] proxy on http://{args.host}:{args.port}  (Codex provider base_url: http://{args.host}:{args.port}/backend-api/codex)", file=sys.stderr)
+        base = f"http://{args.host}:{args.port}"
+        print(f"[owc] proxy on {base}", file=sys.stderr)
+        print(f"[owc]   Claude Code:      ANTHROPIC_BASE_URL={base}", file=sys.stderr)
+        print(f"[owc]   Codex CLI:        base_url = \"{base}/backend-api/codex\"   (owc agent setup codex)", file=sys.stderr)
+        print(f"[owc]   OpenAI-compatible: OPENAI_BASE_URL={base}/v1   (Cursor, opencode, Aider, SDKs)", file=sys.stderr)
         uvicorn.run("adapters.proxy.server:app", host=args.host, port=args.port, log_level="info")
         return 0
     parser.print_help()

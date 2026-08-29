@@ -1,0 +1,26 @@
+{
+  "params": [
+    {
+      "name": "customer_id",
+      "recorded_value": "CUST-1001",
+      "kind": "id",
+      "steps": [
+        "step_4",
+        "step_5",
+        "step_6"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "contract_id",
+      "recorded_value": "CTR-2024-0917",
+      "kind": "id",
+      "steps": [
+        "step_5",
+        "step_6"
+      ],
+      "source": "command"
+    }
+  ],
+  "synthesized_actions": []
+}

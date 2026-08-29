@@ -4,7 +4,7 @@
     python3 -m core.build from-trace trace.json --target NAME     [--build-dir build] [--behaviors DIR]
     python3 -m core.build show       build/<work>
     python3 -m core.build bench      build/<work> [--trace trace.json] [--no-replay]
-    python3 -m core.build run        build/<work> --request "..." [--param k=v] [--escalate codex] [--binder regex|codex]
+    python3 -m core.build run        build/<work> --request "..." [--param k=v] [--escalate auto|claude|codex|…] [--binder regex|agent]
 """
 
 from __future__ import annotations
@@ -80,7 +80,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     params = dict(kv.split("=", 1) for kv in (args.param or []))
     report = run_build(args.build_dir, request=args.request, params=params or None,
-                       escalate=args.escalate, binder=args.binder, out_dir=args.out)
+                       escalate=args.escalate, binder=args.binder, out_dir=args.out, model=getattr(args, "model", None))
     t = report.totals()
     print(f"[run] {report.work}: params={json.dumps(report.params, ensure_ascii=False)} ({', '.join(f'{k}:{v}' for k, v in report.binding.items())})")
     print(f"  tokens {t['tokens']:,} (recorded session {t['recorded_tokens']:,}), wall {t['latency_ms']/1000:.1f}s "
@@ -128,8 +128,11 @@ def main(argv=None) -> int:
     e.add_argument("build_dir")
     e.add_argument("--request", help="Natural-language request the front agent binds parameters from")
     e.add_argument("--param", action="append", help="Explicit parameter, name=value (repeatable)")
-    e.add_argument("--escalate", choices=["none", "codex"], default="none", help="Backend for steps that need an agent")
-    e.add_argument("--binder", choices=["regex", "codex"], default="regex", help="How the front agent extracts parameters")
+    from core.agents import REGISTRY
+    e.add_argument("--escalate", choices=["none", "auto", *REGISTRY], default="none",
+                   help="Backend for steps that need an agent: auto picks the recorded agent or the first installed CLI")
+    e.add_argument("--binder", choices=["regex", "agent", "codex"], default="regex", help="How the front agent extracts parameters")
+    e.add_argument("--model", help="Model for the escalation backend")
     e.add_argument("--out", help="Directory for run reports (default: <build_dir>/runs)")
     e.set_defaults(func=cmd_run)
 

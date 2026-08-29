@@ -11,7 +11,7 @@ set up, what we accept, and the licensing terms for contributions.
 | Bug reports / feature requests | GitHub Issues | Include the trace or build (`build/<work>/trace.json`, `BENCHMARK.md`) when relevant. |
 | Code: proxy, compiler, build backend, benchmark, front agent | this repository | See *Development* below. |
 | The `.work` language (parser, compiler, spec) | [baryonlabs/openworklang](https://github.com/baryonlabs/openworklang) | Vendored here as the `vendor/openworklang` submodule; language changes go there first. |
-| Codex skills (`.agents/skills/ow-*`) | this repository | Keep skills deterministic: exact commands, an emoji terminator, no task execution inside `$ow-define`. |
+| Agent skills (`.agents/skills/ow-*`, canonical; synced with `owc skills install`) | this repository | Keep skills deterministic and agent-neutral: exact commands, `owc agent exec` rather than a specific CLI, `--escalate auto`; the emoji terminator is optional (the demo tapes wait for it), no task execution inside `ow-define`. |
 | Docs, examples, translations (ko/en) | this repository | Keep README.md (ko) and README.en.md in sync. |
 
 ### We are collecting adoption cases
@@ -33,7 +33,7 @@ python3 -m pytest -q                       # must stay green
 
 - Python 3.10+. Standard library first; new dependencies need a reason in the PR.
 - Code lives under `core/` (compiler, build backend, runtime), `adapters/` (proxy, behaviors),
-  `.agents/skills/` (Codex skills), `examples/` (real, reproducible runs).
+  `.agents/skills/` (skills for every agent; never commit `.claude/skills/` copies), `examples/` (real, reproducible runs).
 - Every behavior change needs a test in `tests/`. The suite runs in well under a second; keep it so.
 - Benchmarks and examples must be **real**: no fabricated transcripts, traces or numbers. If you
   regenerate an example, regenerate its transcript, trace and `BENCHMARK.md` together.

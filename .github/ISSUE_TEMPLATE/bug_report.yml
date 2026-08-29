@@ -12,4 +12,4 @@ body:
       label: Trace / build / report
       description: Attach or paste the relevant `build/<work>/trace.json`, `BENCHMARK.md`, `RUN_REPORT.md` or proxy log (redact secrets and customer data).
   - type: input
-    attributes: {label: Version, placeholder: "v0.2.0 / commit sha, Python version, Codex version"}
+    attributes: {label: Version, placeholder: "v0.2.0 / commit sha, Python version, agent CLI and version (claude 2.1.x / codex 0.150.x / opencode …)"}

@@ -123,9 +123,16 @@ def _example_io(steps: Sequence[TraceStep]) -> tuple[Dict[str, Any], Dict[str, A
 
 
 def _relativize_patch(patch: str) -> str:
-    """Rewrite absolute file paths under the current workspace to relative ones (portable builds)."""
-    cwd = str(Path.cwd().resolve()) + "/"
-    return patch.replace(cwd, "")
+    """Rewrite absolute file paths under the workspace to relative ones (portable builds)."""
+    import os
+
+    roots = [str(Path.cwd().resolve()) + "/"]
+    ws = os.environ.get("OPENWORKCOMPILER_WORKSPACE_DIR")
+    if ws:
+        roots.append(str(Path(ws).resolve()) + "/")
+    for root in roots:
+        patch = patch.replace(root, "")
+    return patch
 
 
 def _shell_commands(example_input: Dict[str, Any]) -> List[str]:
@@ -179,40 +186,26 @@ PATCH = {patch!r}
 {_RENDER_HELPER}
 
 
-def _parse(patch_text):
-    """Split an apply_patch text into (op, path, lines) file blocks."""
-    blocks, current = [], None
-    for line in patch_text.splitlines():
-        if line.startswith("*** Begin Patch") or line.startswith("*** End Patch"):
-            continue
-        if line.startswith("*** "):
-            op, _, path = line[4:].partition(" File: ")
-            current = (op, path.strip(), [])
-            blocks.append(current)
-        elif current is not None:
-            current[2].append(line)
-    return blocks
-
-
 def run(**inputs):
-    """Re-apply the file changes captured from the approved agent trace (Add/Delete File)."""
+    """Re-apply the file changes captured from the approved agent trace.
+
+    The patch is V4A-style text (Add / Update hunks / Delete) shared by every agent adapter;
+    ``core.work_ir.patchfmt`` applies it. Update hunks already present in the workspace are
+    reported as already_applied instead of failing.
+    """
+    from core.work_ir.patchfmt import apply_patch_text
+
     patch_text = inputs.get("patch") or _render(PATCH, inputs)
-    written, deleted = [], []
-    for op, path, lines in _parse(patch_text):
-        target = pathlib.Path(path)
-        if op == "Add":
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text("\\n".join(l[1:] if l.startswith("+") else l for l in lines) + "\\n", encoding="utf-8")
-            written.append(str(target))
-        elif op == "Delete":
-            if target.exists():
-                target.unlink()
-            deleted.append(str(target))
-        else:
-            raise NotImplementedError(f"apply_patch op '{{op}}' for {{path}} needs a hand-written handler")
-    return {{"files": written, "deleted": deleted, "stdout": "".join(f"A {{f}}\\n" for f in written) + "".join(f"D {{f}}\\n" for f in deleted)}}
+    results = apply_patch_text(patch_text, ".")
+    marks = {{"Add": "A", "Update": "M", "Delete": "D"}}
+    return {{
+        "files": [r["path"] for r in results if r["op"] != "Delete"],
+        "deleted": [r["path"] for r in results if r["op"] == "Delete"],
+        "results": results,
+        "stdout": "".join(f"{{marks.get(r['op'], '?')}} {{r['path']}} ({{r['status']}})\\n" for r in results),
+    }}
 '''
-        imports = "import pathlib\n"
+        imports = ""
     elif cmds:
         body = f'''PARAMS = {defaults!r}   # recorded values; override via run(**inputs)
 COMMANDS = {cmds!r}

@@ -1,0 +1,306 @@
+{
+  "work": "customer-renewal-claude",
+  "build_dir": "build/customer_renewal_claude",
+  "run_id": "claude_5603ea11-cf34-4d8d-b6db-0be21322061e",
+  "source_agent": "claude-code",
+  "totals": {
+    "recorded_tokens": 1426098,
+    "compiled_tokens": 213044,
+    "token_savings_pct": 85.1,
+    "recorded_latency_ms": 74053.0,
+    "compiled_latency_ms": 10716.3,
+    "speedup_x": 6.9,
+    "outputs_checked": 6,
+    "outputs_matched": 4,
+    "compiled_actions": 6,
+    "escalated_actions": 1
+  },
+  "by_model": {
+    "claude-fable-5": {
+      "recorded_tokens": 1426098,
+      "compiled_tokens": 213044
+    },
+    "code": {
+      "recorded_tokens": 0,
+      "compiled_tokens": 0
+    }
+  },
+  "ledger": [
+    {
+      "step": "step_1",
+      "action": "read_task",
+      "recorded_model": "claude-fable-5",
+      "recorded_prompt_tokens": 170028,
+      "recorded_cached_tokens": 0,
+      "recorded_completion_tokens": 107,
+      "recorded_tokens": 170135,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_2",
+      "action": "read_contracts",
+      "recorded_model": "claude-fable-5",
+      "recorded_prompt_tokens": 204175,
+      "recorded_cached_tokens": 143438,
+      "recorded_completion_tokens": 413,
+      "recorded_tokens": 204588,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_3",
+      "action": "read_behavior",
+      "recorded_model": "claude-fable-5",
+      "recorded_prompt_tokens": 206146,
+      "recorded_cached_tokens": 203941,
+      "recorded_completion_tokens": 327,
+      "recorded_tokens": 206473,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_4",
+      "action": "shell_cd",
+      "recorded_model": "claude-fable-5",
+      "recorded_prompt_tokens": 207295,
+      "recorded_cached_tokens": 206010,
+      "recorded_completion_tokens": 1638,
+      "recorded_tokens": 208933,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_5",
+      "action": "shell_mkdir",
+      "recorded_model": "claude-fable-5",
+      "recorded_prompt_tokens": 209214,
+      "recorded_cached_tokens": 207159,
+      "recorded_completion_tokens": 1551,
+      "recorded_tokens": 210765,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_6",
+      "action": "shell_cat",
+      "recorded_model": "claude-fable-5",
+      "recorded_prompt_tokens": 211122,
+      "recorded_cached_tokens": 209078,
+      "recorded_completion_tokens": 1038,
+      "recorded_tokens": 212160,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_7",
+      "action": "respond",
+      "recorded_model": "claude-fable-5",
+      "recorded_prompt_tokens": 212335,
+      "recorded_cached_tokens": 210986,
+      "recorded_completion_tokens": 709,
+      "recorded_tokens": 213044,
+      "compiled_executor": "claude-fable-5",
+      "compiled_tokens": 213044
+    }
+  ],
+  "actions": [
+    {
+      "action": "read_task",
+      "tier": "code",
+      "recorded_tokens": 170135,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 4116.4,
+      "compiled_latency_ms": 5.2,
+      "output_matches": "1/1",
+      "steps": [
+        {
+          "step_id": "step_1",
+          "recorded_tokens": 170135,
+          "recorded_latency_ms": 4116.369582945481,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 5.214249948039651,
+          "executor_used": "code:customer_renewal_claude/handlers",
+          "output_match": true,
+          "recorded_output": "1\t# Task: renewal proposal for customer CUST-1001\n2\t\n3\tYou are the sales-ops assistant. Prepare the annual renewal proposal for **CUST-1001**.\n4\t\n5\tRules (from `behaviors/`): verify the *active* contract in the CRM before pricing, and price with the\n6\t*current* policy `data/pricing/pricing_v2.yaml` — never the legacy table.\n7\t\n8\tDo the work with auditable shell commands (jq / python3 / cat), from the repository root:\n9\t\n10\t1. **Lookup contract** — read `examples/customer-renewal/data/crm/contracts.json`, select the\n11\t   contract for CUST-1001 whose `status` is `active`, and print it.\n12\t2. **Calculate usage** — from `examples/customer-renewal/data/usage/usage-2026-07.csv`, compute for\n13\t   CUST-1001 the peak `seats_active` over the 3 months, the growth of `seats_active` (last vs first\n14\t   month, in %) and the average `api_calls`.\n15\t3. **Price the offer** — apply `pricing_v2.yaml`: recommended committed seats per `seat_recommendation`,\n16\t   list price for the plan, volume discount band, loyalty discount if the customer has >= 2 years of\n17\t   continuous service (use the active contract's `start_date`, today is 2026-08-29), cap at\n18\t   `max_total_discount_pct`. Compute monthly and annual totals. Write the calculation as JSON to\n19\t   `build/renewal/pricing-CUST-1001.json`.\n20\t4. **Draft the proposal** — write `build/renewal/proposal-CUST-1001.md` with: customer & contract\n21\t   summary, usage summary, a pricing table (seats × list price − discounts = monthly / annual), and\n22\t   every clause from `required_clauses` verbatim.\n23\t5. Reply with a short summary (recommended seats, total annual price, discounts applied) and the two\n24\t   file paths.\n25\t",
+          "compiled_output": "# Task: renewal proposal for customer CUST-1001\n\nYou are the sales-ops assistant. Prepare the annual renewal proposal for **CUST-1001**.\n\nRules (from `behaviors/`): verify the *active* contract in the CRM before pricing, and price with the\n*current* policy `data/pricing/pricing_v2.yaml` — never the legacy table.\n\nDo the work with auditable shell commands (jq / python3 / cat), from the repository root:\n\n1. **Lookup contract** — read `examples/customer-renewal/data/crm/contracts.json`, select the\n   contract for CUST-1001 whose `status` is `active`, and print it.\n2. **Calculate usage** — from `examples/customer-renewal/data/usage/usage-2026-07.csv`, compute for\n   CUST-1001 the peak `seats_active` over the 3 months, the growth of `seats_active` (last vs first\n   month, in %) and the average `api_calls`.\n3. **Price the offer** — apply `pricing_v2.yaml`: recommended committed seats per `seat_recommendation`,\n   list price for the plan, volume discount band, loyalty discount if the customer has >= 2 years of\n   continuous service (use the active contract's `start_date`, today is 2026-08-29), cap at\n   `max_total_discount_pct`. Compute monthly and annual totals. Write the calculation as JSON to\n   `build/renewal/pricing-CUST-1001.json`.\n4. **Draft the proposal** — write `build/renewal/proposal-CUST-1001.md` with: customer & contract\n   summary, usage summary, a pricing table (seats × list price − discounts = monthly / annual), and\n   every clause from `required_clauses` verbatim.\n5. Reply with a short summary (recommended seats, total annual price, discounts applied) and the two\n   file paths.\n",
+          "note": "",
+          "recorded_model": "claude-fable-5",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 170028,
+          "recorded_completion_tokens": 107,
+          "recorded_cached_tokens": 0
+        }
+      ]
+    },
+    {
+      "action": "read_contracts",
+      "tier": "code",
+      "recorded_tokens": 204588,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 6729.8,
+      "compiled_latency_ms": 51.9,
+      "output_matches": "0/1",
+      "steps": [
+        {
+          "step_id": "step_2",
+          "recorded_tokens": 204588,
+          "recorded_latency_ms": 6729.787416988984,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 51.921957870945334,
+          "executor_used": "code:customer_renewal_claude/handlers",
+          "output_match": false,
+          "recorded_output": "1\t{\n2\t  \"generated_at\": \"2026-08-01\",\n3\t  \"contracts\": [\n4\t    {\n5\t      \"customer_id\": \"CUST-1001\",\n6\t      \"customer_name\": \"ACME Manufacturing Co.\",\n7\t      \"contract_id\": \"CTR-2024-0917\",\n8\t      \"status\": \"active\",\n9\t      \"plan\": \"enterprise\",\n10\t      \"seats\": 240,\n11\t      \"price_per_seat_month_usd\": 38.0,\n12\t      \"pricing_policy\": \"pricing_v1_legacy\",\n13\t      \"start_date\": \"2024-09-01\",\n14\t      \"end_date\": \"2026-09-30\",\n15\t      \"billing\": \"annual\",\n16\t      \"account_owner\": \"j.park@example.com\",\n17\t      \"special_terms\": []\n18\t    },\n19\t    {\n20\t      \"customer_id\": \"CUST-1002\",\n21\t      \"customer_name\": \"Bluebird Logistics\",\n22\t      \"contract_id\": \"CTR-2025-0142\",\n23\t      \"status\": \"active\",\n24\t      \"plan\": \"professional\",\n25\t      \"seats\": 60,\n26\t      \"price_per_seat_month_usd\": 25.0,\n27\t      \"pricing_policy\": \"pricing_v2\",\n28\t      \"start_date\": \"2025-11-15\",\n29\t      \"end_date\": \"2026-11-14\",\n30\t      \"billing\": \"annual\",\n31\t      \"account_owner\": \"m.lee@example.com\",\n32\t      \"special_terms\": [\"custom SLA 99.95%\"]\n33\t    },\n34\t    {\n35\t      \"customer_id\": \"CUST-1001\",\n36\t      \"customer_name\": \"ACME Manufacturing Co.\",\n37\t      \"contract_id\": \"CTR-2022-0311\",\n38\t      \"status\": \"expired\",\n39\t      \"plan\": \"professional\",\n40\t      \"seats\": 120,\n41\t      \"price_per_seat_month_usd\": 22.0,\n42\t      \"pricing_policy\": \"pricing_v1_legacy\",\n43\t      \"start_date\": \"2022-09-01\",\n44\t      \"end_date\": \"2024-08-31\",\n45\t      \"billing\": \"annual\",\n46\t      \"account_owner\": \"j.park@example.com\",\n47\t      \"special_terms\": []\n48\t    }\n49\t  ]\n50\t}\n51\t\n1\tcustomer_id,month,seats_active,api_calls,storage_gb,support_tickets\n2\tCUST-1001,2026-05,238,1840000,910,4\n3\tCUST-1001,2026-06,247,2010000,955,3\n4\tCUST-1001,2026-07,262,2265000,1010,5\n5\tCUST-1002,2026-05,54,310000,120,1\n6\tCUST-1002,2026-06,57,325000,128,2\n7\tCUST-1002,2026-07,58,331000,131,1\n8\t\n1\t# Current enterprise pricing policy (rules.pricing_v2). Effective 2026-01-01.\n2\t# The renewal offer MUST be computed from this table (see behaviors/use-current-pricing-policy).\n3\tpolicy: pricing_v2\n4\teffective_from: \"2026-01-01\"\n5\tcurrency: USD\n6\trenewal_term_months: 12\n7\tlist_price_per_seat_month:\n8\t  starter: 12.0\n9\t  professional: 25.0\n10\t  enterprise: 40.0\n11\tvolume_discount_bands:            # applied on list price, by committed seats\n12\t  - min_seats: 50\n13\t    pct: 5\n14\t  - min_seats: 200\n15\t    pct: 10\n16\t  - min_seats: 500\n17\t    pct: 15\n18\tloyalty_discount:                 # customers with >= min_years continuous service\n19\t  min_years: 2\n20\t  pct: 3\n21\tmax_total_discount_pct: 20        # hard cap; anything beyond needs sales-director approval\n22\tseat_recommendation:\n23\t  rule: \"commit seats = max(current contract seats, peak seats_active of last 3 months) rounded up to next 10\"\n24\trequired_clauses:\n25\t  - \"12-month term with 60-day auto-renewal notice\"\n26\t  - \"Data Processing Addendum v3 attached\"\n27\t  - \"Price valid for 30 days from proposal date\"\n28\t\nexamples/customer-renewal/behaviors/verify-current-contract/BEHAVIOR.md\nexamples/customer-renewal/behaviors/use-current-pricing-policy/BEHAVIOR.md",
+          "compiled_output": "{\n  \"generated_at\": \"2026-08-01\",\n  \"contracts\": [\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2024-0917\",\n      \"status\": \"active\",\n      \"plan\": \"enterprise\",\n      \"seats\": 240,\n      \"price_per_seat_month_usd\": 38.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2024-09-01\",\n      \"end_date\": \"2026-09-30\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    },\n    {\n      \"customer_id\": \"CUST-1002\",\n      \"customer_name\": \"Bluebird Logistics\",\n      \"contract_id\": \"CTR-2025-0142\",\n      \"status\": \"active\",\n      \"plan\": \"professional\",\n      \"seats\": 60,\n      \"price_per_seat_month_usd\": 25.0,\n      \"pricing_policy\": \"pricing_v2\",\n      \"start_date\": \"2025-11-15\",\n      \"end_date\": \"2026-11-14\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"m.lee@example.com\",\n      \"special_terms\": [\"custom SLA 99.95%\"]\n    },\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2022-0311\",\n      \"status\": \"expired\",\n      \"plan\": \"professional\",\n      \"seats\": 120,\n      \"price_per_seat_month_usd\": 22.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2022-09-01\",\n      \"end_date\": \"2024-08-31\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    }\n  ]\n}\ncustomer_id,month,seats_active,api_calls,storage_gb,support_tickets\nCUST-1001,2026-05,238,1840000,910,4\nCUST-1001,2026-06,247,2010000,955,3\nCUST-1001,2026-07,262,2265000,1010,5\nCUST-1002,2026-05,54,310000,120,1\nCUST-1002,2026-06,57,325000,128,2\nCUST-1002,2026-07,58,331000,131,1\n# Current enterprise pricing policy (rules.pricing_v2). Effective 2026-01-01.\n# The renewal offer MUST be computed from this table (see behaviors/use-current-pricing-policy).\npolicy: pricing_v2\neffective_from: \"2026-01-01\"\ncurrency: USD\nrenewal_term_months: 12\nlist_price_per_seat_month:\n  starter: 12.0\n  professional: 25.0\n  enterprise: 40.0\nvolume_discount_bands:            # applied on list price, by committed seats\n  - min_seats: 50\n    pct: 5\n  - min_seats: 200\n    pct: 10\n  - min_seats: 500\n    pct: 15\nloyalty_discount:                 # customers with >= min_years continuous service\n  min_years: 2\n  pct: 3\nmax_total_discount_pct: 20        # hard cap; anything beyond needs sales-director approval\nseat_recommendation:\n  rule: \"commit seats = max(current contract seats, peak seats_active of last 3 months) rounded up to next 10\"\nrequired_clauses:\n  - \"12-month term with 60-day auto-renewal notice\"\n  - \"Data Processing Addendum v3 attached\"\n  - \"Price valid for 30 days from proposal date\"\n./examples/customer-renewal/behaviors/use-current-pricing-policy/BEHAVIOR.md\n./examples/customer-renewal/behaviors/verify-current-contract/BEHAVIOR.md\n",
+          "note": "",
+          "recorded_model": "claude-fable-5",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 204175,
+          "recorded_completion_tokens": 413,
+          "recorded_cached_tokens": 143438
+        }
+      ]
+    },
+    {
+      "action": "read_behavior",
+      "tier": "code",
+      "recorded_tokens": 206473,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 4381.6,
+      "compiled_latency_ms": 8.9,
+      "output_matches": "1/1",
+      "steps": [
+        {
+          "step_id": "step_3",
+          "recorded_tokens": 206473,
+          "recorded_latency_ms": 4381.550665944815,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 8.893041871488094,
+          "executor_used": "code:customer_renewal_claude/handlers",
+          "output_match": true,
+          "recorded_output": "1\t# BEHAVIOR: verify-current-contract\n2\t\n3\t## 1. Intent\n4\tEnsure that any renewal offer or contract analysis looks up the active, current customer contract from the CRM before computing renewal terms.\n5\t\n6\t## 2. Evidence\n7\tEvidence consists of a `crm.lookup_contract` step occurring before `services.usage.calculate` or `rules.pricing_v2` steps in the execution trajectory.\n8\t\n9\t## 3. Decision\n10\t- `true`: `crm.lookup_contract` executed successfully and returned active contract data prior to pricing logic.\n11\t- `false`: Pricing or drafting occurred without querying the active contract, or queried a cached/stale record.\n12\t- `na`: Trajectory does not involve contract renewals.\n13\t\n14\t## 4. Execution\n15\tEnforced at compile-time as a non-removable workflow transition dependency and verified by post-hoc trajectory judges.\n16\t\n17\t## 5. Recovery\n18\tIf missing, halt execution and escalate to CRM lookup connector or prompt reviewer.\n19\t\n20\t## 6. Failure Modes\n21\tUsing hardcoded contract terms or relying on LLM memory from previous turns.\n22\t\n1\t# BEHAVIOR: use-current-pricing-policy\n2\t\n3\t## 1. Intent\n4\tGuarantees that pricing calculations apply the current active enterprise pricing table (`rules.pricing_v2`) rather than legacy discount structures.\n5\t\n6\t## 2. Evidence\n7\tInvocation of `rules.pricing_v2` with live policy parameters in the trajectory.\n8\t\n9\t## 3. Decision\n10\t- `true`: Active pricing policy rule engine was queried and applied.\n11\t- `false`: Custom unverified pricing was hallucinated or legacy table was applied.\n12\t- `na`: Trajectory does not perform pricing calculations.\n13\t\n14\t## 4. Execution\n15\tEnforced as a deterministic Rule engine executor step.\n16\t\n17\t## 5. Recovery\n18\tRe-derive offer using standard rule engine `rules.pricing_v2`.\n19\t\n20\t## 6. Failure Modes\n21\tLLM hallucinating custom percentage discounts outside authorized bands.\n22\t",
+          "compiled_output": "# BEHAVIOR: verify-current-contract\n\n## 1. Intent\nEnsure that any renewal offer or contract analysis looks up the active, current customer contract from the CRM before computing renewal terms.\n\n## 2. Evidence\nEvidence consists of a `crm.lookup_contract` step occurring before `services.usage.calculate` or `rules.pricing_v2` steps in the execution trajectory.\n\n## 3. Decision\n- `true`: `crm.lookup_contract` executed successfully and returned active contract data prior to pricing logic.\n- `false`: Pricing or drafting occurred without querying the active contract, or queried a cached/stale record.\n- `na`: Trajectory does not involve contract renewals.\n\n## 4. Execution\nEnforced at compile-time as a non-removable workflow transition dependency and verified by post-hoc trajectory judges.\n\n## 5. Recovery\nIf missing, halt execution and escalate to CRM lookup connector or prompt reviewer.\n\n## 6. Failure Modes\nUsing hardcoded contract terms or relying on LLM memory from previous turns.\n# BEHAVIOR: use-current-pricing-policy\n\n## 1. Intent\nGuarantees that pricing calculations apply the current active enterprise pricing table (`rules.pricing_v2`) rather than legacy discount structures.\n\n## 2. Evidence\nInvocation of `rules.pricing_v2` with live policy parameters in the trajectory.\n\n## 3. Decision\n- `true`: Active pricing policy rule engine was queried and applied.\n- `false`: Custom unverified pricing was hallucinated or legacy table was applied.\n- `na`: Trajectory does not perform pricing calculations.\n\n## 4. Execution\nEnforced as a deterministic Rule engine executor step.\n\n## 5. Recovery\nRe-derive offer using standard rule engine `rules.pricing_v2`.\n\n## 6. Failure Modes\nLLM hallucinating custom percentage discounts outside authorized bands.\n",
+          "note": "",
+          "recorded_model": "claude-fable-5",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 206146,
+          "recorded_completion_tokens": 327,
+          "recorded_cached_tokens": 203941
+        }
+      ]
+    },
+    {
+      "action": "shell_cd",
+      "tier": "code",
+      "recorded_tokens": 208933,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 19072.7,
+      "compiled_latency_ms": 28.0,
+      "output_matches": "1/1",
+      "steps": [
+        {
+          "step_id": "step_4",
+          "recorded_tokens": 208933,
+          "recorded_latency_ms": 19072.65983405523,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 28.01833301782608,
+          "executor_used": "code:customer_renewal_claude/handlers",
+          "output_match": true,
+          "recorded_output": "{\n  \"customer_id\": \"CUST-1001\",\n  \"customer_name\": \"ACME Manufacturing Co.\",\n  \"contract_id\": \"CTR-2024-0917\",\n  \"status\": \"active\",\n  \"plan\": \"enterprise\",\n  \"seats\": 240,\n  \"price_per_seat_month_usd\": 38.0,\n  \"pricing_policy\": \"pricing_v1_legacy\",\n  \"start_date\": \"2024-09-01\",\n  \"end_date\": \"2026-09-30\",\n  \"billing\": \"annual\",\n  \"account_owner\": \"j.park@example.com\",\n  \"special_terms\": []\n}\nmonths          : ['2026-05', '2026-06', '2026-07']\nseats_active    : [238, 247, 262]\npeak seats      : 262\ngrowth (last vs first): 10.08%\navg api_calls   : 2,038,333",
+          "compiled_output": "{\n  \"customer_id\": \"CUST-1001\",\n  \"customer_name\": \"ACME Manufacturing Co.\",\n  \"contract_id\": \"CTR-2024-0917\",\n  \"status\": \"active\",\n  \"plan\": \"enterprise\",\n  \"seats\": 240,\n  \"price_per_seat_month_usd\": 38.0,\n  \"pricing_policy\": \"pricing_v1_legacy\",\n  \"start_date\": \"2024-09-01\",\n  \"end_date\": \"2026-09-30\",\n  \"billing\": \"annual\",\n  \"account_owner\": \"j.park@example.com\",\n  \"special_terms\": []\n}\nmonths          : ['2026-05', '2026-06', '2026-07']\nseats_active    : [238, 247, 262]\npeak seats      : 262\ngrowth (last vs first): 10.08%\navg api_calls   : 2,038,333\n",
+          "note": "",
+          "recorded_model": "claude-fable-5",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 207295,
+          "recorded_completion_tokens": 1638,
+          "recorded_cached_tokens": 206010
+        }
+      ]
+    },
+    {
+      "action": "shell_mkdir",
+      "tier": "code",
+      "recorded_tokens": 210765,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 16663.1,
+      "compiled_latency_ms": 24.4,
+      "output_matches": "1/1",
+      "steps": [
+        {
+          "step_id": "step_5",
+          "recorded_tokens": 210765,
+          "recorded_latency_ms": 16663.052999880165,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 24.398625129833817,
+          "executor_used": "code:customer_renewal_claude/handlers",
+          "output_match": true,
+          "recorded_output": "{\n  \"customer_id\": \"CUST-1001\",\n  \"contract_id\": \"CTR-2024-0917\",\n  \"pricing_policy\": \"pricing_v2\",\n  \"as_of\": \"2026-08-29\",\n  \"plan\": \"enterprise\",\n  \"current_contract_seats\": 240,\n  \"peak_seats_active_3m\": 262,\n  \"recommended_committed_seats\": 270,\n  \"list_price_per_seat_month_usd\": 40.0,\n  \"monthly_list_total_usd\": 10800.0,\n  \"volume_discount_pct\": 10,\n  \"loyalty\": {\n    \"contract_start_date\": \"2024-09-01\",\n    \"years_of_continuous_service\": 1.99,\n    \"min_years_required\": 2,\n    \"applied\": false,\n    \"pct\": 0\n  },\n  \"total_discount_pct\": 10,\n  \"max_total_discount_pct\": 20,\n  \"monthly_total_usd\": 9720.0,\n  \"annual_total_usd\": 116640.0,\n  \"renewal_term_months\": 12,\n  \"currency\": \"USD\"\n}",
+          "compiled_output": "{\n  \"customer_id\": \"CUST-1001\",\n  \"contract_id\": \"CTR-2024-0917\",\n  \"pricing_policy\": \"pricing_v2\",\n  \"as_of\": \"2026-08-29\",\n  \"plan\": \"enterprise\",\n  \"current_contract_seats\": 240,\n  \"peak_seats_active_3m\": 262,\n  \"recommended_committed_seats\": 270,\n  \"list_price_per_seat_month_usd\": 40.0,\n  \"monthly_list_total_usd\": 10800.0,\n  \"volume_discount_pct\": 10,\n  \"loyalty\": {\n    \"contract_start_date\": \"2024-09-01\",\n    \"years_of_continuous_service\": 1.99,\n    \"min_years_required\": 2,\n    \"applied\": false,\n    \"pct\": 0\n  },\n  \"total_discount_pct\": 10,\n  \"max_total_discount_pct\": 20,\n  \"monthly_total_usd\": 9720.0,\n  \"annual_total_usd\": 116640.0,\n  \"renewal_term_months\": 12,\n  \"currency\": \"USD\"\n}\n",
+          "note": "",
+          "recorded_model": "claude-fable-5",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 209214,
+          "recorded_completion_tokens": 1551,
+          "recorded_cached_tokens": 207159
+        }
+      ]
+    },
+    {
+      "action": "shell_cat",
+      "tier": "code",
+      "recorded_tokens": 212160,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 12500.0,
+      "compiled_latency_ms": 8.3,
+      "output_matches": "0/1",
+      "steps": [
+        {
+          "step_id": "step_6",
+          "recorded_tokens": 212160,
+          "recorded_latency_ms": 12499.986875103787,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 8.259666850790381,
+          "executor_used": "code:customer_renewal_claude/handlers",
+          "output_match": false,
+          "recorded_output": "total 16\ndrwxr-xr-x@  4 hongmartin  staff   128 Aug 29 12:33 .\ndrwxr-xr-x@ 18 hongmartin  staff   576 Aug 29 12:33 ..\n-rw-r--r--@  1 hongmartin  staff   697 Aug 29 12:33 pricing-CUST-1001.json\n-rw-r--r--@  1 hongmartin  staff  1605 Aug 29 12:33 proposal-CUST-1001.md",
+          "compiled_output": "total 16\ndrwxr-xr-x@  4 hongmartin  staff   128 Aug 29 12:35 .\ndrwxr-xr-x@ 19 hongmartin  staff   608 Aug 29 12:35 ..\n-rw-r--r--@  1 hongmartin  staff   697 Aug 29 12:35 pricing-CUST-1001.json\n-rw-r--r--@  1 hongmartin  staff  1605 Aug 29 12:35 proposal-CUST-1001.md\n",
+          "note": "",
+          "recorded_model": "claude-fable-5",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 211122,
+          "recorded_completion_tokens": 1038,
+          "recorded_cached_tokens": 209078
+        }
+      ]
+    },
+    {
+      "action": "respond",
+      "tier": "frontier_llm",
+      "recorded_tokens": 213044,
+      "compiled_tokens": 213044,
+      "recorded_latency_ms": 10589.6,
+      "compiled_latency_ms": 10589.6,
+      "output_matches": "n/a",
+      "steps": [
+        {
+          "step_id": "step_7",
+          "recorded_tokens": 213044,
+          "recorded_latency_ms": 10589.56987503916,
+          "compiled_tokens": 213044,
+          "compiled_latency_ms": 10589.56987503916,
+          "executor_used": "escalated:frontier_llm",
+          "output_match": null,
+          "recorded_output": "모든 단계 완료. TASK.md의 5개 단계를 그대로 수행했습니다.\n\n## 요약 — CUST-1001 (ACME Manufacturing Co.) 갱신 제안\n\n- **active 계약 확인**: CTR-2024-0917 (enterprise, 240석, 2024-09-01 ~ 2026-09-30) — CRM에서 조회 후 가격 산정 (behavior `verify-current-contract` 준수)\n- **사용량**: 3개월 피크 seats_active **262**, 성장률 **+10.08%** (5월 238 → 7월 262), 평균 api_calls **2,038,333**/월\n- **추천 커밋 좌석**: **270석** = max(240, 262)를 10 단위 올림\n- **적용 할인**: 볼륨 할인 **10%** (270석 ≥ 200). 로열티 할인 **미적용** — active 계약 start_date 기준 1.99년으로 2년 미만 (계약서의 legacy 정책 필드는 무시하고 `pricing_v2`로 산정, behavior `use-current-pricing-policy` 준수). 총 할인 10% (상한 20% 이내)\n- **가격**: 월 $10,800 정가 − 10% = **월 $9,720** / **연 $116,640** (12개월 약정)\n\n### 산출 파일\n- `build/renewal/pricing-CUST-1001.json` — 가격 계산 상세 (JSON)\n- `build/renewal/proposal-CUST-1001.md` — 제안서 (계약·사용량 요약, 가격표, `required_clauses` 3개 조항 원문 포함)\n\n참고: 로열티 할인은 과업 지시대로 active 계약의 start_date(2024-09-01)를 사용해 판정했습니다. 만료된 이전 계약(2022-09-01 시작)까지 연속 서비스로 본다면 결과가 달라질 수 있으나, 지시서가 명시한 기준을 따랐습니다.",
+          "compiled_output": "모든 단계 완료. TASK.md의 5개 단계를 그대로 수행했습니다.\n\n## 요약 — CUST-1001 (ACME Manufacturing Co.) 갱신 제안\n\n- **active 계약 확인**: CTR-2024-0917 (enterprise, 240석, 2024-09-01 ~ 2026-09-30) — CRM에서 조회 후 가격 산정 (behavior `verify-current-contract` 준수)\n- **사용량**: 3개월 피크 seats_active **262**, 성장률 **+10.08%** (5월 238 → 7월 262), 평균 api_calls **2,038,333**/월\n- **추천 커밋 좌석**: **270석** = max(240, 262)를 10 단위 올림\n- **적용 할인**: 볼륨 할인 **10%** (270석 ≥ 200). 로열티 할인 **미적용** — active 계약 start_date 기준 1.99년으로 2년 미만 (계약서의 legacy 정책 필드는 무시하고 `pricing_v2`로 산정, behavior `use-current-pricing-policy` 준수). 총 할인 10% (상한 20% 이내)\n- **가격**: 월 $10,800 정가 − 10% = **월 $9,720** / **연 $116,640** (12개월 약정)\n\n### 산출 파일\n- `build/renewal/pricing-CUST-1001.json` — 가격 계산 상세 (JSON)\n- `build/renewal/proposal-CUST-1001.md` — 제안서 (계약·사용량 요약, 가격표, `required_clauses` 3개 조항 원문 포함)\n\n참고: 로열티 할인은 과업 지시대로 active 계약의 start_date(2024-09-01)를 사용해 판정했습니다. 만료된 이전 계약(2022-09-01 시작)까지 연속 서비스로 본다면 결과가 달라질 수 있으나, 지시서가 명시한 기준을 따랐습니다.",
+          "note": "kept recorded cost (frontier/human tier)",
+          "recorded_model": "claude-fable-5",
+          "compiled_model": "claude-fable-5",
+          "recorded_prompt_tokens": 212335,
+          "recorded_completion_tokens": 709,
+          "recorded_cached_tokens": 210986
+        }
+      ]
+    }
+  ],
+  "final_answer": "모든 단계 완료. TASK.md의 5개 단계를 그대로 수행했습니다.\n\n## 요약 — CUST-1001 (ACME Manufacturing Co.) 갱신 제안\n\n- **active 계약 확인**: CTR-2024-0917 (enterprise, 240석, 2024-09-01 ~ 2026-09-30) — CRM에서 조회 후 가격 산정 (behavior `verify-current-contract` 준수)\n- **사용량**: 3개월 피크 seats_active **262**, 성장률 **+10.08%** (5월 238 → 7월 262), 평균 api_calls **2,038,333**/월\n- **추천 커밋 좌석**: **270석** = max(240, 262)를 10 단위 올림\n- **적용 할인**: 볼륨 할인 **10%** (270석 ≥ 200). 로열티 할인 **미적용** — active 계약 start_date 기준 1.99년으로 2년 미만 (계약서의 legacy 정책 필드는 무시하고 `pricing_v2`로 산정, behavior `use-current-pricing-policy` 준수). 총 할인 10% (상한 20% 이내)\n- **가격**: 월 $10,800 정가 − 10% = **월 $9,720** / **연 $116,640** (12개월 약정)\n\n### 산출 파일\n- `build/renewal/pricing-CUST-1001.json` — 가격 계산 상세 (JSON)\n- `build/renewal/proposal-CUST-1001.md` — 제안서 (계약·사용량 요약, 가격표, `required_clauses` 3개 조항 원문 포함)\n\n참고: 로열티 할인은 과업 지시대로 active 계약의 start_date(2024-09-01)를 사용해 판정했습니다. 만료된 이전 계약(2022-09-01 시작)까지 연속 서비스로 본다면 결과가 달라질 수 있으나, 지시서가 명시한 기준을 따랐습니다."
+}
