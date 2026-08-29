@@ -17,6 +17,14 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
+
+def _parse_iso(value: str) -> datetime:
+    """datetime.fromisoformat that also accepts a trailing 'Z' (Python < 3.11)."""
+    value = str(value).strip()
+    if value.endswith("Z"):
+        value = value[:-1] + "+00:00"
+    return datetime.fromisoformat(value)
+
 class TraceStatus(str, Enum):
     """Execution status for a trace run."""
 
@@ -354,8 +362,8 @@ def normalize_langgraph_trace(data: Union[Dict[str, Any], Any]) -> TraceIR:
         latency_ms = s.get("latency_ms")
         if latency_ms is None and s.get("start_time") and s.get("end_time"):
             try:
-                t0 = datetime.fromisoformat(str(s["start_time"]))
-                t1 = datetime.fromisoformat(str(s["end_time"]))
+                t0 = _parse_iso(str(s["start_time"]))
+                t1 = _parse_iso(str(s["end_time"]))
                 latency_ms = (t1 - t0).total_seconds() * 1000.0
             except Exception:
                 pass
