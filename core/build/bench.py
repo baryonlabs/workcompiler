@@ -193,6 +193,31 @@ def _norm(text: Any) -> str:
     return "\n".join(_lines(text))
 
 
+def _verify_patch_files(patch: str, build_root: Path) -> tuple[bool, str]:
+    """After replaying an apply_patch handler, check the files on disk equal the recorded patch."""
+    cwd = str(Path.cwd().resolve()) + "/"
+    ok, checked = True, 0
+    current = None
+    blocks: List[tuple[str, str, List[str]]] = []
+    for line in patch.replace(cwd, "").splitlines():
+        if line.startswith("*** Begin Patch") or line.startswith("*** End Patch"):
+            continue
+        if line.startswith("*** "):
+            op, _, path = line[4:].partition(" File: ")
+            current = (op, path.strip(), [])
+            blocks.append(current)
+        elif current is not None:
+            current[2].append(line)
+    for op, path, lines in blocks:
+        if op != "Add":
+            continue
+        checked += 1
+        expected = "\n".join(l[1:] if l.startswith("+") else l for l in lines) + "\n"
+        actual = Path(path).read_text(encoding="utf-8") if Path(path).exists() else None
+        ok = ok and actual == expected
+    return (ok and checked > 0), f"{checked} file(s) verified on disk" if ok else "written file differs from recorded patch"
+
+
 def _compare(recorded: str, compiled: str) -> tuple[bool, str]:
     """(match, note): exact line sequence first, then order-insensitive line multiset."""
     rec, comp = _lines(recorded), _lines(compiled)
@@ -219,15 +244,11 @@ def _step_tokens(step: TraceStep) -> int:
     return int((usage or {}).get("total_tokens", 0))
 
 
-def _group_steps(trace: TraceIR) -> Dict[str, List[TraceStep]]:
+def _normalizer():
     from core.compiler.compiler import WorkCompiler
 
-    norm = WorkCompiler._normalize_action_name
-    grouped: Dict[str, List[TraceStep]] = {}
-    for step in trace.steps:
-        if step.action:
-            grouped.setdefault(norm(WorkCompiler.__new__(WorkCompiler), step.action), []).append(step)
-    return grouped
+    compiler = WorkCompiler.__new__(WorkCompiler)
+    return lambda name: WorkCompiler._normalize_action_name(compiler, name)
 
 
 def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, engine: Any = None) -> BenchReport:
@@ -239,57 +260,69 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
     engine = engine or DurableRuntimeEngine(auto_checkpoint=False)
     load_build_into_engine(engine, root)
     executors = work_ir.to_dict().get("executors", {})
-    grouped = _group_steps(trace)
 
     report = BenchReport(work=work_ir.work, build_dir=str(root), run_id=trace.run_id, source_agent=trace.source_agent)
+    benches: Dict[str, ActionBench] = {
+        action: ActionBench(action=action, tier=str(executors.get(action, {}).get("type", "frontier_llm")))
+        for action in work_ir.actions
+    }
+    norm = _normalizer()
 
-    for action in work_ir.actions:
-        tier = str(executors.get(action, {}).get("type", "frontier_llm"))
-        bench = ActionBench(action=action, tier=tier)
-        for step in grouped.get(action, []):
-            rec_out = _recorded_output(step)
-            rec_tokens = _step_tokens(step)
-            rec_latency = float(getattr(step, "latency_ms", 0.0) or 0.0)
-            inputs = step.input if isinstance(step.input, dict) else {}
-            executable = tier in ("code", "rule", "http")
+    # Replay in the order the agent worked: later steps may read files earlier steps wrote.
+    for step in trace.steps:
+        action = norm(step.action) if step.action else ""
+        bench = benches.get(action)
+        if bench is None:
+            continue
+        tier = bench.tier
+        rec_out = _recorded_output(step)
+        rec_tokens = _step_tokens(step)
+        rec_latency = float(getattr(step, "latency_ms", 0.0) or 0.0)
+        inputs = step.input if isinstance(step.input, dict) else {}
+        executable = tier in ("code", "rule", "http")
 
-            if executable and replay and _is_self_referential(inputs):
-                bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, 0.0, f"{tier} (skipped)",
-                                             None, rec_out, "", "self-referential step (benchmarks/recompiles this build) not replayed"))
-            elif executable and replay:
-                t0 = time.perf_counter()
-                os.environ[BENCH_ACTIVE_ENV] = "1"
-                try:
-                    result = engine.get_executor(tier).execute(action, dict(inputs))
-                finally:
-                    os.environ.pop(BENCH_ACTIVE_ENV, None)
-                elapsed = (time.perf_counter() - t0) * 1000.0
-                out = result.output if isinstance(result.output, dict) else {"value": result.output}
-                comp_out = str(out.get("stdout") if "stdout" in out else out.get("content") or json.dumps(out, ensure_ascii=False, default=str))
-                if not result.success:
-                    comp_out = f"ERROR: {result.error}"
-                has_recorded = isinstance(step.output, dict) and step.output.get("tool_result") is not None
-                match: Optional[bool] = None
-                note = "" if result.success else "executor failed"
-                if has_recorded:
-                    match, cmp_note = _compare(rec_out, comp_out)
-                    note = note or cmp_note
-                else:
-                    note = "no recorded tool output to compare"
-                if out.get("exit_code") not in (None, 0):
-                    note = f"exit_code={out.get('exit_code')}"
-                bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, elapsed,
-                                             f"{tier}:{root.name}/handlers" if tier == "code" else tier,
-                                             match, rec_out, comp_out, note))
-            elif executable:
-                bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, 0.0, f"{tier} (replay disabled)",
-                                             None, rec_out, "", "not replayed"))
+        if executable and replay and _is_self_referential(inputs):
+            bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, 0.0, f"{tier} (skipped)",
+                                         None, rec_out, "", "self-referential step (benchmarks/recompiles this build) not replayed"))
+        elif executable and replay:
+            t0 = time.perf_counter()
+            os.environ[BENCH_ACTIVE_ENV] = "1"
+            try:
+                result = engine.get_executor(tier).execute(action, dict(inputs))
+            finally:
+                os.environ.pop(BENCH_ACTIVE_ENV, None)
+            elapsed = (time.perf_counter() - t0) * 1000.0
+            out = result.output if isinstance(result.output, dict) else {"value": result.output}
+            comp_out = str(out.get("stdout") if "stdout" in out else out.get("content") or json.dumps(out, ensure_ascii=False, default=str))
+            if not result.success:
+                comp_out = f"ERROR: {result.error}"
+            has_recorded = isinstance(step.output, dict) and step.output.get("tool_result") is not None
+            match: Optional[bool] = None
+            note = "" if result.success else "executor failed"
+            if isinstance(inputs.get("patch"), str):
+                match, cmp_note = _verify_patch_files(inputs["patch"], root)
+                rec_out = "(files written by the agent's apply_patch)"
+                note = note or cmp_note
+            elif has_recorded:
+                match, cmp_note = _compare(rec_out, comp_out)
+                note = note or cmp_note
             else:
-                reason = {"ml": "model not trained yet → fallback", "slm": "SLM not trained yet → fallback"}.get(tier, "")
-                bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, rec_tokens, rec_latency,
-                                             f"escalated:{tier}", None, rec_out, rec_out,
-                                             reason or "kept recorded cost (frontier/human tier)"))
-        report.actions.append(bench)
+                note = "no recorded tool output to compare"
+            if out.get("exit_code") not in (None, 0):
+                note = (note + "; " if note else "") + f"exit_code={out.get('exit_code')}"
+            bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, elapsed,
+                                         f"{tier}:{root.name}/handlers" if tier == "code" else tier,
+                                         match, rec_out, comp_out, note))
+        elif executable:
+            bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, 0.0, f"{tier} (replay disabled)",
+                                         None, rec_out, "", "not replayed"))
+        else:
+            reason = {"ml": "model not trained yet → fallback", "slm": "SLM not trained yet → fallback"}.get(tier, "")
+            bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, rec_tokens, rec_latency,
+                                         f"escalated:{tier}", None, rec_out, rec_out,
+                                         reason or "kept recorded cost (frontier/human tier)"))
+
+    report.actions = [benches[a] for a in work_ir.actions]
 
     for step in reversed(trace.steps):
         out = step.output if isinstance(step.output, dict) else {}

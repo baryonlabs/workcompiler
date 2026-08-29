@@ -713,8 +713,8 @@ class DeterminismAnalyzer:
                         reasoning=f"Step analysis detected deterministic pattern: {step_res['pattern_type']}",
                     )
 
-        # 2b. Recorded shell commands (Codex / agent tool calls) are replayable deterministic code
-        if steps and all(self._shell_command_of(step) for step in steps):
+        # 2b. Recorded shell commands / file patches (Codex / agent tool calls) are replayable deterministic code
+        if steps and all(self._shell_command_of(step) or self._patch_of(step) for step in steps):
             return DeterminismAnalysisResult(
                 is_deterministic=True,
                 tier="code",
@@ -790,6 +790,14 @@ class DeterminismAnalyzer:
         if isinstance(cmd, list) and cmd:
             return " ".join(str(c) for c in cmd)
         return cmd if isinstance(cmd, str) and cmd.strip() else None
+
+    @staticmethod
+    def _patch_of(step: Any) -> Optional[str]:
+        inp = getattr(step, "input", None) if not isinstance(step, dict) else step.get("input")
+        if hasattr(inp, "model_dump"):
+            inp = inp.model_dump()
+        patch = inp.get("patch") if isinstance(inp, dict) else None
+        return patch if isinstance(patch, str) and patch.strip() else None
 
     def is_deterministic(
         self,

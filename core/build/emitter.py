@@ -110,6 +110,12 @@ def _example_io(steps: Sequence[TraceStep]) -> tuple[Dict[str, Any], Dict[str, A
     return _as_dict(steps[0].input), _as_dict(steps[0].output)
 
 
+def _relativize_patch(patch: str) -> str:
+    """Rewrite absolute file paths under the current workspace to relative ones (portable builds)."""
+    cwd = str(Path.cwd().resolve()) + "/"
+    return patch.replace(cwd, "")
+
+
 def _shell_commands(example_input: Dict[str, Any]) -> List[str]:
     """All shell commands a recorded step ran (Codex may batch several per tool call)."""
     cmds = example_input.get("cmds")
@@ -139,8 +145,48 @@ def _emit_code_handler(root: Path, action: str, executor: Dict[str, Any], steps:
     cmds = _shell_commands(example_in)
     input_keys = [k for k in example_in.keys() if not k.startswith("__")]
     handler_ref = executor.get("handler") or f"handlers.{action}"
+    patch = example_in.get("patch") if isinstance(example_in.get("patch"), str) else None
 
-    if cmds:
+    if patch:
+        patch = _relativize_patch(patch)
+        body = f'''PATCH = {patch!r}
+
+
+def _parse(patch_text):
+    """Split an apply_patch text into (op, path, lines) file blocks."""
+    blocks, current = [], None
+    for line in patch_text.splitlines():
+        if line.startswith("*** Begin Patch") or line.startswith("*** End Patch"):
+            continue
+        if line.startswith("*** "):
+            op, _, path = line[4:].partition(" File: ")
+            current = (op, path.strip(), [])
+            blocks.append(current)
+        elif current is not None:
+            current[2].append(line)
+    return blocks
+
+
+def run(**inputs):
+    """Re-apply the file changes captured from the approved agent trace (Add/Delete File)."""
+    patch_text = inputs.get("patch") or PATCH
+    written, deleted = [], []
+    for op, path, lines in _parse(patch_text):
+        target = pathlib.Path(path)
+        if op == "Add":
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("\\n".join(l[1:] if l.startswith("+") else l for l in lines) + "\\n", encoding="utf-8")
+            written.append(str(target))
+        elif op == "Delete":
+            if target.exists():
+                target.unlink()
+            deleted.append(str(target))
+        else:
+            raise NotImplementedError(f"apply_patch op '{{op}}' for {{path}} needs a hand-written handler")
+    return {{"files": written, "deleted": deleted, "stdout": "".join(f"A {{f}}\\n" for f in written) + "".join(f"D {{f}}\\n" for f in deleted)}}
+'''
+        imports = "import pathlib\n"
+    elif cmds:
         body = f'''COMMANDS = {cmds!r}
 
 
@@ -159,9 +205,11 @@ def run(**inputs):
             env[f"OW_{{key.upper()}}"] = str(value)
     results = []
     for command in commands:
-        completed = subprocess.run(command, shell=True, capture_output=True, text=True, env=env, timeout=600)
+        # stderr is merged into stdout: that is what the agent saw in its tool result.
+        completed = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                   text=True, env=env, timeout=600)
         results.append({{"cmd": command, "exit_code": completed.returncode,
-                        "stdout": completed.stdout, "stderr": completed.stderr}})
+                        "stdout": completed.stdout, "stderr": ""}})
     stdout = "".join(r["stdout"] for r in results)
     return {{
         "cmds": commands,

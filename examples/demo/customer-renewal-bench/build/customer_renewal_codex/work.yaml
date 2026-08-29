@@ -1,0 +1,82 @@
+work: customer-renewal-codex
+version: '3.0'
+description: Compiled workflow for automating customer renewal codex
+inputs:
+  - content
+  - raw_args
+  - cmd
+outputs:
+  - content
+  - tool_calls
+  - role
+  - response_id
+  - status
+states:
+  - initialized
+  - sed_shelled
+  - rg_shelled
+  - cat_shelled
+  - jq_shelled
+  - mkdir_shelled
+  - offer_priced
+  - respond_completed
+actions:
+  - shell_sed
+  - shell_rg
+  - shell_cat
+  - shell_jq
+  - shell_mkdir
+  - write_pricing_cust_1001
+  - respond
+dependencies:
+  shell_rg:
+    - shell_sed
+  shell_cat:
+    - shell_rg
+  shell_jq:
+    - shell_cat
+  shell_mkdir:
+    - shell_jq
+  write_pricing_cust_1001:
+    - shell_mkdir
+  respond:
+    - shell_jq
+invariants:
+  - use_current_pricing_policy
+  - verify_current_contract
+quality:
+  reviewer_acceptance: '>=0.95'
+  factual_accuracy: '>=0.99'
+behaviors:
+  - name: use-current-pricing-policy
+    path: behaviors/use-current-pricing-policy/BEHAVIOR.md
+  - name: verify-current-contract
+    path: behaviors/verify-current-contract/BEHAVIOR.md
+escalation:
+  on_error: fallback_to_frontier_llm
+  on_quality_drop: require_human_review
+  on_timeout: escalate_to_human
+executors:
+  shell_sed:
+    type: code
+    handler: services.shell_sed
+  shell_rg:
+    type: code
+    handler: services.shell_rg
+  shell_cat:
+    type: code
+    handler: services.shell_cat
+  shell_jq:
+    type: code
+    handler: services.shell_jq
+  shell_mkdir:
+    type: code
+    handler: services.shell_mkdir
+  write_pricing_cust_1001:
+    type: code
+    handler: services.write_pricing_cust_1001
+  respond:
+    type: frontier_llm
+    preferred: claude-3-5-sonnet
+    fallback:
+      - human

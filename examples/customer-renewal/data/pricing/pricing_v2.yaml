@@ -1,0 +1,27 @@
+# Current enterprise pricing policy (rules.pricing_v2). Effective 2026-01-01.
+# The renewal offer MUST be computed from this table (see behaviors/use-current-pricing-policy).
+policy: pricing_v2
+effective_from: "2026-01-01"
+currency: USD
+renewal_term_months: 12
+list_price_per_seat_month:
+  starter: 12.0
+  professional: 25.0
+  enterprise: 40.0
+volume_discount_bands:            # applied on list price, by committed seats
+  - min_seats: 50
+    pct: 5
+  - min_seats: 200
+    pct: 10
+  - min_seats: 500
+    pct: 15
+loyalty_discount:                 # customers with >= min_years continuous service
+  min_years: 2
+  pct: 3
+max_total_discount_pct: 20        # hard cap; anything beyond needs sales-director approval
+seat_recommendation:
+  rule: "commit seats = max(current contract seats, peak seats_active of last 3 months) rounded up to next 10"
+required_clauses:
+  - "12-month term with 60-day auto-renewal notice"
+  - "Data Processing Addendum v3 attached"
+  - "Price valid for 30 days from proposal date"

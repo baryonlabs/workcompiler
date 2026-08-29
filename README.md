@@ -35,6 +35,17 @@ AI가 한 번 작업하게 하세요. OpenWorkflow는 이후 작업을 안정적
 
 셸 스텝 2개(`shell_python3`, `shell_find`)는 code 계층으로 내려가 토큰 0·수십 ms에 같은 출력을 냈고, 남은 비용은 아직 frontier LLM으로 에스컬레이션되는 최종 요약(`respond`)뿐입니다 — 이 부분이 `models/slm/` 학습 후보가 승격되면 내려갑니다.
 
+**실제 업무 작업 — 고객 계약 갱신 제안서** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): CRM 활성 계약 확인 → 3개월 사용량 집계 → 현행 가격정책으로 산정 → 제안서·가격 JSON 작성; 원본은 [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
+
+| | 기록된 에이전트 (Codex, 8 스텝) | 컴파일된 빌드 (빈 상태에서 재실행) | 차이 |
+| :-- | --: | --: | --: |
+| LLM 토큰 | 139,437 | 20,545 | **−85%** |
+| 벽시계 시간 | 82.6 s | 11.2 s | **7.4×** |
+| 결과 재현 | — | **7/7 일치** | |
+| 최종 산출물 `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **바이트 단위 동일** | |
+
+계약 조회(`jq`)·데이터 읽기·가격 산정·제안서 작성(`apply_patch`)까지 업무 자체는 전부 code 계층으로 컴파일돼 토큰 0으로 재현됐고, 남은 비용은 사람에게 보여줄 최종 요약 한 스텝입니다.
+
 설정 방법과 각 단계가 실행하는 명령은 [Zero-Code 에이전트 프록시](#zero-code-에이전트-프록시-adaptersproxy) 섹션을, 입력 프롬프트·Codex 출력·컴파일 산출물·벤치마크 원본은 [`examples/demo/`](examples/demo/)를 참조하세요.
 
 ---
@@ -480,7 +491,7 @@ openworkflow/
 ├── docs/                        # 명세서, 아키텍처, 사용 가이드, 다이어그램
 ├── .agents/skills/              # Codex 스킬: $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench
 ├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + 런타임 로더 + 벤치마크
-├── tests/                       # pytest 테스트 수트 (145개 테스트 전원 통과)
+├── tests/                       # pytest 테스트 수트 (148개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트
 ```
 

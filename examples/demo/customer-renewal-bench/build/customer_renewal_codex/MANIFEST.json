@@ -1,0 +1,80 @@
+{
+  "work": "customer-renewal-codex",
+  "build_dir": "build/customer_renewal_codex",
+  "artifact_count": 9,
+  "by_tier": {
+    "work_ir": [
+      "work.yaml"
+    ],
+    "code": [
+      "handlers/shell_sed.py",
+      "handlers/shell_rg.py",
+      "handlers/shell_cat.py",
+      "handlers/shell_jq.py",
+      "handlers/shell_mkdir.py",
+      "handlers/write_pricing_cust_1001.py"
+    ],
+    "frontier_llm": [
+      "prompts/respond.prompt.md"
+    ],
+    "trace": [
+      "trace.json"
+    ]
+  },
+  "artifacts": [
+    {
+      "action": "*",
+      "tier": "work_ir",
+      "kind": "work.yaml",
+      "path": "work.yaml"
+    },
+    {
+      "action": "shell_sed",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_sed.py"
+    },
+    {
+      "action": "shell_rg",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_rg.py"
+    },
+    {
+      "action": "shell_cat",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_cat.py"
+    },
+    {
+      "action": "shell_jq",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_jq.py"
+    },
+    {
+      "action": "shell_mkdir",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_mkdir.py"
+    },
+    {
+      "action": "write_pricing_cust_1001",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/write_pricing_cust_1001.py"
+    },
+    {
+      "action": "respond",
+      "tier": "frontier_llm",
+      "kind": "prompt",
+      "path": "prompts/respond.prompt.md"
+    },
+    {
+      "action": "*",
+      "tier": "trace",
+      "kind": "trace.json",
+      "path": "trace.json"
+    }
+  ]
+}

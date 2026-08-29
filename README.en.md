@@ -35,6 +35,17 @@ A **real interactive Codex session**, not a mock-up. Point Codex at the OpenWork
 
 The two shell steps (`shell_python3`, `shell_find`) lowered to the code tier and reproduced the same output with zero tokens in tens of milliseconds; the remaining cost is the final summary (`respond`), still escalated to a frontier LLM — that is what the `models/slm/` training candidate takes over once promoted.
 
+**A real business task — customer contract renewal proposal** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): verify the active CRM contract → aggregate 3 months of usage → price with the current policy → write the proposal and pricing JSON; artifacts in [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
+
+| | recorded agent (Codex, 8 steps) | compiled build (replayed from a clean state) | delta |
+| :-- | --: | --: | --: |
+| LLM tokens | 139,437 | 20,545 | **−85%** |
+| wall time | 82.6 s | 11.2 s | **7.4×** |
+| outputs reproduced | — | **7/7** | |
+| deliverables `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **byte-identical** | |
+
+Contract lookup (`jq`), data reads, pricing and writing the proposal (`apply_patch`) — the work itself — all compiled to the code tier and replayed with zero tokens; the only remaining cost is the one final summary step shown to a human.
+
 Setup and the exact commands each step runs are in the [Zero-Code Agent Proxy](#zero-code-agent-proxy-adaptersproxy) section; the prompts, Codex transcripts, compiled artifacts and benchmark are in [`examples/demo/`](examples/demo/).
 
 ---
@@ -454,7 +465,7 @@ openworkflow/
 ├── docs/                        # Specifications, architecture, usage guides, and diagrams
 ├── .agents/skills/              # Codex skills: $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench
 ├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + runtime loader + benchmark
-├── tests/                       # Complete pytest suite (145 tests)
+├── tests/                       # Complete pytest suite (148 tests)
 └── examples/                    # Sample workflows, LinkML schemas, and runnable demo scripts
 ```
 

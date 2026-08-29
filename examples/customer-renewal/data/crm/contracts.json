@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-08-01",
+  "contracts": [
+    {
+      "customer_id": "CUST-1001",
+      "customer_name": "ACME Manufacturing Co.",
+      "contract_id": "CTR-2024-0917",
+      "status": "active",
+      "plan": "enterprise",
+      "seats": 240,
+      "price_per_seat_month_usd": 38.0,
+      "pricing_policy": "pricing_v1_legacy",
+      "start_date": "2024-09-01",
+      "end_date": "2026-09-30",
+      "billing": "annual",
+      "account_owner": "j.park@example.com",
+      "special_terms": []
+    },
+    {
+      "customer_id": "CUST-1002",
+      "customer_name": "Bluebird Logistics",
+      "contract_id": "CTR-2025-0142",
+      "status": "active",
+      "plan": "professional",
+      "seats": 60,
+      "price_per_seat_month_usd": 25.0,
+      "pricing_policy": "pricing_v2",
+      "start_date": "2025-11-15",
+      "end_date": "2026-11-14",
+      "billing": "annual",
+      "account_owner": "m.lee@example.com",
+      "special_terms": ["custom SLA 99.95%"]
+    },
+    {
+      "customer_id": "CUST-1001",
+      "customer_name": "ACME Manufacturing Co.",
+      "contract_id": "CTR-2022-0311",
+      "status": "expired",
+      "plan": "professional",
+      "seats": 120,
+      "price_per_seat_month_usd": 22.0,
+      "pricing_policy": "pricing_v1_legacy",
+      "start_date": "2022-09-01",
+      "end_date": "2024-08-31",
+      "billing": "annual",
+      "account_owner": "j.park@example.com",
+      "special_terms": []
+    }
+  ]
+}

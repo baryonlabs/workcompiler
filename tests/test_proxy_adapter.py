@@ -515,3 +515,16 @@ def test_concatenated_code_mode_chunks_without_markers_are_unwrapped():
     chunks = json.dumps({"chunk_id": "a", "output": "one\n"}) + json.dumps({"chunk_id": "b", "output": "two\n"})
     envelope = [{"type": "input_text", "text": "Script completed\nOutput:\n"}, {"type": "input_text", "text": chunks}]
     assert normalize_tool_output(envelope) == "one\ntwo\n"
+
+
+def test_code_mode_apply_patch_becomes_a_write_action():
+    interceptor = TrajectoryInterceptor(run_id="patch")
+    patch = "*** Begin Patch\n*** Add File: /repo/build/renewal/proposal-CUST-1001.md\n+# Proposal\n+hello\n*** End Patch"
+    snippet = "const patch = " + json.dumps(patch) + ";\ntext(await tools.apply_patch(patch));"
+    response = {"id": "r", "status": "completed",
+                "output": [{"type": "custom_tool_call", "name": "exec", "call_id": "c1", "input": snippet}],
+                "usage": {"input_tokens": 5, "output_tokens": 1}}
+    step = interceptor.intercept_responses_request_response({"input": "write it"}, response)
+    assert step.action == "write_proposal_cust_1001"
+    assert step.input["patch"] == patch
+    assert step.input["files"] == ["/repo/build/renewal/proposal-CUST-1001.md"]

@@ -49,6 +49,28 @@ def _code_mode_commands(snippet: str) -> List[str]:
     return commands
 
 
+_CODE_MODE_PATCH_RE = re.compile(r'("\*\*\* Begin Patch(?:[^"\\]|\\.)*")', re.S)
+_PATCH_FILE_RE = re.compile(r"^\*\*\* (Add|Update|Delete) File: (.+)$", re.M)
+
+
+def _code_mode_patch(snippet: str) -> Optional[str]:
+    """Return the apply_patch text embedded in a Codex code-mode snippet, if any."""
+    if "apply_patch" not in snippet:
+        return None
+    match = _CODE_MODE_PATCH_RE.search(snippet)
+    if not match:
+        return None
+    try:
+        return json.loads(match.group(1))
+    except Exception:
+        return None
+
+
+def patch_files(patch: str) -> List[Dict[str, str]]:
+    """List the files an apply_patch text touches: [{"op": "Add", "path": ...}, ...]."""
+    return [{"op": op, "path": path.strip()} for op, path in _PATCH_FILE_RE.findall(patch)]
+
+
 def _code_mode_command(snippet: str) -> Optional[str]:
     """First ``cmd`` of a Codex code-mode ``exec_command`` call, if any."""
     commands = _code_mode_commands(snippet)
@@ -310,8 +332,18 @@ class TrajectoryInterceptor:
                 arguments = _parse_json_arguments(item.get("arguments") or item.get("input") or item.get("action"))
                 tool_calls.append({"id": item.get("call_id") or item.get("id"), "name": name, "arguments": arguments})
                 if len(tool_calls) == 1:
-                    program = _shell_program(arguments) if name in SHELL_TOOL_NAMES or item_type == "local_shell_call" else None
-                    action_name = f"shell_{program}" if program else name
+                    patch = _code_mode_patch(arguments["raw_args"]) if isinstance(arguments.get("raw_args"), str) else None
+                    if patch is None and isinstance(arguments.get("patch"), str):
+                        patch = arguments["patch"]
+                    if patch:
+                        files = patch_files(patch)
+                        arguments["patch"] = patch
+                        arguments["files"] = [f["path"] for f in files]
+                        first = files[0]["path"].rsplit("/", 1)[-1] if files else "files"
+                        action_name = "write_" + re.sub(r"[^\w]+", "_", first.rsplit(".", 1)[0]).strip("_").lower()
+                    else:
+                        program = _shell_program(arguments) if name in SHELL_TOOL_NAMES or item_type == "local_shell_call" else None
+                        action_name = f"shell_{program}" if program else name
                     user_input.update(arguments)
             elif item_type == "message":
                 for part in item.get("content", []) or []:

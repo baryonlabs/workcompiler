@@ -195,3 +195,65 @@ def test_benchmark_compare_unwraps_json_repacked_outputs():
     assert _compare(recorded, compiled) == (True, "")
     assert _compare("b\na\n", "a\nb\n") == (True, "same lines, different order")
     assert _compare("a\n", "a\nb\n") == (False, "")
+
+
+def test_patch_steps_compile_to_file_writing_handlers_and_bench_verifies_files(tmp_path, monkeypatch):
+    from core.build.bench import run_benchmark
+    from core.work_ir import WorkIR
+
+    monkeypatch.chdir(tmp_path)
+    patch = ("*** Begin Patch\n*** Add File: " + str(tmp_path / "out/proposal.md") +
+             "\n+# Proposal\n+Total: $116,640\n*** End Patch")
+    trace = TraceIR.model_validate({
+        "run_id": "p", "source_agent": "codex_exec",
+        "steps": [{"step_id": "s1", "actor": "agent", "action": "write_proposal", "latency_ms": 9000.0,
+                   "token_usage": {"prompt_tokens": 18000, "completion_tokens": 600, "total_tokens": 18600},
+                   "input": {"patch": patch, "files": [str(tmp_path / "out/proposal.md")]},
+                   "output": {"tool_calls": [{"id": "c", "name": "exec", "result": "{}"}], "tool_result": "{}"}}],
+        "result": {"status": "success", "outputs": {}},
+    })
+    work_ir = WorkIR.model_validate({
+        "work": "renewal", "version": "3.0", "inputs": ["patch"], "outputs": ["files"],
+        "states": ["initialized", "write_proposal_completed"], "actions": ["write_proposal"], "dependencies": {},
+        "executors": {"write_proposal": {"type": "code"}},
+    })
+    manifest = emit_build(work_ir, tmp_path / "build", traces=[trace])
+    handler = (Path(manifest.build_dir) / "handlers" / "write_proposal.py").read_text()
+    assert "*** Add File: out/proposal.md" in handler  # absolute path relativized to the workspace
+
+    report = run_benchmark(manifest.build_dir, trace)
+    step = report.actions[0].steps[0]
+    assert step.output_match is True and "verified on disk" in step.note
+    assert (tmp_path / "out/proposal.md").read_text() == "# Proposal\nTotal: $116,640\n"
+    assert report.totals()["compiled_tokens"] == 0
+
+
+def test_benchmark_replays_steps_in_trace_order(tmp_path, monkeypatch):
+    """A later step of an *earlier-listed* action must not run before the steps that precede it."""
+    from core.build.bench import run_benchmark
+    from core.work_ir import WorkIR
+
+    monkeypatch.chdir(tmp_path)
+    trace = TraceIR.model_validate({
+        "run_id": "order", "source_agent": "codex_exec",
+        "steps": [
+            {"step_id": "s1", "actor": "agent", "action": "shell_ls", "latency_ms": 1.0,
+             "input": {"cmd": "ls ."}, "output": {"tool_calls": [], "tool_result": ""}},
+            {"step_id": "s2", "actor": "agent", "action": "shell_printf", "latency_ms": 1.0,
+             "input": {"cmd": "printf 'hello' > note.txt"}, "output": {"tool_calls": [], "tool_result": ""}},
+            {"step_id": "s3", "actor": "agent", "action": "shell_ls", "latency_ms": 1.0,
+             "input": {"cmd": "cat note.txt"}, "output": {"tool_calls": [], "tool_result": "hello"}},
+        ],
+        "result": {"status": "success", "outputs": {}},
+    })
+    work_ir = WorkIR.model_validate({
+        "work": "order", "version": "3.0", "inputs": ["cmd"], "outputs": ["content"],
+        "states": ["initialized", "ls_shelled", "printf_shelled"],
+        "actions": ["shell_ls", "shell_printf"], "dependencies": {"shell_printf": ["shell_ls"]},
+        "executors": {"shell_ls": {"type": "code"}, "shell_printf": {"type": "code"}},
+    })
+    manifest = emit_build(work_ir, tmp_path / "build", traces=[trace])
+    report = run_benchmark(manifest.build_dir, trace)
+    ls_steps = report.actions[0].steps
+    assert [s.step_id for s in ls_steps] == ["s1", "s3"]
+    assert ls_steps[1].output_match is True  # cat ran after printf wrote the file
