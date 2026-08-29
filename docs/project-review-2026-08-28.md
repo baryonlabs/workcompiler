@@ -1,4 +1,4 @@
-# OpenWorkflow 전체 프로젝트 리뷰
+# OpenWorkCompiler 전체 프로젝트 리뷰
 
 검토일: 2026-08-28
 검토 방식: 아키텍처·품질/보안·제품 도식 관점의 병렬 검토
@@ -6,7 +6,7 @@
 
 ## 결론
 
-OpenWorkflow의 핵심 설계 방향은 명확하다.
+OpenWorkCompiler의 핵심 설계 방향은 명확하다.
 
 `Agent/API Trace → TraceIR → Behavior Contract → WorkCompiler → WorkIR → Durable Runtime → Quality/Oracle → Optimizer`
 
@@ -23,7 +23,7 @@ Work IR을 실행의 canonical asset으로 삼고, 결정형 코드·규칙·ML�
 
 The first safety slice is now implemented and covered by regression tests.
 
-- Proxy compilation writes are restricted to `OPENWORKFLOW_WORKSPACE_DIR` (or the current workspace), malformed JSON returns a client error, and demo responses declare `X-OpenWorkflow-Response-Mode: synthetic`.
+- Proxy compilation writes are restricted to `OPENWORKCOMPILER_WORKSPACE_DIR` (or the current workspace), malformed JSON returns a client error, and demo responses declare `X-OpenWorkCompiler-Response-Mode: synthetic`.
 - Runtime startup rejects malformed/cyclic dependency DAGs, human responses must satisfy required fields before changing state, and checkpoints use `fsync` plus atomic replacement.
 - Dynamic Python imports are disabled by default; an operator must opt in and allowlist module prefixes. HTTP executors reject private, loopback, link-local, reserved, and redirect-to-private destinations unless the operator explicitly enables private-network access.
 - `pyproject.toml` now declares the package metadata and runtime/test dependencies.

@@ -1,4 +1,4 @@
-"""OpenWorkflow Runtime Executors.
+"""OpenWorkCompiler Runtime Executors.
 
 Defines the action execution abstractions and concrete executors:
 - ActionResult: Standardized execution outcome dataclass.
@@ -200,7 +200,7 @@ class ActionResult:
 
 
 class BaseExecutor(abc.ABC):
-    """Abstract base class for all OpenWorkflow action executors.
+    """Abstract base class for all OpenWorkCompiler action executors.
 
     Subclasses implement execution strategies for code, rules, HTTP endpoints,
     ML models, SLMs, LLMs, or human-in-the-loop actions.

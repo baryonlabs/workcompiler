@@ -98,7 +98,7 @@ def cmd_show(args: argparse.Namespace) -> int:
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(prog="python3 -m core.build", description="OpenWorkflow build backend")
+    parser = argparse.ArgumentParser(prog="python3 -m core.build", description="OpenWorkCompiler build backend")
     sub = parser.add_subparsers(dest="command", required=True)
 
     a = sub.add_parser("from-work", help="Emit the artifact tree for an existing work.yaml")

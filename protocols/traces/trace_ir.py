@@ -1,6 +1,6 @@
 """Trace IR data models and serialization.
 
-Implements the OpenWorkflow Trace/Eval Protocol contract for representing
+Implements the OpenWorkCompiler Trace/Eval Protocol contract for representing
 raw or normalized agent trajectories across diverse agent frameworks.
 """
 
@@ -88,7 +88,7 @@ class TraceResult:
 
 @dataclass
 class TraceIR:
-    """OpenWorkflow Trace IR data model.
+    """OpenWorkCompiler Trace IR data model.
 
     Represents a full recorded run trajectory from a frontier or local agent.
     """

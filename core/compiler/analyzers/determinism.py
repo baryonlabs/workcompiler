@@ -1,4 +1,4 @@
-"""Determinism Analyzer for OpenWorkflow WorkCompiler.
+"""Determinism Analyzer for OpenWorkCompiler WorkCompiler.
 
 Detects deterministic operation patterns in agent execution trace steps:
 - Arithmetic calculation (unary, binary, aggregations, linear combinations)

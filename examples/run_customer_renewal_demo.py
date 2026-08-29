@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenWorkflow End-to-End Customer Renewal Demonstration
+OpenWorkCompiler End-to-End Customer Renewal Demonstration
 Runs the full pipeline: Trace Normalization -> BEHAVIOR Parsing -> Work Compilation -> 
 Durable Runtime Execution -> Oracle Gate Validation -> Quality Record Evaluation -> Executor Optimization.
 """
@@ -27,7 +27,7 @@ from core.optimizer import ExecutorOptimizer, generate_training_candidate
 
 def main():
     print("=" * 70)
-    print("🚀 OpenWorkflow v4: End-to-End Customer Renewal Demonstration")
+    print("🚀 OpenWorkCompiler v4: End-to-End Customer Renewal Demonstration")
     print("=" * 70)
 
     # 1. Simulate Raw Trajectory Ingestion
@@ -197,7 +197,7 @@ Invocation of `lookup_contract` before pricing or proposal drafting.
     print(f"   [SLM FACTORY] Training Sample Pairs: {len(training_candidate['dataset']['examples'])}")
 
     print("\n" + "=" * 70)
-    print("🎉 OpenWorkflow End-to-End Test Completed Successfully!")
+    print("🎉 OpenWorkCompiler End-to-End Test Completed Successfully!")
     print("=" * 70)
 
 

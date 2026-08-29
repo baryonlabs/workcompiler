@@ -1,13 +1,13 @@
 ---
 name: ow-define
-description: Turn a raw, unrefined request into the WHAT of an OpenWorkflow work — a relentless interview (grill-me / grilling) that produces TASK.md (goal, inputs, steps, acceptance criteria) and BEHAVIOR.md contracts, then hands off to the agent run + compile pipeline. Use when someone has a business task in mind but cannot yet state the goal, rules or acceptance criteria precisely.
+description: Turn a raw, unrefined request into the WHAT of an OpenWorkCompiler work — a relentless interview (grill-me / grilling) that produces TASK.md (goal, inputs, steps, acceptance criteria) and BEHAVIOR.md contracts, then hands off to the agent run + compile pipeline. Use when someone has a business task in mind but cannot yet state the goal, rules or acceptance criteria precisely.
 ---
 
 # ow-define — WHAT before HOW
 
 Invoked as `$ow-define <short description of the work>` (e.g. `$ow-define customer renewal proposals`).
 
-OpenWorkflow compiles a *verified* agent session into an executable build. That only pays off when the goal,
+OpenWorkCompiler compiles a *verified* agent session into an executable build. That only pays off when the goal,
 the rules and the acceptance criteria are written down first — otherwise the compiler faithfully freezes a
 vague run. This skill produces those two artifacts:
 

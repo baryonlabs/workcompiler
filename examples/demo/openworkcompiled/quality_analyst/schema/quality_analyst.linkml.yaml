@@ -1,4 +1,4 @@
-id: https://w3id.org/openworkflow/schemas/quality_analyst
+id: https://w3id.org/openworkcompiler/schemas/quality_analyst
 name: quality_analyst
 description: Analyze production line quality anomaly root causes and generate remediation plans
 imports:

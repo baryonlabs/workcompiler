@@ -1,36 +1,36 @@
-# OpenWorkflow v3 Architecture: Kernel & Ecosystem Strategy
+# OpenWorkCompiler v3 Architecture: Kernel & Ecosystem Strategy
 
 Status: Design Spec (v3) · Supersedes v2 Architecture
 
 ## Executive Summary
 
-OpenWorkflow v3 establishes the core architectural philosophy:
+OpenWorkCompiler v3 establishes the core architectural philosophy:
 
 > **Build the kernel, integrate the ecosystem.**
 > 
-> *"Bring your agent. Bring your UI. Bring your evals. OpenWorkflow compiles the work."*
+> *"Bring your agent. Bring your UI. Bring your evals. OpenWorkCompiler compiles the work."*
 
-OpenWorkflow does not replace existing agent frameworks, desktop shells, Slack bots, or evaluation platforms. Instead, OpenWorkflow acts as a **thin, robust execution and compilation kernel** that converts proven AI agent traces into reliable, durable, optimized workflows, while seamlessly delegating surface UX, tool exposure, tracing, and model fine-tuning to the broader ecosystem via standard protocol adapters.
+OpenWorkCompiler does not replace existing agent frameworks, desktop shells, Slack bots, or evaluation platforms. Instead, OpenWorkCompiler acts as a **thin, robust execution and compilation kernel** that converts proven AI agent traces into reliable, durable, optimized workflows, while seamlessly delegating surface UX, tool exposure, tracing, and model fine-tuning to the broader ecosystem via standard protocol adapters.
 
 ---
 
 ## 1. Core Principles
 
-1. **Kernel Focus**: OpenWorkflow owns **Work Compilation**, **Durable Execution**, **Behavior/Policy Commit**, and **Autonomous Optimization**.
+1. **Kernel Focus**: OpenWorkCompiler owns **Work Compilation**, **Durable Execution**, **Behavior/Policy Commit**, and **Autonomous Optimization**.
 2. **Ecosystem Delegated**: User interfaces (OpenWorker, OpenTag), protocol transport (AG-UI, MCP), telemetry (Braintrust, Langfuse, OpenTelemetry), and model training (Hugging Face, TRL) are attached via thin protocol adapters.
-3. **Trace → Work IR Compilation**: The central asset of OpenWorkflow is the **Work IR (Intermediate Representation)**—a vendor-agnostic, framework-agnostic definition of compiled business work.
+3. **Trace → Work IR Compilation**: The central asset of OpenWorkCompiler is the **Work IR (Intermediate Representation)**—a vendor-agnostic, framework-agnostic definition of compiled business work.
 4. **Behavior Contract Invariance**: Behavior specs (`BEHAVIOR.md` in AgentBehavior format) are non-negotiable process invariants preserved across all executor swaps (Code, Rule, SLM, LLM).
 5. **Humans Evaluate Outcomes Only**: Users interact via standard result cards (`Input → Output → Expected quality`); they never construct or operate workflow graphs.
 
 ---
 
-## 2. OpenWorkflow Core Kernel (6 Core Modules)
+## 2. OpenWorkCompiler Core Kernel (6 Core Modules)
 
 The kernel is intentionally kept minimal, cohesive, and decoupled from external frameworks.
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           OPENWORKFLOW CORE                             │
+│                           OPENWORKCOMPILER CORE                             │
 │                                                                         │
 │  1. Work Trace               2. Quality & Behavior Contract             │
 │     - Agent trajectory          - Human outcome rating                  │
@@ -62,7 +62,7 @@ The kernel is intentionally kept minimal, cohesive, and decoupled from external 
 
 ## 3. Ecosystem Integration Matrix
 
-OpenWorkflow explicitly avoids re-inventing existing open-source tools. Everything outside the core kernel is connected via adapters.
+OpenWorkCompiler explicitly avoids re-inventing existing open-source tools. Everything outside the core kernel is connected via adapters.
 
 | Subsystem / Domain | Strategy | Integration Target / Standard |
 | :--- | :---: | :--- |
@@ -82,7 +82,7 @@ OpenWorkflow explicitly avoids re-inventing existing open-source tools. Everythi
 
 ## 4. The 5 Standard Protocol Boundaries
 
-To enable seamless ecosystem integration, OpenWorkflow defines 5 standardized protocol contracts:
+To enable seamless ecosystem integration, OpenWorkCompiler defines 5 standardized protocol contracts:
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -126,7 +126,7 @@ Streams real-time workflow lifecycle events to UI surfaces (OpenTag, CopilotKit,
 * `workflow.completed`
 
 ### 3) Tool Protocol (MCP)
-Exposes OpenWorkflow control endpoints to external agents via Model Context Protocol:
+Exposes OpenWorkCompiler control endpoints to external agents via Model Context Protocol:
 
 * `start_work`
 * `get_work`
@@ -137,7 +137,7 @@ Exposes OpenWorkflow control endpoints to external agents via Model Context Prot
 * `get_business_object`
 
 ### 4) Trace/Eval Protocol & Trace IR
-Import adapters translate raw agent traces (OpenAI, LangGraph, Braintrust, OpenWorker) into **OpenWorkflow Trace IR**:
+Import adapters translate raw agent traces (OpenAI, LangGraph, Braintrust, OpenWorker) into **OpenWorkCompiler Trace IR**:
 
 ```json
 {
@@ -164,7 +164,7 @@ Orchestrates remote or local execution workers (e.g. OpenWorker Desktop executin
 
 
 ### 6) Zero-Code Agent Proxy Adapter (`adapters/proxy/`)
-Inspired by transparent LLM proxy architectures (e.g. `opencodex`), OpenWorkflow provides a lightweight reverse proxy interceptor:
+Inspired by transparent LLM proxy architectures (e.g. `opencodex`), OpenWorkCompiler provides a lightweight reverse proxy interceptor:
 
 ```text
 Existing Agent (Cursor, Claude Code, AutoGen, LangChain)
@@ -172,20 +172,20 @@ Existing Agent (Cursor, Claude Code, AutoGen, LangChain)
   API Request (OPENAI_BASE_URL=http://localhost:8080/v1)
                       │
                       ▼
-       OpenWorkflow Proxy Adapter (adapters/proxy/)
+       OpenWorkCompiler Proxy Adapter (adapters/proxy/)
          ├── 1. Forward request to Upstream LLM (OpenAI / Anthropic)
          ├── 2. Intercept trajectory (Tool Calls, Prompts, Outputs)
          └── 3. Stream trajectory into Trace IR
                       │
                       ▼
-            OpenWorkflow Work Compiler  ──▶  Work IR (work.yaml)
+            OpenWorkCompiler Work Compiler  ──▶  Work IR (work.yaml)
 ```
 
-Existing agents require **zero code modifications**—simply changing the API base URL allows OpenWorkflow to capture agent trajectories and compile them into deterministic `Work IR`.
+Existing agents require **zero code modifications**—simply changing the API base URL allows OpenWorkCompiler to capture agent trajectories and compile them into deterministic `Work IR`.
 
 ## 5. Core Native Abstraction: `Work IR``)
 
-The **Work IR** (`work.yaml`) is OpenWorkflow's primary asset. It represents the compiled, executable definition of business work, decoupled from any specific LLM, UI, or infrastructure.
+The **Work IR** (`work.yaml`) is OpenWorkCompiler's primary asset. It represents the compiled, executable definition of business work, decoupled from any specific LLM, UI, or infrastructure.
 
 ```yaml
 work: customer-renewal
@@ -265,18 +265,18 @@ executors:
 ## 6. Subsystem Integration Strategies
 
 ### OpenWorker (Desktop & Local Worker)
-* **Phase 1**: Connect OpenWorker to OpenWorkflow via **MCP**.
+* **Phase 1**: Connect OpenWorker to OpenWorkCompiler via **MCP**.
 * **Phase 2**: Introduce a native adapter for deep state synchronization.
 * **Phase 3**: Position OpenWorker as the primary **Local Worker** for desktop file system, local shell, and local app automation under the Worker Protocol.
 
 ### OpenTag (Slack / Teams Surface)
 ```text
-Slack / Teams  ──▶  OpenTag  ──▶  AG-UI Adapter  ──▶  OpenWorkflow Core
+Slack / Teams  ──▶  OpenTag  ──▶  AG-UI Adapter  ──▶  OpenWorkCompiler Core
 ```
-OpenTag handles enterprise channel UX and user notifications; OpenWorkflow owns workflow state, behavior compliance, and execution routing.
+OpenTag handles enterprise channel UX and user notifications; OpenWorkCompiler owns workflow state, behavior compliance, and execution routing.
 
 ### AgentBehavior Integration
-OpenWorkflow reads native `.agents/behaviors/*/BEHAVIOR.md` files without re-implementation. The Work Compiler classifies each behavior into:
+OpenWorkCompiler reads native `.agents/behaviors/*/BEHAVIOR.md` files without re-implementation. The Work Compiler classifies each behavior into:
 1. **Rule / Policy Engine** (deterministic check)
 2. **Workflow Transition Constraint** (ordering dependency)
 3. **Runtime Evaluator Judge** (semantic quality check)
@@ -285,9 +285,9 @@ OpenWorkflow reads native `.agents/behaviors/*/BEHAVIOR.md` files without re-imp
 
 ## 7. Explicit Non-Negotiable Boundaries
 
-To maintain focus and high engineering quality, OpenWorkflow strictly defines what to build versus what NOT to build.
+To maintain focus and high engineering quality, OpenWorkCompiler strictly defines what to build versus what NOT to build.
 
-### ❌ What OpenWorkflow Will NOT Build
+### ❌ What OpenWorkCompiler Will NOT Build
 * Custom Slack / Teams bot frameworks
 * Proprietary desktop shell / GUI application
 * Drag-and-drop visual workflow canvas (reference/embed n8n/Windmill if needed)
@@ -296,7 +296,7 @@ To maintain focus and high engineering quality, OpenWorkflow strictly defines wh
 * Proprietary Vector Database
 * General-purpose conversational agent framework
 
-### ✅ What OpenWorkflow WILL Build & Own
+### ✅ What OpenWorkCompiler WILL Build & Own
 * **Trace → Work IR Compiler**: Decomposing agent traces into deterministic Work IR.
 * **Work IR → Compiled Workflow**: Synthesizing optimized execution DAGs.
 * **Behavior → Executable Invariants**: Compiling `BEHAVIOR.md` into rules, constraints, and judges.
@@ -309,8 +309,8 @@ To maintain focus and high engineering quality, OpenWorkflow strictly defines wh
 ## 8. Target Repository Architecture
 
 ```text
-openworkflow/
-├── core/                        # Thin, strong OpenWorkflow kernel
+openworkcompiler/
+├── core/                        # Thin, strong OpenWorkCompiler kernel
 │   ├── work_ir/                 # Work IR schema, parser, and AST
 │   ├── compiler/                # Trace decomposition & workflow synthesis
 │   ├── runtime/                 # Durable state machine & checkpointing

@@ -1,4 +1,4 @@
-"""OpenWorkLang: Agent Programming Language for OpenWorkflow.
+"""OpenWorkLang: Agent Programming Language for OpenWorkCompiler.
 
 Enables human and developer authoring of high-level agent work specifications
 which compile into executable WorkIR (work.yaml) and LinkML domain schemas.

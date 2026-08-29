@@ -1,7 +1,7 @@
-# OpenWorkflow terminal demo — rendered with vhs (https://github.com/charmbracelet/vhs)
-# Regenerate from the repo root:  vhs docs/demo/openworkflow-demo.tape
+# OpenWorkCompiler terminal demo — rendered with vhs (https://github.com/charmbracelet/vhs)
+# Regenerate from the repo root:  vhs docs/demo/openworkcompiler-demo.tape
 
-Output docs/demo/openworkflow-demo.gif
+Output docs/demo/openworkcompiler-demo.gif
 
 Set Shell "bash"
 Set FontSize 15

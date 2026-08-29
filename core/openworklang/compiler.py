@@ -1,7 +1,7 @@
 """OpenWorkLang Compiler Engine.
 
 Compiles OpenWorkLang (.work) AST sources into:
-1. OpenWorkflow WorkIR (work.yaml) AST model for durable execution.
+1. OpenWorkCompiler WorkIR (work.yaml) AST model for durable execution.
 2. LinkML Schema definitions (YAML).
 3. BEHAVIOR.md process contract specifications.
 """
@@ -75,7 +75,7 @@ class OpenWorkLangCompiler:
         """Compile OpenWorkLangAST into LinkML authoring schema (YAML)."""
         class_prefix = "".join(part.title() for part in ast.name.replace("-", "_").split("_"))
         linkml_lines = [
-            f"id: https://w3id.org/openworkflow/schemas/{ast.name}",
+            f"id: https://w3id.org/openworkcompiler/schemas/{ast.name}",
             f"name: {ast.name}",
             f"description: {ast.goal or 'OpenWorkLang compiled schema'}",
             "imports:",

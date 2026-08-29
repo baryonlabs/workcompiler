@@ -1,5 +1,5 @@
 # OpenWorkLang (.work) Example: Production Quality Analyst Agent
-# Compiles into OpenWorkflow WorkIR (work.yaml) and LinkML Schemas
+# Compiles into OpenWorkCompiler WorkIR (work.yaml) and LinkML Schemas
 
 work quality_analyst {
   goal: "Analyze production line quality anomaly root causes and generate remediation plans"

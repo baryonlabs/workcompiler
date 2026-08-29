@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "OpenWorkflow Worker Protocol Schema",
+  "title": "OpenWorkCompiler Worker Protocol Schema",
   "type": "object",
   "required": [
     "task_id",

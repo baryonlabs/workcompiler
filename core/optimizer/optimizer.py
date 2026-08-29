@@ -281,7 +281,7 @@ def generate_training_candidate(
         Dictionary representation of the TrainingCandidate ready for YAML export or TRL execution.
     """
     default_system_prompt = system_prompt or (
-        f"You are a specialized OpenWorkflow SLM executor for action '{action_name}'. "
+        f"You are a specialized OpenWorkCompiler SLM executor for action '{action_name}'. "
         "Strictly adhere to specified behavior contracts and schema invariants."
     )
 
@@ -384,7 +384,7 @@ def generate_training_candidate(
             "max_latency_ms": 1500.0,
         },
         metadata={
-            "source": "OpenWorkflow ExecutorOptimizer",
+            "source": "OpenWorkCompiler ExecutorOptimizer",
             "target_backends": ["huggingface", "trl", "unsloth"],
         },
     )

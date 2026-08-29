@@ -14,7 +14,7 @@ from typing import Any
 class BehaviorVerdict(str, Enum):
     """Behavior compliance verdict for an individual behavior contract.
 
-    Adopts the AgentBehavior / OpenWorkflow standard convention:
+    Adopts the AgentBehavior / OpenWorkCompiler standard convention:
       - TRUE: Trigger fired and required conduct was observed.
       - FALSE: Trigger fired, conduct was missing, skipped, or failed.
       - NA: No trigger in this trajectory, or behavior is unjudgeable.
@@ -175,7 +175,7 @@ class QualityRecord:
 
 
 def evaluate_quality_fold(quality_record: QualityRecord) -> str:
-    """Evaluates the unified quality fold for a QualityRecord according to OpenWorkflow principles.
+    """Evaluates the unified quality fold for a QualityRecord according to OpenWorkCompiler principles.
 
     Evaluation logic enforcing the Lucky-Correct check:
       1. Any behavior verdict == 'false' -> FAIL (regardless of outcome or other passing checks).

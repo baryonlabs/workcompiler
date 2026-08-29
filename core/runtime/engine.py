@@ -1,4 +1,4 @@
-"""OpenWorkflow Durable Runtime Engine.
+"""OpenWorkCompiler Durable Runtime Engine.
 
 Implements the stateful workflow execution state machine:
 - WorkflowStatus & StepStatus: Lifecycle state enumerations.

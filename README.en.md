@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/logo.png" alt="OpenWorkCompiler logo" width="420">
+  <img src="docs/logo.png" alt="OpenWorkCompiler logo" width="400">
 </p>
 
-# OpenWorkflow
+# OpenWorkCompiler
 
 ![OpenWorkCompiler turns non-deterministic agent work into repeatable deterministic execution — (A) agent-centric run, (B) compiled deterministic run, (C) before/after, (D) efficiency gains](docs/banner.png)
 
@@ -10,11 +10,11 @@
 
 [한국어 README](README.md)
 
-Let AI do the work once. OpenWorkflow learns how to run it reliably thereafter.
+Let AI do the work once. OpenWorkCompiler learns how to run it reliably thereafter.
 
 > **"Build the kernel, integrate the ecosystem, enrich with semantic truth."**
 >
-> *"LinkML is the front door for human/LLM model authoring; OWL is the semantic truth layer; SHACL validates constraints; OpenWorkflow executes durable work."*
+> *"LinkML is the front door for human/LLM model authoring; OWL is the semantic truth layer; SHACL validates constraints; OpenWorkCompiler executes durable work."*
 
 ---
 
@@ -58,9 +58,9 @@ Measured: on the same renewal-proposal task the compiled build produced identica
 
 ## 30-second demo: use it from inside Codex
 
-![Real recording: inside the Codex TUI, the $ow-compile-work / $ow-traces / $ow-compile-trace skills compile an OpenWorkLang file, list captured sessions, and compile the session itself into work.yaml](docs/demo/openworkflow-codex-demo.gif)
+![Real recording: inside the Codex TUI, the $ow-compile-work / $ow-traces / $ow-compile-trace skills compile an OpenWorkLang file, list captured sessions, and compile the session itself into work.yaml](docs/demo/openworkcompiler-codex-demo.gif)
 
-A **real interactive Codex session**, not a mock-up. Point Codex at the OpenWorkflow proxy (ChatGPT login reused as-is) and invoke the three skills shipped in this repository with `$` mentions.
+A **real interactive Codex session**, not a mock-up. Point Codex at the OpenWorkCompiler proxy (ChatGPT login reused as-is) and invoke the three skills shipped in this repository with `$` mentions.
 
 | Step | Typed in Codex | Result |
 | :--- | :--- | :--- |
@@ -111,7 +111,7 @@ The token saving is smaller than in the first benchmark for an obvious reason: e
 
 A **complete beginner** holding nothing but work materials (a lead's memo, their own notes, a previous deliverable, data files) types `$ow-define` in the Codex TUI and mostly answers "go with your recommendation" — that produces the WHAT; the agent's first run, compilation and replay then followed for all four business cases, for real ([`examples/cases/`](examples/cases/) — scenarios, transcripts, traces, builds and token ledgers):
 
-![Real recording: a beginner defines the refund-approval job with $ow-define in the Codex TUI](docs/demo/openworkflow-define-demo.gif)
+![Real recording: a beginner defines the refund-approval job with $ow-define in the Codex TUI](docs/demo/openworkcompiler-define-demo.gif)
 
 | Case | What the beginner had | `$ow-define` produced | Agent's first run (gpt-5.6-sol) | Compiled build replay |
 | :-- | :-- | :-- | --: | --: |
@@ -172,7 +172,7 @@ flowchart TB
         L1 --> L2 --> L3 --> L4
     end
 
-    subgraph RIGHT["OPENWORKFLOW — Compiled execution"]
+    subgraph RIGHT["OPENWORKCOMPILER — Compiled execution"]
         direction TB
         R1["User request"]
         R2["Input → Output → Expected quality"]
@@ -204,13 +204,13 @@ flowchart TB
 
 ---
 
-## Why OpenWorkflow
+## Why OpenWorkCompiler
 
 Coding agents and frontier LLMs can perform work, but their output is not repeatable, cost-effective, or observable. Every run re-derives the same result at the same frontier cost, and quality is unmeasured.
 
-OpenWorkflow inverts this: an agent performs the work once, a human evaluates the output, and the system compiles that proven execution into a reliable, optimized workflow that runs deterministically behind the scenes.
+OpenWorkCompiler inverts this: an agent performs the work once, a human evaluates the output, and the system compiles that proven execution into a reliable, optimized workflow that runs deterministically behind the scenes.
 
-**AI performs. Humans evaluate outcome quality. OpenWorkflow evaluates behavior, compiles the work, and continuously optimizes execution.**
+**AI performs. Humans evaluate outcome quality. OpenWorkCompiler evaluates behavior, compiles the work, and continuously optimizes execution.**
 
 ---
 
@@ -240,12 +240,12 @@ OpenWorkflow inverts this: an agent performs the work once, a human evaluates th
 
 ## Zero-Code Agent Proxy (`adapters/proxy/`)
 
-OpenWorkflow collects standard LLM API requests as TraceIR input. `adapters/proxy/server.py` offers two modes.
+OpenWorkCompiler collects standard LLM API requests as TraceIR input. `adapters/proxy/server.py` offers two modes.
 
 | Endpoint | Mode | Description |
 | :--- | :--- | :--- |
-| `POST /v1/responses`, `POST /backend-api/codex/responses` | **passthrough** (`X-OpenWorkflow-Response-Mode: passthrough`) | Forwards the request to the real upstream (OpenAI Responses API or the ChatGPT Codex backend), relays the SSE stream byte-for-byte, and captures the completed turn into TraceIR in the background. **Codex CLI runs unmodified.** |
-| `POST /v1/chat/completions`, `POST /v1/messages` | **synthetic** (`X-OpenWorkflow-Response-Mode: synthetic`) | Development/demo synthetic responses. Do not route production traffic here. |
+| `POST /v1/responses`, `POST /backend-api/codex/responses` | **passthrough** (`X-OpenWorkCompiler-Response-Mode: passthrough`) | Forwards the request to the real upstream (OpenAI Responses API or the ChatGPT Codex backend), relays the SSE stream byte-for-byte, and captures the completed turn into TraceIR in the background. **Codex CLI runs unmodified.** |
+| `POST /v1/chat/completions`, `POST /v1/messages` | **synthetic** (`X-OpenWorkCompiler-Response-Mode: synthetic`) | Development/demo synthetic responses. Do not route production traffic here. |
 
 ### Real usage: everything inside the Codex TUI
 
@@ -258,22 +258,22 @@ The [30-second demo](#30-second-demo-use-it-from-inside-codex) at the top of thi
 | 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` (`build_dir`) | The captured Codex session compiles into `build/codex_session/` — `handlers/shell_*.py` replay the recorded commands, `respond` becomes `prompts/respond.prompt.md` |
 | 4 | `$ow-bench codex-session` | `python3 -m core.build bench build/codex_session` | Replays the code tier against the bundled `trace.json` → per-action output equality, tokens and latency in `BENCHMARK.md` |
 
-The recording script is [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/openworkflow-codex-demo.tape).
+The recording script is [`docs/demo/openworkcompiler-codex-demo.tape`](docs/demo/openworkcompiler-codex-demo.tape).
 
 **Try it**
 
 1. Configure the Codex provider — add to `~/.codex/config.toml`, or use a separate `CODEX_HOME` directory (copy `auth.json` + the `config.toml` below).
 
    ```toml
-   model_provider = "openworkflow"
+   model_provider = "openworkcompiler"
    approval_policy = "never"
    sandbox_mode = "workspace-write"
 
    [sandbox_workspace_write]
    network_access = true            # lets Codex curl the local proxy
 
-   [model_providers.openworkflow]
-   name = "OpenWorkflow Proxy"
+   [model_providers.openworkcompiler]
+   name = "OpenWorkCompiler Proxy"
    base_url = "http://127.0.0.1:8787/backend-api/codex"
    wire_api = "responses"
    requires_openai_auth = true      # reuse the ChatGPT login token as-is
@@ -310,7 +310,7 @@ Existing AI Agent (Codex CLI, Claude Code, Cursor, AutoGen, LangChain, Custom Sc
                                 │
                                 ▼
  ┌─────────────────────────────────────────────────────────────────────────────┐
- │                OPENWORKFLOW TRANSPARENT PROXY ADAPTER                       │
+ │                OPENWORKCOMPILER TRANSPARENT PROXY ADAPTER                       │
  │                    (adapters/proxy/server.py)                              │
  ├─────────────────────────────────────────────────────────────────────────────┤
  │ 1. Responses API / Codex backend calls pass through upstream (SSE relayed)   │
@@ -319,7 +319,7 @@ Existing AI Agent (Codex CLI, Claude Code, Cursor, AutoGen, LangChain, Custom Sc
  └──────────────────────────────┬──────────────────────────────────────────────┘
                                 │
                                 ▼
-                     OpenWorkflow WorkCompiler
+                     OpenWorkCompiler WorkCompiler
                    (TraceIR → WorkIR compilation)
 ```
 
@@ -327,7 +327,7 @@ Existing AI Agent (Codex CLI, Claude Code, Cursor, AutoGen, LangChain, Custom Sc
 
 ## The 8-Tier Executor Lowering Hierarchy
 
-OpenWorkflow's compiler prioritizes **model elimination before model lowering**. It uses middle-end analyzers (`DeterminismAnalyzer`, `PredictionAnalyzer`, `SLMAnalyzer`) to lower steps down the 8-tier hierarchy:
+OpenWorkCompiler's compiler prioritizes **model elimination before model lowering**. It uses middle-end analyzers (`DeterminismAnalyzer`, `PredictionAnalyzer`, `SLMAnalyzer`) to lower steps down the 8-tier hierarchy:
 
 ```text
 Priority 1: Model Elimination (Zero Token Cost)
@@ -350,7 +350,7 @@ Priority 3: Residual Execution (Fallback & Quality Assurance)
 
 ## Semantic Stack Architecture (v4)
 
-OpenWorkflow v4 introduces a multi-tiered semantic stack. It uses **LinkML** as the developer-friendly YAML authoring language, compiles into internal **Semantic IR**, enriches with **OWL 2** DL semantics, and validates closed-world constraints via **SHACL**:
+OpenWorkCompiler v4 introduces a multi-tiered semantic stack. It uses **LinkML** as the developer-friendly YAML authoring language, compiles into internal **Semantic IR**, enriches with **OWL 2** DL semantics, and validates closed-world constraints via **SHACL**:
 
 | Layer | Role | Target Technology |
 | :--- | :--- | :--- |
@@ -360,7 +360,7 @@ OpenWorkflow v4 introduces a multi-tiered semantic stack. It uses **LinkML** as 
 | **Constraint Validation** | Closed-world data verification & cardinalities | **SHACL** |
 | **Reasoner** | Inferred classification & consistency checking | **ELK / HermiT** |
 | **Runtime Graph** | Knowledge Graph & RDF triples | **Jena / RDF4J / RDFLib** |
-| **Execution Engine** | Stateful workflow, action DAG & durable runtime | **OpenWorkflow Kernel** |
+| **Execution Engine** | Stateful workflow, action DAG & durable runtime | **OpenWorkCompiler Kernel** |
 
 ---
 
@@ -388,7 +388,7 @@ Pydantic               SHACL                  OWL                 Work IR
                          │                     │
                          └──────────┬──────────┘
                                     ▼
-                           OpenWorkflow Runtime
+                           OpenWorkCompiler Runtime
 ```
 
 ---
@@ -397,7 +397,7 @@ Pydantic               SHACL                  OWL                 Work IR
 
 ## OpenWorkLang: The Agent Programming Language (`.work`)
 
-OpenWorkflow introduces **OpenWorkLang**, a declarative Agent Programming Language for compiling human intent, agent goals, tools, memory policies, process invariants, and action workflows into executable agent programs:
+OpenWorkCompiler introduces **OpenWorkLang**, a declarative Agent Programming Language for compiling human intent, agent goals, tools, memory policies, process invariants, and action workflows into executable agent programs:
 
 > **"Code → Software를 만드는 시대에서 OpenWorkLang → Agent를 컴파일하는 시대로."**
 
@@ -467,7 +467,7 @@ See **[OpenWorkLang Spec](docs/openworklang-spec.md)** for full language grammar
 Agent Trace  ──▶  Trace IR  ──▶  Work Compiler  ──▶  Work IR  ──▶  Durable Runtime
 ```
 
-The **Work IR** (`work.yaml`) is OpenWorkflow's primary native asset representing executable business work:
+The **Work IR** (`work.yaml`) is OpenWorkCompiler's primary native asset representing executable business work:
 
 ```yaml
 work: customer-renewal
@@ -530,7 +530,7 @@ executors:
 
 ## The 5 Standard Protocol Boundaries
 
-OpenWorkflow connects to external surfaces and tools through 5 standardized protocol contracts:
+OpenWorkCompiler connects to external surfaces and tools through 5 standardized protocol contracts:
 
 1. **Ingress Protocol**: Standardized event format for external triggers (webhooks, cron timers, Slack events, email notifications).
 2. **Surface Protocol (AG-UI)**: Real-time workflow streaming (`workflow.started`, `step.started`, `approval.requested`, `workflow.completed`) to UI surfaces like OpenTag or CopilotKit.
@@ -543,8 +543,8 @@ OpenWorkflow connects to external surfaces and tools through 5 standardized prot
 ## Repository Layout (v4)
 
 ```
-openworkflow/
-├── core/                        # Thin, strong OpenWorkflow kernel
+openworkcompiler/
+├── core/                        # Thin, strong OpenWorkCompiler kernel
 │   ├── semantic_ir/             # LinkML parser, Semantic IR AST, OWL/SHACL generators
 │   ├── work_ir/                 # Work IR schema, parser, and AST
 │   ├── compiler/                # Trace IR → Work IR compilation & Middle-End Analyzers
@@ -590,13 +590,13 @@ For complete API documentation and a step-by-step developer guide, see **[Usage 
 
 ### Pipeline demo (Python script run)
 
-![OpenWorkflow terminal demo — customer renewal pipeline run and full test suite](docs/demo/openworkflow-demo.gif)
+![OpenWorkCompiler terminal demo — customer renewal pipeline run and full test suite](docs/demo/openworkcompiler-demo.gif)
 
-The recording shows the 6-step pipeline (`Agent Trace → BEHAVIOR.md parsing → Work IR compilation → Durable Runtime execution → Objective Oracle Gate → SLM promotion evaluation`) running end to end, followed by the full pytest suite passing. The recording script lives at [`docs/demo/openworkflow-demo.tape`](docs/demo/openworkflow-demo.tape) and can be regenerated with [vhs](https://github.com/charmbracelet/vhs):
+The recording shows the 6-step pipeline (`Agent Trace → BEHAVIOR.md parsing → Work IR compilation → Durable Runtime execution → Objective Oracle Gate → SLM promotion evaluation`) running end to end, followed by the full pytest suite passing. The recording script lives at [`docs/demo/openworkcompiler-demo.tape`](docs/demo/openworkcompiler-demo.tape) and can be regenerated with [vhs](https://github.com/charmbracelet/vhs):
 
 ```bash
 brew install vhs   # or: go install github.com/charmbracelet/vhs@latest
-vhs docs/demo/openworkflow-demo.tape
+vhs docs/demo/openworkcompiler-demo.tape
 ```
 
 Run the end-to-end customer renewal demonstration script:
@@ -615,7 +615,7 @@ python3 -m pytest tests/
 
 ## Ecosystem & Reference Links
 
-OpenWorkflow builds upon and integrates with the following open-source projects, standards, and research initiatives:
+OpenWorkCompiler builds upon and integrates with the following open-source projects, standards, and research initiatives:
 
 | Category | Project / Standard | Link | Description |
 | :--- | :--- | :--- | :--- |

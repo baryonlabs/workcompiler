@@ -1,4 +1,4 @@
-"""Objective Oracle Gate for OpenWorkflow Runtime.
+"""Objective Oracle Gate for OpenWorkCompiler Runtime.
 
 Implements Frugal-style objective verification and failure escalation:
 validates step execution results against external schemas and behavior contracts,

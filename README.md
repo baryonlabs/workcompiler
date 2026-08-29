@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/logo.png" alt="OpenWorkCompiler 로고" width="420">
+  <img src="docs/logo.png" alt="OpenWorkCompiler 로고" width="400">
 </p>
 
-# OpenWorkflow
+# OpenWorkCompiler
 
 ![OpenWorkCompiler는 비결정형 업무를 반복 가능한 결정형 실행으로 바꾸도록 도와줍니다 — (A) Agent 중심 비결정형 수행, (B) 컴파일 후 결정형 수행, (C) Before/After, (D) 효율성 향상 포인트](docs/banner.png)
 
@@ -10,11 +10,11 @@
 
 [English README](README.en.md)
 
-AI가 한 번 작업하게 하세요. OpenWorkflow는 이후 작업을 안정적으로 실행하는 방법을 배웁니다.
+AI가 한 번 작업하게 하세요. OpenWorkCompiler는 이후 작업을 안정적으로 실행하는 방법을 배웁니다.
 
 > **"코어 커널을 구축하고, 생태계를 통합하며, 시맨틱 진실을 강화하라 (Build the kernel, integrate the ecosystem, enrich with semantic truth.)"**
 >
-> *"LinkML은 모델 작성의 관문이며, OWL은 시맨틱 진실 레이어이고, SHACL은 제약 조건을 검증하며, OpenWorkflow는 지속적 작업을 실행합니다."*
+> *"LinkML은 모델 작성의 관문이며, OWL은 시맨틱 진실 레이어이고, SHACL은 제약 조건을 검증하며, OpenWorkCompiler는 지속적 작업을 실행합니다."*
 
 ---
 
@@ -58,9 +58,9 @@ flowchart LR
 
 ## 30초 데모: Codex 안에서 그대로 쓰기
 
-![Codex TUI 안에서 $ow-compile-work / $ow-traces / $ow-compile-trace 스킬로 OpenWorkLang 컴파일, 캡처 세션 조회, 세션의 work.yaml 컴파일까지 수행하는 실제 녹화](docs/demo/openworkflow-codex-demo.gif)
+![Codex TUI 안에서 $ow-compile-work / $ow-traces / $ow-compile-trace 스킬로 OpenWorkLang 컴파일, 캡처 세션 조회, 세션의 work.yaml 컴파일까지 수행하는 실제 녹화](docs/demo/openworkcompiler-codex-demo.gif)
 
-합성 화면이 아닌 **실제 Codex 대화형 세션**입니다. Codex를 OpenWorkflow 프록시로 향하게 한 뒤(ChatGPT 로그인 그대로), 저장소의 스킬 3개를 `$` 멘션으로 호출하면 됩니다.
+합성 화면이 아닌 **실제 Codex 대화형 세션**입니다. Codex를 OpenWorkCompiler 프록시로 향하게 한 뒤(ChatGPT 로그인 그대로), 저장소의 스킬 3개를 `$` 멘션으로 호출하면 됩니다.
 
 | 순서 | Codex 입력 | 결과 |
 | :--- | :--- | :--- |
@@ -111,7 +111,7 @@ python3 -m core.build run build/customer_renewal_codex \
 
 업무 자료(팀장 메모 · 본인 노트 · 이전 완성물 · 데이터 파일)만 가진 **완전 초보자**가 Codex TUI에서 `$ow-define`을 치고 "추천안대로"라고 답하는 것만으로 WHAT이 만들어지고, 그 뒤 에이전트 1회 수행 → 컴파일 → 재실행까지 4가지 업무 사례 전부를 실제로 돌렸습니다 ([`examples/cases/`](examples/cases/) — 시나리오·transcript·트레이스·빌드·토큰 원장 포함):
 
-![초보자가 Codex TUI에서 $ow-define으로 환불 승인 업무를 정의하는 실제 녹화](docs/demo/openworkflow-define-demo.gif)
+![초보자가 Codex TUI에서 $ow-define으로 환불 승인 업무를 정의하는 실제 녹화](docs/demo/openworkcompiler-define-demo.gif)
 
 | 사례 | 초보자가 가진 것 | `$ow-define` 결과 | 에이전트 1회 (gpt-5.6-sol) | 컴파일된 빌드 재실행 |
 | :-- | :-- | :-- | --: | --: |
@@ -172,7 +172,7 @@ flowchart TB
         L1 --> L2 --> L3 --> L4
     end
 
-    subgraph RIGHT["OPENWORKFLOW — 컴파일된 정밀 실행"]
+    subgraph RIGHT["OPENWORKCOMPILER — 컴파일된 정밀 실행"]
         direction TB
         R1["사용자 요청"]
         R2["입력 → 출력 → 기대 품질"]
@@ -204,19 +204,19 @@ flowchart TB
 
 ---
 
-## 왜 OpenWorkflow인가?
+## 왜 OpenWorkCompiler인가?
 
 코딩 에이전트와 프론티어 LLM은 뛰어난 수행 능력을 갖추었지만, 그 출력은 반복 가능하지 않고, 비용 효율적이지 않으며, 관측 가능하지 않습니다. 매 요청마다 프론티어 비용을 지불하며 동일한 추론을 처음부터 다시 수행하지만, 품질은 지속적으로 측정되지 않습니다.
 
-OpenWorkflow는 이를 역전시킵니다: 에이전트가 1회 작업을 수행하고 인간이 결과를 평가하면, 시스템은 검증된 실행 과정을 백그라운드에서 결정론적으로 실행되는 안정적이고 최적화된 워크플로우로 컴파일합니다.
+OpenWorkCompiler는 이를 역전시킵니다: 에이전트가 1회 작업을 수행하고 인간이 결과를 평가하면, 시스템은 검증된 실행 과정을 백그라운드에서 결정론적으로 실행되는 안정적이고 최적화된 워크플로우로 컴파일합니다.
 
-**AI는 실행합니다. 인간은 결과 품질을 평가합니다. OpenWorkflow는 행위를 감독하고, 작업을 컴파일하며, 실행을 지속적으로 최적화합니다.**
+**AI는 실행합니다. 인간은 결과 품질을 평가합니다. OpenWorkCompiler는 행위를 감독하고, 작업을 컴파일하며, 실행을 지속적으로 최적화합니다.**
 
 ---
 
 ## 실제 업무에서는 어떻게 동작하나요?
 
-아래 사례의 공통점은 처음에는 LLM 에이전트가 업무를 수행하지만, 사람이 결과의 품질만 승인하면 OpenWorkflow가 반복 가능한 부분을 백그라운드에서 컴파일한다는 것입니다. 사람에게 상태 머신이나 모델 선택을 요구하지 않습니다.
+아래 사례의 공통점은 처음에는 LLM 에이전트가 업무를 수행하지만, 사람이 결과의 품질만 승인하면 OpenWorkCompiler가 반복 가능한 부분을 백그라운드에서 컴파일한다는 것입니다. 사람에게 상태 머신이나 모델 선택을 요구하지 않습니다.
 
 | 업무 사례 | 처음 한 번: 에이전트가 수행하는 일 | 컴파일 후: 기본 실행 경로 | 예외 시 에스컬레이션 | 사람이 보는 품질 기준 |
 | :--- | :--- | :--- | :--- | :--- |
@@ -231,7 +231,7 @@ OpenWorkflow는 이를 역전시킵니다: 에이전트가 1회 작업을 수행
 영업 담당자 요청
   → LLM Agent가 계약·사용량·가격 정책을 조사해 갱신안 작성
   → 담당자가 “가격과 조항이 정확하다”라고 결과 품질 승인
-  → OpenWorkflow가 승인 trace를 Work IR로 컴파일
+  → OpenWorkCompiler가 승인 trace를 Work IR로 컴파일
   → 다음 갱신부터 DB 조회 + 가격 Rule + SLM 초안으로 실행
   → 특약/품질 저하만 Frontier LLM 또는 담당자에게 에스컬레이션
 ```
@@ -266,12 +266,12 @@ OpenWorkflow는 이를 역전시킵니다: 에이전트가 1회 작업을 수행
 
 ## Zero-Code 에이전트 프록시 (`adapters/proxy/`)
 
-OpenWorkflow는 표준 LLM API 요청을 TraceIR 입력으로 수집합니다. `adapters/proxy/server.py`는 두 가지 모드를 제공합니다.
+OpenWorkCompiler는 표준 LLM API 요청을 TraceIR 입력으로 수집합니다. `adapters/proxy/server.py`는 두 가지 모드를 제공합니다.
 
 | 엔드포인트 | 모드 | 설명 |
 | :--- | :--- | :--- |
-| `POST /v1/responses`, `POST /backend-api/codex/responses` | **passthrough** (`X-OpenWorkflow-Response-Mode: passthrough`) | 요청을 실제 upstream(OpenAI Responses API 또는 ChatGPT Codex 백엔드)으로 그대로 전달하고 SSE 스트림을 바이트 단위로 중계하면서, 완료된 턴을 백그라운드에서 TraceIR로 캡처합니다. **Codex CLI가 수정 없이 그대로 동작합니다.** |
-| `POST /v1/chat/completions`, `POST /v1/messages` | **synthetic** (`X-OpenWorkflow-Response-Mode: synthetic`) | 개발·데모용 합성 응답. 운영 트래픽을 전달하면 안 됩니다. |
+| `POST /v1/responses`, `POST /backend-api/codex/responses` | **passthrough** (`X-OpenWorkCompiler-Response-Mode: passthrough`) | 요청을 실제 upstream(OpenAI Responses API 또는 ChatGPT Codex 백엔드)으로 그대로 전달하고 SSE 스트림을 바이트 단위로 중계하면서, 완료된 턴을 백그라운드에서 TraceIR로 캡처합니다. **Codex CLI가 수정 없이 그대로 동작합니다.** |
+| `POST /v1/chat/completions`, `POST /v1/messages` | **synthetic** (`X-OpenWorkCompiler-Response-Mode: synthetic`) | 개발·데모용 합성 응답. 운영 트래픽을 전달하면 안 됩니다. |
 
 ### 실제 사용 화면: Codex TUI 안에서 전부 실행
 
@@ -284,22 +284,22 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
 | 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` (`build_dir`) | 캡처된 Codex 세션이 `build/codex_session/`로 컴파일됨 — `handlers/shell_*.py`가 기록된 명령을 재실행, `respond`는 `prompts/respond.prompt.md` |
 | 4 | `$ow-bench codex-session` | `python3 -m core.build bench build/codex_session` | 빌드에 동봉된 `trace.json`에 대해 code 계층을 재실행 → 결과 일치·토큰·지연을 액션별로 비교한 `BENCHMARK.md` |
 
-녹화 스크립트는 [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/openworkflow-codex-demo.tape)입니다.
+녹화 스크립트는 [`docs/demo/openworkcompiler-codex-demo.tape`](docs/demo/openworkcompiler-codex-demo.tape)입니다.
 
 **직접 해보기**
 
 1. Codex provider 설정 — `~/.codex/config.toml`에 추가하거나, 별도 `CODEX_HOME` 디렉터리(`auth.json` 복사 + 아래 `config.toml`)를 사용합니다.
 
    ```toml
-   model_provider = "openworkflow"
+   model_provider = "openworkcompiler"
    approval_policy = "never"
    sandbox_mode = "workspace-write"
 
    [sandbox_workspace_write]
    network_access = true            # Codex가 로컬 프록시에 curl 할 수 있게
 
-   [model_providers.openworkflow]
-   name = "OpenWorkflow Proxy"
+   [model_providers.openworkcompiler]
+   name = "OpenWorkCompiler Proxy"
    base_url = "http://127.0.0.1:8787/backend-api/codex"
    wire_api = "responses"
    requires_openai_auth = true      # ChatGPT 로그인 토큰을 그대로 사용
@@ -336,7 +336,7 @@ Existing AI Agent (Codex CLI, Claude Code, Cursor, AutoGen, LangChain, Custom Sc
                                 │
                                 ▼
  ┌─────────────────────────────────────────────────────────────────────────────┐
- │                OPENWORKFLOW TRANSPARENT PROXY ADAPTER                       │
+ │                OPENWORKCOMPILER TRANSPARENT PROXY ADAPTER                       │
  │                    (adapters/proxy/server.py)                              │
  ├─────────────────────────────────────────────────────────────────────────────┤
  │ 1. Responses API / Codex 백엔드 호출은 upstream으로 투명 전달 (SSE 중계)    │
@@ -345,7 +345,7 @@ Existing AI Agent (Codex CLI, Claude Code, Cursor, AutoGen, LangChain, Custom Sc
  └──────────────────────────────┬──────────────────────────────────────────────┘
                                 │
                                 ▼
-                     OpenWorkflow WorkCompiler
+                     OpenWorkCompiler WorkCompiler
                    (TraceIR → WorkIR 컴파일)
 ```
 
@@ -353,7 +353,7 @@ Existing AI Agent (Codex CLI, Claude Code, Cursor, AutoGen, LangChain, Custom Sc
 
 ## 8단계 실행 주체 하위 계층 (8-Tier Lowering Hierarchy)
 
-OpenWorkflow 컴파일러는 **"모델을 축소하기 전에 모델을 아예 없애는 것(Model Elimination)"**을 최우선으로 합니다. 3대 Middle-End 분석기(`DeterminismAnalyzer`, `PredictionAnalyzer`, `SLMAnalyzer`)를 통해 8단계 계층으로 작업을 하위 통합합니다:
+OpenWorkCompiler 컴파일러는 **"모델을 축소하기 전에 모델을 아예 없애는 것(Model Elimination)"**을 최우선으로 합니다. 3대 Middle-End 분석기(`DeterminismAnalyzer`, `PredictionAnalyzer`, `SLMAnalyzer`)를 통해 8단계 계층으로 작업을 하위 통합합니다:
 
 ```text
 Priority 1: 모델 완전 제거 (Zero Token Cost)
@@ -376,7 +376,7 @@ Priority 3: 잔여 실행 및 품질 보증 (Residual & Human)
 
 ## 시맨틱 스택 아키텍처 (v4)
 
-OpenWorkflow v4는 멀티 티어 시맨틱 스택을 도입합니다. **LinkML**을 개발자 친화적인 YAML 저작 언어로 활용하고, 이를 내장 **Semantic IR**로 컴파일한 뒤, **OWL 2** DL 의미론으로 풍부화하고 **SHACL**을 통해 폐쇄 세계(Closed-World) 데이터 제약조건을 검증합니다.
+OpenWorkCompiler v4는 멀티 티어 시맨틱 스택을 도입합니다. **LinkML**을 개발자 친화적인 YAML 저작 언어로 활용하고, 이를 내장 **Semantic IR**로 컴파일한 뒤, **OWL 2** DL 의미론으로 풍부화하고 **SHACL**을 통해 폐쇄 세계(Closed-World) 데이터 제약조건을 검증합니다.
 
 | 계층 | 역할 | 추천 기술 |
 | :--- | :--- | :--- |
@@ -386,7 +386,7 @@ OpenWorkflow v4는 멀티 티어 시맨틱 스택을 도입합니다. **LinkML**
 | **Constraint Validation** | 폐쇄 세계 데이터 제약 검증 | **SHACL** |
 | **Reasoner** | 추론 및 일관성 검사 | **ELK / HermiT** |
 | **Runtime Graph** | 지식 그래프 및 RDF 트리플 | **Jena / RDF4J / RDFLib** |
-| **Execution Engine** | 지속성 워크플로우 실행 엔진 | **OpenWorkflow Kernel** |
+| **Execution Engine** | 지속성 워크플로우 실행 엔진 | **OpenWorkCompiler Kernel** |
 
 ---
 
@@ -414,7 +414,7 @@ Pydantic               SHACL                  OWL                 Work IR
                          │                     │
                          └──────────┬──────────┘
                                     ▼
-                           OpenWorkflow Runtime
+                           OpenWorkCompiler Runtime
 ```
 
 ---
@@ -423,7 +423,7 @@ Pydantic               SHACL                  OWL                 Work IR
 
 ## OpenWorkLang: Agent 프로그래밍 언어 (`.work`)
 
-OpenWorkflow는 인간의 의도, 에이전트 목표, 도구, 메모리 정책, 프로세스 불변식 및 액션 워크플로우를 실행 가능한 에이전트 프로그램으로 컴파일하는 선언형 Agent 프로그래밍 언어인 **OpenWorkLang**을 제시합니다:
+OpenWorkCompiler는 인간의 의도, 에이전트 목표, 도구, 메모리 정책, 프로세스 불변식 및 액션 워크플로우를 실행 가능한 에이전트 프로그램으로 컴파일하는 선언형 Agent 프로그래밍 언어인 **OpenWorkLang**을 제시합니다:
 
 > **"Code → Software를 만드는 시대에서 OpenWorkLang → Agent를 컴파일하는 시대로."**
 
@@ -556,7 +556,7 @@ executors:
 
 ## 5대 표준 프로토콜 경계 (5 Standard Protocols)
 
-OpenWorkflow는 5가지 표준화된 프로토콜 계약을 통해 외부 표면 및 도구와 연결됩니다.
+OpenWorkCompiler는 5가지 표준화된 프로토콜 계약을 통해 외부 표면 및 도구와 연결됩니다.
 
 1. **Ingress Protocol**: 외부 트리거(웹훅, cron 타이머, 슬랙 이벤트, 이메일 알림)를 위한 표준화된 이벤트 규격.
 2. **Surface Protocol (AG-UI)**: OpenTag, CopilotKit과 같은 UI 표면에 실시간 워크플로우 이벤트를 스트리밍 (`workflow.started`, `step.started`, `approval.requested`, `workflow.completed`).
@@ -569,8 +569,8 @@ OpenWorkflow는 5가지 표준화된 프로토콜 계약을 통해 외부 표면
 ## 리포지토리 레이아웃 (v4)
 
 ```
-openworkflow/
-├── core/                        # 얇고 강력한 OpenWorkflow 커널
+openworkcompiler/
+├── core/                        # 얇고 강력한 OpenWorkCompiler 커널
 │   ├── semantic_ir/             # LinkML 파서, Semantic IR AST, OWL/SHACL 생성기
 │   ├── work_ir/                 # Work IR 스키마, 파서, AST
 │   ├── compiler/                # Trace IR → Work IR 컴파일러 & Middle-End 분석기
@@ -616,13 +616,13 @@ openworkflow/
 
 ### 파이프라인 데모 (Python 스크립트 실행 화면)
 
-![OpenWorkflow 터미널 데모 — 고객 계약 갱신 파이프라인 실행과 전체 테스트 수트](docs/demo/openworkflow-demo.gif)
+![OpenWorkCompiler 터미널 데모 — 고객 계약 갱신 파이프라인 실행과 전체 테스트 수트](docs/demo/openworkcompiler-demo.gif)
 
-위 녹화는 `Agent Trace → BEHAVIOR.md 파싱 → Work IR 컴파일 → Durable Runtime 실행 → Objective Oracle Gate → SLM 승격 평가`의 6단계 파이프라인이 한 번에 실행되는 모습과, 전체 pytest 수트가 통과하는 장면입니다. 녹화 스크립트는 [`docs/demo/openworkflow-demo.tape`](docs/demo/openworkflow-demo.tape)에 있으며, [vhs](https://github.com/charmbracelet/vhs)로 재생성할 수 있습니다:
+위 녹화는 `Agent Trace → BEHAVIOR.md 파싱 → Work IR 컴파일 → Durable Runtime 실행 → Objective Oracle Gate → SLM 승격 평가`의 6단계 파이프라인이 한 번에 실행되는 모습과, 전체 pytest 수트가 통과하는 장면입니다. 녹화 스크립트는 [`docs/demo/openworkcompiler-demo.tape`](docs/demo/openworkcompiler-demo.tape)에 있으며, [vhs](https://github.com/charmbracelet/vhs)로 재생성할 수 있습니다:
 
 ```bash
 brew install vhs   # 또는 go install github.com/charmbracelet/vhs@latest
-vhs docs/demo/openworkflow-demo.tape
+vhs docs/demo/openworkcompiler-demo.tape
 ```
 
 고객 계약 갱신 엔드투엔드 파이프라인 실시간 데모 실행:
@@ -641,7 +641,7 @@ python3 -m pytest tests/
 
 ## 생태계 및 참고 오픈소스 링크
 
-OpenWorkflow는 다음 오픈소스 프로젝트, 표준 규격 및 연구 이니셔티브와 연동되거나 참고하여 개발됩니다.
+OpenWorkCompiler는 다음 오픈소스 프로젝트, 표준 규격 및 연구 이니셔티브와 연동되거나 참고하여 개발됩니다.
 
 | 카테고리 | 프로젝트 / 표준 | 링크 | 설명 |
 | :--- | :--- | :--- | :--- |

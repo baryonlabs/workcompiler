@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""OpenWorkflow Zero-Code Agent Proxy Server.
+"""OpenWorkCompiler Zero-Code Agent Proxy Server.
 
 FastAPI / Uvicorn async HTTP reverse proxy intercepting OpenAI (/v1/chat/completions),
 OpenAI Responses API (/v1/responses — used by Codex CLI) and Anthropic (/v1/messages)
@@ -9,12 +9,12 @@ traffic to capture trajectories and compile WorkIR.
 Two modes coexist:
 
 * ``/v1/chat/completions`` and ``/v1/messages`` answer with a *synthetic* response
-  (development/demo only, flagged by ``X-OpenWorkflow-Response-Mode: synthetic``).
+  (development/demo only, flagged by ``X-OpenWorkCompiler-Response-Mode: synthetic``).
 * ``/v1/responses`` and ``/backend-api/codex/*`` are *transparent passthroughs*:
   the request (headers included) is forwarded to the real upstream, the SSE stream
   is relayed byte-for-byte to the client, and the completed turn is captured into
   TraceIR in the background. This is what lets Codex CLI run unmodified through
-  OpenWorkflow (``X-OpenWorkflow-Response-Mode: passthrough``).
+  OpenWorkCompiler (``X-OpenWorkCompiler-Response-Mode: passthrough``).
 """
 
 import os
@@ -37,7 +37,7 @@ from core.compiler import WorkCompiler
 from core.work_ir import save_work_ir, WorkIR
 
 app = FastAPI(
-    title="OpenWorkflow Zero-Code Agent Proxy",
+    title="OpenWorkCompiler Zero-Code Agent Proxy",
     version="4.0.0",
     description="Transparent reverse proxy converting standard LLM API calls into compiled WorkIR workflows.",
 )
@@ -50,7 +50,7 @@ UPSTREAM_OPENAI_URL = os.getenv("OPENAI_UPSTREAM_URL", "https://api.openai.com/v
 UPSTREAM_ANTHROPIC_URL = os.getenv("ANTHROPIC_UPSTREAM_URL", "https://api.anthropic.com/v1")
 # Codex CLI with ChatGPT login talks to this backend instead of api.openai.com.
 UPSTREAM_CHATGPT_CODEX_URL = os.getenv("CHATGPT_CODEX_UPSTREAM_URL", "https://chatgpt.com/backend-api/codex")
-UPSTREAM_TIMEOUT_SECONDS = float(os.getenv("OPENWORKFLOW_UPSTREAM_TIMEOUT", "600"))
+UPSTREAM_TIMEOUT_SECONDS = float(os.getenv("OPENWORKCOMPILER_UPSTREAM_TIMEOUT", "600"))
 
 # Hop-by-hop / transport headers that must not be forwarded verbatim.
 _STRIP_REQUEST_HEADERS = {"host", "content-length", "connection", "accept-encoding", "transfer-encoding"}
@@ -59,7 +59,7 @@ _STRIP_RESPONSE_HEADERS = {"content-length", "content-encoding", "transfer-encod
 
 def _workspace_root() -> Path:
     """Return the only directory the proxy may write compiled workflows into."""
-    return Path(os.getenv("OPENWORKFLOW_WORKSPACE_DIR", os.getcwd())).resolve()
+    return Path(os.getenv("OPENWORKCOMPILER_WORKSPACE_DIR", os.getcwd())).resolve()
 
 
 def _workspace_output_path(output_path: Any) -> Path:
@@ -75,7 +75,7 @@ def _workspace_output_path(output_path: Any) -> Path:
     except ValueError as exc:
         raise HTTPException(
             status_code=403,
-            detail="output_path must resolve inside OPENWORKFLOW_WORKSPACE_DIR.",
+            detail="output_path must resolve inside OPENWORKCOMPILER_WORKSPACE_DIR.",
         ) from exc
     return resolved
 
@@ -93,7 +93,7 @@ async def _json_object(request: Request) -> Dict[str, Any]:
 
 def _synthetic_headers() -> Dict[str, str]:
     """Make the development-only synthetic response mode visible to callers."""
-    return {"X-OpenWorkflow-Response-Mode": "synthetic"}
+    return {"X-OpenWorkCompiler-Response-Mode": "synthetic"}
 
 
 def discover_behavior_contracts(workspace_dir: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -184,7 +184,7 @@ async def get_intercepted_trace(run_id: str, include_raw: bool = False) -> Dict[
 @app.post("/v1/workcompiler/compile")
 async def trigger_work_compilation(
     request: Request,
-    x_openworkflow_behavior: Optional[str] = Header(None, alias="X-OpenWorkflow-Behavior"),
+    x_openworkcompiler_behavior: Optional[str] = Header(None, alias="X-OpenWorkCompiler-Behavior"),
 ) -> Dict[str, Any]:
     """Dual-Trigger: Compile intercepted trajectory into WorkIR (work.yaml)."""
     request_data = await _json_object(request)
@@ -202,8 +202,8 @@ async def trigger_work_compilation(
 
     # Discover behaviors from workspace + custom header
     behaviors = discover_behavior_contracts()
-    if x_openworkflow_behavior:
-        behaviors.append(parse_behavior_md(x_openworkflow_behavior))
+    if x_openworkcompiler_behavior:
+        behaviors.append(parse_behavior_md(x_openworkcompiler_behavior))
 
     # Trigger WorkCompiler
     compiler = WorkCompiler()
@@ -249,7 +249,7 @@ async def trigger_work_compilation(
 
 
 def _passthrough_headers() -> Dict[str, str]:
-    return {"X-OpenWorkflow-Response-Mode": "passthrough"}
+    return {"X-OpenWorkCompiler-Response-Mode": "passthrough"}
 
 
 def _upstream_client() -> httpx.AsyncClient:
@@ -260,12 +260,12 @@ def _upstream_client() -> httpx.AsyncClient:
 def _resolve_run_id(request: Request, payload: Dict[str, Any]) -> Optional[str]:
     """Group Responses API calls into one trajectory per agent conversation.
 
-    Priority: explicit ``X-OpenWorkflow-Run-ID`` header → Codex ``session_id`` /
+    Priority: explicit ``X-OpenWorkCompiler-Run-ID`` header → Codex ``session_id`` /
     ``conversation_id`` headers → ``prompt_cache_key`` in the payload (Codex sets it
     to the thread id) → ``previous_response_id`` chain is not stable, so fall back to a
     fresh per-process session.
     """
-    for header in ("x-openworkflow-run-id", "session_id", "conversation_id"):
+    for header in ("x-openworkcompiler-run-id", "session_id", "conversation_id"):
         value = request.headers.get(header)
         if value:
             return value
@@ -358,8 +358,8 @@ async def proxy_chatgpt_codex_responses(request: Request) -> Response:
 
     Point Codex at this proxy with a custom provider::
 
-        [model_providers.openworkflow]
-        name = "OpenWorkflow Proxy"
+        [model_providers.openworkcompiler]
+        name = "OpenWorkCompiler Proxy"
         base_url = "http://127.0.0.1:8787/backend-api/codex"
         wire_api = "responses"
         requires_openai_auth = true
@@ -388,15 +388,15 @@ async def proxy_chatgpt_codex_other(path: str, request: Request) -> Response:
 @app.post("/v1/chat/completions")
 async def proxy_openai_chat_completions(
     request: Request,
-    x_openworkflow_run_id: Optional[str] = Header(None, alias="X-OpenWorkflow-Run-ID"),
-    x_openworkflow_behavior: Optional[str] = Header(None, alias="X-OpenWorkflow-Behavior"),
+    x_openworkcompiler_run_id: Optional[str] = Header(None, alias="X-OpenWorkCompiler-Run-ID"),
+    x_openworkcompiler_behavior: Optional[str] = Header(None, alias="X-OpenWorkCompiler-Behavior"),
 ) -> JSONResponse:
     """Reverse proxy interceptor for OpenAI /v1/chat/completions."""
     payload = await _json_object(request)
     start_time = time.perf_counter()
 
     interceptor = get_or_create_interceptor(
-        run_id=x_openworkflow_run_id,
+        run_id=x_openworkcompiler_run_id,
         source_agent=request.headers.get("user-agent", "openai-client")
     )
 
@@ -455,15 +455,15 @@ async def proxy_openai_chat_completions(
 @app.post("/v1/messages")
 async def proxy_anthropic_messages(
     request: Request,
-    x_openworkflow_run_id: Optional[str] = Header(None, alias="X-OpenWorkflow-Run-ID"),
-    x_openworkflow_behavior: Optional[str] = Header(None, alias="X-OpenWorkflow-Behavior"),
+    x_openworkcompiler_run_id: Optional[str] = Header(None, alias="X-OpenWorkCompiler-Run-ID"),
+    x_openworkcompiler_behavior: Optional[str] = Header(None, alias="X-OpenWorkCompiler-Behavior"),
 ) -> JSONResponse:
     """Reverse proxy interceptor for Anthropic /v1/messages."""
     payload = await _json_object(request)
     start_time = time.perf_counter()
 
     interceptor = get_or_create_interceptor(
-        run_id=x_openworkflow_run_id,
+        run_id=x_openworkcompiler_run_id,
         source_agent=request.headers.get("user-agent", "anthropic-client")
     )
 

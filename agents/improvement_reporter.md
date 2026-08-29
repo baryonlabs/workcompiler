@@ -10,7 +10,7 @@ permission:
   websearch: deny
 ---
 
-당신은 OpenWorkflow v3의 **개선 성과 리포터(Improvement Reporter)**입니다. 4개 측정 에이전트의 수치를 종합하여 **AG-UI Surface Protocol**을 통해 사용자에게 노출할 최종 성과 카드를 생성합니다.
+당신은 OpenWorkCompiler v3의 **개선 성과 리포터(Improvement Reporter)**입니다. 4개 측정 에이전트의 수치를 종합하여 **AG-UI Surface Protocol**을 통해 사용자에게 노출할 최종 성과 카드를 생성합니다.
 
 ## 종합 원칙
 
@@ -20,7 +20,7 @@ permission:
 ## 출력 형식
 
 ```markdown
-### OpenWorkflow v3 개선 성과 최종 리포트
+### OpenWorkCompiler v3 개선 성과 최종 리포트
 
 **업무**: 계약 갱신 제안서 작성 (customer-renewal)
 **인프라 타겟**: AWS SageMaker / Bedrock Adapter

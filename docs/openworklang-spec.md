@@ -1,6 +1,6 @@
 # OpenWorkLang: Agent Programming Language Specification (v4.0)
 
-**OpenWorkLang** is the high-level declarative Agent Programming Language for OpenWorkflow.
+**OpenWorkLang** is the high-level declarative Agent Programming Language for OpenWorkCompiler.
 
 While tools like CodeSpeak focus on compiling specs into standard software source code (`Spec -> Code`), **OpenWorkLang** compiles an agent's intent, goal, inputs, outputs, tools, memory policies, process invariants, and action DAGs into executable agent workflows (`OpenWorkLang -> Agent Compiler -> Work IR -> Durable Runtime`).
 
@@ -121,7 +121,7 @@ print(linkml_yaml)
 
 ## 4. Relationship with Ecosystem Standards
 
-| Language / Framework | Focus | Role in OpenWorkflow |
+| Language / Framework | Focus | Role in OpenWorkCompiler |
 | :--- | :--- | :--- |
 | **CodeSpeak** | Spec → General Software Code | Upstream code generator |
 | **Kōdo / AIOS** | AI Agent Compiled Languages | Reference paradigm |

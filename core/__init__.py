@@ -1,1 +1,1 @@
-"""OpenWorkflow Core Module."""
+"""OpenWorkCompiler Core Module."""

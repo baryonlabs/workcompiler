@@ -1,6 +1,6 @@
 ---
 name: ow-traces
-description: List agent sessions captured by the OpenWorkflow zero-code proxy (localhost:8787). Use when the user asks what the proxy has captured, or for TraceIR sessions.
+description: List agent sessions captured by the OpenWorkCompiler zero-code proxy (localhost:8787). Use when the user asks what the proxy has captured, or for TraceIR sessions.
 ---
 
 # ow-traces — captured agent sessions

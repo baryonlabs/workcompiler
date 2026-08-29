@@ -1,4 +1,4 @@
-"""Unit tests for OpenWorkflow Durable Runtime Engine and Executors."""
+"""Unit tests for OpenWorkCompiler Durable Runtime Engine and Executors."""
 
 import json
 import os

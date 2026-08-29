@@ -12,7 +12,7 @@ session id: 01a04b1d-262f-73b2-9bef-f39cca22c86e
 user
 $ow-traces
 codex
-I’m using the `ow-traces` skill to query the local OpenWorkflow proxy and summarize every captured session.
+I’m using the `ow-traces` skill to query the local OpenWorkCompiler proxy and summarize every captured session.
 exec
 /bin/zsh -lc 'curl -s localhost:8787/v1/workcompiler/traces | jq' in /Users/hongmartin/orca/projects/open-workflow
  succeeded in 0ms:

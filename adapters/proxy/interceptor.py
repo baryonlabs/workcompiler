@@ -1,4 +1,4 @@
-"""OpenWorkflow Zero-Code Agent Proxy Trajectory Interceptor.
+"""OpenWorkCompiler Zero-Code Agent Proxy Trajectory Interceptor.
 
 Intercepts and reconstructs standard OpenAI (/v1/chat/completions), OpenAI
 Responses API (/v1/responses, used by Codex CLI) and Anthropic (/v1/messages)
@@ -166,7 +166,7 @@ def responses_object_from_sse(sse_text: str) -> Optional[Dict[str, Any]]:
 
 
 class TrajectoryInterceptor:
-    """Buffers and transforms live LLM API traffic into OpenWorkflow TraceIR."""
+    """Buffers and transforms live LLM API traffic into OpenWorkCompiler TraceIR."""
 
     def __init__(self, run_id: Optional[str] = None, source_agent: str = "zero-code-proxy") -> None:
         self.run_id = run_id or f"run_proxy_{uuid.uuid4().hex[:8]}"

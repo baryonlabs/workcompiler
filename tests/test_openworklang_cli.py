@@ -22,7 +22,7 @@ def test_cli_compiles_work_file_to_yaml_and_linkml(tmp_path, capsys):
     saved = yaml.safe_load(out.read_text())
     assert saved["work"] == "quality_analyst"
     assert saved["actions"] == summary["actions"]
-    assert linkml.read_text().startswith("id: https://w3id.org/openworkflow/schemas/quality_analyst")
+    assert linkml.read_text().startswith("id: https://w3id.org/openworkcompiler/schemas/quality_analyst")
 
 
 def test_cli_reports_missing_source(tmp_path, capsys):

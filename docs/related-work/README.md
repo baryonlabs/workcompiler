@@ -1,6 +1,6 @@
 # Work Compiler / LLM-based Workflow Compilation — Frontier Research Notes
 
-Reference document for the Work Compiler research area behind OpenWorkflow's "Work Compilation" pillar.
+Reference document for the Work Compiler research area behind OpenWorkCompiler's "Work Compilation" pillar.
 Compiled from a ChatGPT share (2026-08) and verified against arXiv metadata. PDFs are stored locally under `papers/`.
 
 ## Field snapshot
@@ -51,7 +51,7 @@ Classical compilers (LLVM/Clang) and LLMs loop together; an abstract business-le
 - Researchers: ACCLAIM framework team (Benjamin Mikek, Danylo Vashchilenko, Bryan Lu, Panpan Xu).
 - **ACCLAIM (2026)**: agent + classical-compiler cooperation for AI code optimization; LLM probabilistic outputs are checked/compensated by a compiler toolchain (translation validation — Alive2 lineage).
 
-## 3. Positioning suggestions for OpenWorkflow
+## 3. Positioning suggestions for OpenWorkCompiler
 
 The "LLM compiles work, execution is deterministic" direction aligns with FlowCompile (workflow-level optimization) and Blueprint First, Model Second (deterministic execution).
 

@@ -1,6 +1,6 @@
 ---
 name: ow-compile-trace
-description: Compile the agent session captured by the OpenWorkflow proxy (the one with the most steps) into Work IR plus an executable build tree (code handlers that replay recorded shell commands, ML/SLM datasets, prompt contracts). Use when the user asks to compile a captured trace or turn a session into a workflow.
+description: Compile the agent session captured by the OpenWorkCompiler proxy (the one with the most steps) into Work IR plus an executable build tree (code handlers that replay recorded shell commands, ML/SLM datasets, prompt contracts). Use when the user asks to compile a captured trace or turn a session into a workflow.
 ---
 
 # ow-compile-trace — captured session → build tree

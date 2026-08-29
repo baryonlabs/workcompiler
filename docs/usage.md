@@ -1,6 +1,6 @@
-# OpenWorkflow Usage Guide
+# OpenWorkCompiler Usage Guide
 
-This guide demonstrates how to use the **OpenWorkflow** core kernel in Python to ingest agent traces, enforce behavior contracts, compile work definitions, execute durable workflows, evaluate quality, and optimize step executors across the 8-tier lowering hierarchy.
+This guide demonstrates how to use the **OpenWorkCompiler** core kernel in Python to ingest agent traces, enforce behavior contracts, compile work definitions, execute durable workflows, evaluate quality, and optimize step executors across the 8-tier lowering hierarchy.
 
 ---
 

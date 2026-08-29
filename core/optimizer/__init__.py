@@ -1,4 +1,4 @@
-"""OpenWorkflow Core Optimizer Engine.
+"""OpenWorkCompiler Core Optimizer Engine.
 
 Provides Executor routing, promotion gate evaluations (Frontier LLM -> SLM / Code),
 and training candidate generation for external fine-tuning backends.

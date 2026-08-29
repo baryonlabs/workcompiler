@@ -9,7 +9,7 @@ README 상단 "30초 데모"에 쓰인 입력과 산출물, 그리고 **원래 �
 | [`openworkcompiled/quality_analyst/`](openworkcompiled/quality_analyst/) | 1단계 산출물 — OpenWorkLang `examples/quality_analysis.work` → 빌드 트리: `work.yaml`, `handlers/collect_data.py`(code), `rules/detect_anomaly.rule.yaml`(rule), `models/ml/find_correlation/`(model card·dataset·train.py), `models/slm/{determine_root_cause,create_report}/`(training_candidate·dataset·train.py), `schema/*.linkml.yaml`, `MANIFEST.json` |
 | [`build/codex_session/`](build/codex_session/) | 3단계 산출물 — 1단계 Codex 세션 → 빌드 트리: `work.yaml`, `handlers/shell_python3.py`·`shell_find.py`(기록된 명령을 재실행하는 code 핸들러), `prompts/respond.prompt.md`(frontier_llm 계약), `trace.json`(원본 세션), **[`BENCHMARK.md`](build/codex_session/BENCHMARK.md)** / `benchmark.json`(4단계 벤치마크) |
 
-입력 소스: [`examples/quality_analysis.work`](../quality_analysis.work) · 스킬 정의: [`.agents/skills/`](../../.agents/skills/) · 녹화 스크립트: [`docs/demo/openworkflow-codex-demo.tape`](../../docs/demo/openworkflow-codex-demo.tape)
+입력 소스: [`examples/quality_analysis.work`](../quality_analysis.work) · 스킬 정의: [`.agents/skills/`](../../.agents/skills/) · 녹화 스크립트: [`docs/demo/openworkcompiler-codex-demo.tape`](../../docs/demo/openworkcompiler-codex-demo.tape)
 
 ## 벤치마크: 같은 작업, 에이전트 vs 컴파일된 빌드
 

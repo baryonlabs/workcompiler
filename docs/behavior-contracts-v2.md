@@ -1,8 +1,8 @@
-# OpenWorkflow Behavior Contract Layer (v2)
+# OpenWorkCompiler Behavior Contract Layer (v2)
 
 Status: design (v2/v3) · Integrated into v3 Architecture via `adapters/agentbehavior/` and `core/validation/` (see `docs/v3-architecture-kernel-ecosystem.md`)
 
-AgentBehavior is **not** a competing execution layer. It is a standard layer that sits in front of OpenWorkflow's Work Compilation: it defines and validates what a *good execution* is, before compilation. This document improves the v1 analysis into a concrete, buildable design and lands the decisions.
+AgentBehavior is **not** a competing execution layer. It is a standard layer that sits in front of OpenWorkCompiler's Work Compilation: it defines and validates what a *good execution* is, before compilation. This document improves the v1 analysis into a concrete, buildable design and lands the decisions.
 
 ## 1. The gap v1 left open
 
@@ -22,7 +22,7 @@ Production → quality eval → recompile
 
 had exactly one blank: **"the result was good" and "the way it was done was good" are not the same.**
 
-A frontier agent can land a correct contract analysis while skipping the primary-source check, querying data without permission checks, or using a cached price table instead of the live one. v1 named this problem correctly ("lucky-correct negative") but did not decide how OpenWorkflow opens, owns, and operates a behavior layer. v2 decides that.
+A frontier agent can land a correct contract analysis while skipping the primary-source check, querying data without permission checks, or using a cached price table instead of the live one. v1 named this problem correctly ("lucky-correct negative") but did not decide how OpenWorkCompiler opens, owns, and operates a behavior layer. v2 decides that.
 
 ## 2. The one-sentence correction
 
@@ -45,7 +45,7 @@ Executor   = who/what actually runs each step (code • rule • ML • SLM • 
 
 ## 4. Behavior Contract — native format
 
-OpenWorkflow supports AgentBehavior's `BEHAVIOR.md` format natively and stores it under a work definition. Full compat with AgentBehavior spec + Apache-2.0 borrow is intentional, but the registry and lifecycle are OpenWorkflow-owned.
+OpenWorkCompiler supports AgentBehavior's `BEHAVIOR.md` format natively and stores it under a work definition. Full compat with AgentBehavior spec + Apache-2.0 borrow is intentional, but the registry and lifecycle are OpenWorkCompiler-owned.
 
 ```text
 work: renewal-proposal
@@ -209,7 +209,7 @@ behavior: always-check-current-pricing-policy
 ## 11. Dependency posture
 
 - **Format**: support AgentBehavior `BEHAVIOR.md` natively + provide an importer/exporter so specs are portable.
-- **Execution**: OpenWorkflow owns the registry, runtime policy, and judges. AgentBehavior provides the standard, not the engine.
+- **Execution**: OpenWorkCompiler owns the registry, runtime policy, and judges. AgentBehavior provides the standard, not the engine.
 - **License**: Apache-2.0 — borrow with attribution, no structural risk.
 
 ## 12. Human review surface (unchanged UX, richer backend)
@@ -278,7 +278,7 @@ Behavior verdicts surface as **explainable checkmarks**; the full per-behavior `
        │           │      Code / ML / SLM
        └───────────┼────────────┘
                    ▼
-             OpenWorkflow
+             OpenWorkCompiler
                  Runtime
                    │
                    ▼

@@ -10,7 +10,7 @@ permission:
   websearch: deny
 ---
 
-당신은 OpenWorkflow v3의 **품질 측정 에이전트(Quality Measurer)**입니다. 수행 결과물(Output)의 **Outcome Quality**와 과정의 **Behavior Compliance**를 통합 측정합니다.
+당신은 OpenWorkCompiler v3의 **품질 측정 에이전트(Quality Measurer)**입니다. 수행 결과물(Output)의 **Outcome Quality**와 과정의 **Behavior Compliance**를 통합 측정합니다.
 
 ## 측정 원칙 (v3)
 

@@ -1,22 +1,22 @@
-# OpenWorkflow Workload Compiler: Ecosystem Reference & TODO Roadmap
+# OpenWorkCompiler Workload Compiler: Ecosystem Reference & TODO Roadmap
 
 Status: Reference & Actionable TODO Spec · Created 2026-08
 
 ## 1. Comparative Ecosystem Analysis
 
-| Project / Reference | Type | Core Mechanism | OpenWorkflow Distinction |
+| Project / Reference | Type | Core Mechanism | OpenWorkCompiler Distinction |
 | :--- | :--- | :--- | :--- |
-| **SqueezeAILab/LLMCompiler** (ICML 2024) | Execution-Plan Compiler | Dynamic tool-call DAG parallelization inside LLM sessions | OpenWorkflow is a **Workload Compiler** compiling past successful traces into deterministic Code/Rule/ML/SLM pipelines. |
-| **Frugal** (Claude Code Router) | Cost Router | Cheap model first (Haiku → Sonnet); escalates on external oracle failure | OpenWorkflow expands Frugal's 5-tier LLM routing into an **8-tier executor lowering** (Code/Rule/ML/SLM/LLM). |
-| **Scylla23/modelrouter** | Adaptive Router | `/router:redo` user correction feedback loop | OpenWorkflow uses **QualityRecord** fold verdicts to adaptively route step execution. |
-| **Nardien/agent-distillation** | Trajectory Distillation | Distills 1.5B student agent from teacher trajectory | Reference for OpenWorkflow's **TrainingCandidate Generator** (SLM Factory orchestrator). |
-| **Claude Code Production Plugins** | Harness & Oracle | Test/typecheck/schema external oracles for step completion | OpenWorkflow quality loop uses external oracles + behavior contracts instead of LLM self-confidence. |
+| **SqueezeAILab/LLMCompiler** (ICML 2024) | Execution-Plan Compiler | Dynamic tool-call DAG parallelization inside LLM sessions | OpenWorkCompiler is a **Workload Compiler** compiling past successful traces into deterministic Code/Rule/ML/SLM pipelines. |
+| **Frugal** (Claude Code Router) | Cost Router | Cheap model first (Haiku → Sonnet); escalates on external oracle failure | OpenWorkCompiler expands Frugal's 5-tier LLM routing into an **8-tier executor lowering** (Code/Rule/ML/SLM/LLM). |
+| **Scylla23/modelrouter** | Adaptive Router | `/router:redo` user correction feedback loop | OpenWorkCompiler uses **QualityRecord** fold verdicts to adaptively route step execution. |
+| **Nardien/agent-distillation** | Trajectory Distillation | Distills 1.5B student agent from teacher trajectory | Reference for OpenWorkCompiler's **TrainingCandidate Generator** (SLM Factory orchestrator). |
+| **Claude Code Production Plugins** | Harness & Oracle | Test/typecheck/schema external oracles for step completion | OpenWorkCompiler quality loop uses external oracles + behavior contracts instead of LLM self-confidence. |
 
 ---
 
 ## 2. The 8-Tier Executor Lowering Hierarchy
 
-OpenWorkflow's compiler prioritizes **model elimination** before model reduction:
+OpenWorkCompiler's compiler prioritizes **model elimination** before model reduction:
 
 ```text
 Priority 1: Model Elimination (Zero Token Cost)

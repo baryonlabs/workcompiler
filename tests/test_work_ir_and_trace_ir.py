@@ -1,4 +1,4 @@
-"""Unit tests for OpenWorkflow Work IR and Trace IR modules."""
+"""Unit tests for OpenWorkCompiler Work IR and Trace IR modules."""
 
 import json
 import tempfile

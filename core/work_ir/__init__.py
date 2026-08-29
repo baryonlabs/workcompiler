@@ -1,4 +1,4 @@
-"""OpenWorkflow Work IR and Trace IR Kernel Module."""
+"""OpenWorkCompiler Work IR and Trace IR Kernel Module."""
 
 from core.work_ir.tool_output import normalize_tool_output
 from core.work_ir.trace_ir import (

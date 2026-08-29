@@ -1,4 +1,4 @@
-"""OpenWorkflow build backend.
+"""OpenWorkCompiler build backend.
 
 Lowers a compiled Work IR into an executable artifact tree (``build/<work>/``):
 Python handlers for the code tier, declarative rule files, ML/SLM training

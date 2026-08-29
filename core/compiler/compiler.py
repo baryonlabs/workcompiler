@@ -1,4 +1,4 @@
-"""Work Compiler engine for OpenWorkflow.
+"""Work Compiler engine for OpenWorkCompiler.
 
 Decomposes recorded agent execution traces, discovers state machine states,
 detects causal and behavioral action dependencies, extracts process invariants,

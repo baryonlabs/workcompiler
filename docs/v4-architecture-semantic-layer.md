@@ -1,14 +1,14 @@
-# OpenWorkflow v4 Architecture: Semantic Layer & LinkML/OWL Integration
+# OpenWorkCompiler v4 Architecture: Semantic Layer & LinkML/OWL Integration
 
 Status: Master Architecture Specification (v4) · Supersedes v3 Architecture
 
 ## Executive Summary
 
-OpenWorkflow v4 introduces the **Semantic Layer Stack**, establishing a clear separation of concerns between developer-friendly domain modeling, semantic reasoning, closed-world constraint validation, and durable workflow execution.
+OpenWorkCompiler v4 introduces the **Semantic Layer Stack**, establishing a clear separation of concerns between developer-friendly domain modeling, semantic reasoning, closed-world constraint validation, and durable workflow execution.
 
 > **"Build the kernel, integrate the ecosystem, enrich with semantic truth."**
 >
-> *"LinkML is the front door for human/LLM model authoring; OWL is the semantic truth layer; SHACL validates constraints; OpenWorkflow executes durable work."*
+> *"LinkML is the front door for human/LLM model authoring; OWL is the semantic truth layer; SHACL validates constraints; OpenWorkCompiler executes durable work."*
 
 ---
 
@@ -16,7 +16,7 @@ OpenWorkflow v4 introduces the **Semantic Layer Stack**, establishing a clear se
 
 A common architectural trap in AI systems is forcing developers or LLMs to write raw Description Logic axioms (OWL 2) directly, or assuming schema validation tools (LinkML) can perform open-world reasoning.
 
-OpenWorkflow v4 resolves this by separating roles into a multi-tiered semantic stack:
+OpenWorkCompiler v4 resolves this by separating roles into a multi-tiered semantic stack:
 
 | Layer | Role | Target Technology |
 | :--- | :--- | :--- |
@@ -26,7 +26,7 @@ OpenWorkflow v4 resolves this by separating roles into a multi-tiered semantic s
 | **Constraint Validation** | Closed-world data verification & cardinalities | **SHACL** |
 | **Reasoner** | Inferred classification & consistency checking | **ELK / HermiT** |
 | **Runtime Graph** | Knowledge Graph & RDF triples | **Jena / RDF4J / RDFLib** |
-| **Execution Engine** | Stateful workflow, action DAG & durable runtime | **OpenWorkflow Kernel** |
+| **Execution Engine** | Stateful workflow, action DAG & durable runtime | **OpenWorkCompiler Kernel** |
 
 ---
 
@@ -56,7 +56,7 @@ Pydantic          SHACL             OWL           Work IR
                     │                │
                     └────────┬───────┘
                              ▼
-                    OpenWorkflow Runtime
+                    OpenWorkCompiler Runtime
 ```
 
 ### Why LinkML as the Authoring Front Door?
@@ -87,13 +87,13 @@ LinkML models are split by the Semantic Compiler into two distinct validation en
 
 ---
 
-## 4. OpenWorkflow Core Kernel (7 Modules in v4)
+## 4. OpenWorkCompiler Core Kernel (7 Modules in v4)
 
 v4 expands the core kernel to include the **Semantic IR** module:
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           OPENWORKFLOW CORE (v4)                        │
+│                           OPENWORKCOMPILER CORE (v4)                        │
 │                                                                         │
 │  1. Work Trace               2. Quality & Behavior Contract             │
 │     - Trajectory indexing       - Human outcome rating                  │
@@ -120,8 +120,8 @@ v4 expands the core kernel to include the **Semantic IR** module:
 ## 5. Repository Layout (v4)
 
 ```text
-openworkflow/
-├── core/                        # Thin, strong OpenWorkflow kernel
+openworkcompiler/
+├── core/                        # Thin, strong OpenWorkCompiler kernel
 │   ├── semantic_ir/             # [v4] LinkML parser, Semantic IR AST, OWL/SHACL generators
 │   ├── work_ir/                 # Work IR schema, parser, and AST
 │   ├── compiler/                # Trace IR → Work IR compilation

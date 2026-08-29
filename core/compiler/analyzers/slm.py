@@ -1,4 +1,4 @@
-"""SLM (Small Language Model) task analyzer for OpenWorkflow WorkCompiler.
+"""SLM (Small Language Model) task analyzer for OpenWorkCompiler WorkCompiler.
 
 Analyzes recorded trace steps to detect narrow generative language tasks
 (e.g., email intent extraction, customer support summary, short proposal drafting)

@@ -1,6 +1,6 @@
 ---
 name: ow-compile-work
-description: Compile an OpenWorkLang (.work) file into an executable OpenWorkflow build tree (work.yaml + per-tier artifacts - code handlers, rule files, ML/SLM training packages, LinkML schema). Use when the user mentions a .work file, OpenWorkLang, or asks to compile an agent program.
+description: Compile an OpenWorkLang (.work) file into an executable OpenWorkCompiler build tree (work.yaml + per-tier artifacts - code handlers, rule files, ML/SLM training packages, LinkML schema). Use when the user mentions a .work file, OpenWorkLang, or asks to compile an agent program.
 ---
 
 # ow-compile-work — OpenWorkLang → build tree

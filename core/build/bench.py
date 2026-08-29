@@ -188,7 +188,7 @@ class BenchReport:
         return "\n".join(lines)
 
 
-BENCH_ACTIVE_ENV = "OPENWORKFLOW_BENCH_ACTIVE"
+BENCH_ACTIVE_ENV = "OPENWORKCOMPILER_BENCH_ACTIVE"
 _SELF_REFERENTIAL_MARKERS = ("core.build bench", "/v1/workcompiler/compile")
 
 

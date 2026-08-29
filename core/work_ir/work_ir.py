@@ -1,4 +1,4 @@
-"""OpenWorkflow Core Kernel - Work IR Models, Validation, and YAML Engine.
+"""OpenWorkCompiler Core Kernel - Work IR Models, Validation, and YAML Engine.
 
 This module defines the canonical Work Intermediate Representation (Work IR)
 specification conforming to `core/work_ir/schema.json`. It provides AST models,
@@ -168,7 +168,7 @@ ExecutorsDef = Dict[str, ExecutorDef]
 
 
 class WorkIR(BaseModel):
-    """Canonical OpenWorkflow Work IR AST Model.
+    """Canonical OpenWorkCompiler Work IR AST Model.
 
     Conforms to `core/work_ir/schema.json` and `work.yaml` specifications.
     """

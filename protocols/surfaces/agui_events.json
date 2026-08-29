@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "OpenWorkflow AG-UI Surface Protocol Event Schema",
+  "title": "OpenWorkCompiler AG-UI Surface Protocol Event Schema",
   "type": "object",
   "required": [
     "event",

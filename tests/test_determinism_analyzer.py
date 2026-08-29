@@ -1,4 +1,4 @@
-"""Unit tests for DeterminismAnalyzer in OpenWorkflow WorkCompiler."""
+"""Unit tests for DeterminismAnalyzer in OpenWorkCompiler WorkCompiler."""
 
 import unittest
 from typing import Any, Dict, List

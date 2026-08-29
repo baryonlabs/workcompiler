@@ -1,14 +1,14 @@
 # AGENTS.md
 
-Project-specific guidance for AI coding agents working on OpenWorkflow.
+Project-specific guidance for AI coding agents working on OpenWorkCompiler.
 
 ## Project overview
 
-OpenWorkflow is **the execution layer for AI work**: a system that turns proven agent executions into reliable, optimized, compiled workflows.
+OpenWorkCompiler is **the execution layer for AI work**: a system that turns proven agent executions into reliable, optimized, compiled workflows.
 
-- An agent performs work → a human approves the output → OpenWorkflow compiles the trace into deterministic workflow + rules + code + SLMs → the runtime executes it → the system measures quality and optimizes itself.
+- An agent performs work → a human approves the output → OpenWorkCompiler compiles the trace into deterministic workflow + rules + code + SLMs → the runtime executes it → the system measures quality and optimizes itself.
 - One core philosophy: **"Build the kernel, integrate the ecosystem, enrich with semantic truth."**
-  - *"LinkML is the front door for human/LLM model authoring; OWL is the semantic truth layer; SHACL validates constraints; OpenWorkflow executes durable work."*
+  - *"LinkML is the front door for human/LLM model authoring; OWL is the semantic truth layer; SHACL validates constraints; OpenWorkCompiler executes durable work."*
 - Full vision and architecture live in `README.md` and `docs/v4-architecture-semantic-layer.md`. Read them before making design decisions.
 - Behavior Contract design: `docs/behavior-contracts-v2.md` (integration of the AgentBehavior standard).
 
@@ -30,7 +30,7 @@ These constraints must survive every change. If a change violates one, flag it a
 ```
 README.md          Product vision, core vs ecosystem loops, architecture
 AGENTS.md          This file — agent instructions
-core/              Thin, strong OpenWorkflow kernel
+core/              Thin, strong OpenWorkCompiler kernel
   semantic_ir/     LinkML parser, Semantic IR AST, OWL/SHACL generators
   work_ir/         Work IR schema, AST parser, work.yaml validator
   compiler/        Trace IR → Work IR compilation & invariant extraction

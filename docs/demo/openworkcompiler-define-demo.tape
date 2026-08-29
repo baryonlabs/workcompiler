@@ -3,9 +3,9 @@
 # beginner mostly accepts the recommended answers. Rendered with vhs; fixed waits per interview round.
 #
 #   export CODEX_HOME=/path/to/codex-home     # auth.json + trusted project, no proxy needed for this step
-#   vhs docs/demo/openworkflow-define-demo.tape
+#   vhs docs/demo/openworkcompiler-define-demo.tape
 
-Output docs/demo/openworkflow-define-demo.gif
+Output docs/demo/openworkcompiler-define-demo.gif
 
 Set Shell "bash"
 Set FontFamily "D2Coding"

@@ -1,4 +1,4 @@
-"""OpenWorkflow Core Kernel - Trace IR Models and Normalization.
+"""OpenWorkCompiler Core Kernel - Trace IR Models and Normalization.
 
 This module defines the canonical Trace Intermediate Representation (Trace IR)
 used to capture, normalize, and parse execution trajectories from diverse agent
@@ -139,7 +139,7 @@ class TraceResult(BaseModel):
 
 
 class TraceIR(BaseModel):
-    """Canonical OpenWorkflow Trace Intermediate Representation.
+    """Canonical OpenWorkCompiler Trace Intermediate Representation.
 
     Represents a full execution trajectory conforming to
     `protocols/traces/trace_ir_schema.json`.

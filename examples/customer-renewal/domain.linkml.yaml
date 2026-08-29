@@ -1,11 +1,11 @@
-id: https://openworkflow.ai/schemas/customer_renewal
+id: https://openworkcompiler.ai/schemas/customer_renewal
 name: customer_renewal_domain
 title: Customer Renewal Domain Model (LinkML)
 version: 4.0.0
 
 prefixes:
   linkml: https://w3id.org/linkml/
-  owf: https://openworkflow.ai/ontology/
+  owf: https://openworkcompiler.ai/ontology/
 default_prefix: owf
 
 imports:

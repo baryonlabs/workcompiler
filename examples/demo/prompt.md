@@ -1,6 +1,6 @@
 # Codex에 입력한 프롬프트
 
-README 상단 데모(`docs/demo/openworkflow-codex-demo.gif`)에서 Codex TUI에 입력한 것은 아래 네 줄이 전부입니다.
+README 상단 데모(`docs/demo/openworkcompiler-codex-demo.gif`)에서 Codex TUI에 입력한 것은 아래 네 줄이 전부입니다.
 `$ow-…`는 저장소 `.agents/skills/`에 있는 스킬을 명시적으로 호출하는 멘션입니다 (Codex가 리포지토리를 열면 자동 탐지).
 
 ```text

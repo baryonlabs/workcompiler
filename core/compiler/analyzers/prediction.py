@@ -1,4 +1,4 @@
-"""Prediction Analyzer for OpenWorkflow WorkCompiler.
+"""Prediction Analyzer for OpenWorkCompiler WorkCompiler.
 
 Detects traditional Machine Learning (ML) execution candidates from recorded
 agent trace steps: structured inputs, finite categorical labels, or numerical

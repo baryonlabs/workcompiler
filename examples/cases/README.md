@@ -17,9 +17,9 @@ Codex와 채팅해서 해결하는 시나리오로 재현했습니다. 아래 4�
 
 ## Codex TUI로 가능한가? — 예
 
-![초보자가 Codex TUI에서 $ow-define으로 환불 승인 업무를 정의하는 실제 녹화](../../docs/demo/openworkflow-define-demo.gif)
+![초보자가 Codex TUI에서 $ow-define으로 환불 승인 업무를 정의하는 실제 녹화](../../docs/demo/openworkcompiler-define-demo.gif)
 
-위 녹화([tape](../../docs/demo/openworkflow-define-demo.tape))는 `examples/cases/_tui-demo/`(환불 승인 자료 복사본)에서 초보자가 실제로 친 것 전부입니다:
+위 녹화([tape](../../docs/demo/openworkcompiler-define-demo.tape))는 `examples/cases/_tui-demo/`(환불 승인 자료 복사본)에서 초보자가 실제로 친 것 전부입니다:
 
 ```text
 $ow-define 환불 승인 업무. 저는 프롬프트 같은 건 몰라요. 팀장님 메모랑 제 노트, 예전에 쓴 판정서,

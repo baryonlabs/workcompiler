@@ -1,4 +1,4 @@
-"""OpenWorkflow Runtime Engine & Executors.
+"""OpenWorkCompiler Runtime Engine & Executors.
 
 Exports:
 - ActionResult, BaseExecutor, CodeExecutor, RuleExecutor, HTTPExecutor,

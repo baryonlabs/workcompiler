@@ -1,6 +1,6 @@
 ---
 name: ow-bench
-description: Benchmark a compiled OpenWorkflow build against the agent session it was compiled from — compares final outputs, LLM token usage and wall-clock speed of the compiled tiers vs. the recorded agent. Use when the user asks how much cheaper/faster the compiled workflow is, or whether it reproduces the agent's results.
+description: Benchmark a compiled OpenWorkCompiler build against the agent session it was compiled from — compares final outputs, LLM token usage and wall-clock speed of the compiled tiers vs. the recorded agent. Use when the user asks how much cheaper/faster the compiled workflow is, or whether it reproduces the agent's results.
 ---
 
 # ow-bench — recorded agent vs. compiled build

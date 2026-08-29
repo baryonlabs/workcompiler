@@ -1,4 +1,4 @@
-"""Unit and Integration Tests for OpenWorkflow Zero-Code Agent Proxy Adapter."""
+"""Unit and Integration Tests for OpenWorkCompiler Zero-Code Agent Proxy Adapter."""
 
 import json
 import pytest
@@ -48,7 +48,7 @@ def test_openai_chat_completions_interception(client):
     }
 
     headers = {
-        "X-OpenWorkflow-Run-ID": "test_run_openai_01",
+        "X-OpenWorkCompiler-Run-ID": "test_run_openai_01",
         "User-Agent": "Claude-Code/1.0",
     }
 
@@ -57,7 +57,7 @@ def test_openai_chat_completions_interception(client):
     res_data = response.json()
     assert "choices" in res_data
     assert res_data["choices"][0]["message"]["role"] == "assistant"
-    assert response.headers["X-OpenWorkflow-Response-Mode"] == "synthetic"
+    assert response.headers["X-OpenWorkCompiler-Response-Mode"] == "synthetic"
 
     # Verify session interceptor recorded the turn
     assert "test_run_openai_01" in active_interceptors
@@ -89,7 +89,7 @@ def test_anthropic_messages_interception(client):
     }
 
     headers = {
-        "X-OpenWorkflow-Run-ID": "test_run_anthropic_01",
+        "X-OpenWorkCompiler-Run-ID": "test_run_anthropic_01",
         "User-Agent": "Anthropic-SDK/python",
     }
 
@@ -97,7 +97,7 @@ def test_anthropic_messages_interception(client):
     assert response.status_code == 200
     res_data = response.json()
     assert res_data["type"] == "message"
-    assert response.headers["X-OpenWorkflow-Response-Mode"] == "synthetic"
+    assert response.headers["X-OpenWorkCompiler-Response-Mode"] == "synthetic"
 
     assert "test_run_anthropic_01" in active_interceptors
     interceptor = active_interceptors["test_run_anthropic_01"]
@@ -114,7 +114,7 @@ def test_list_traces_and_compile_trigger(client):
         "messages": [{"role": "user", "content": "Check CRM contract"}],
         "tools": [{"type": "function", "function": {"name": "lookup_contract"}}],
     }
-    client.post("/v1/chat/completions", json=payload_1, headers={"X-OpenWorkflow-Run-ID": "session_demo"})
+    client.post("/v1/chat/completions", json=payload_1, headers={"X-OpenWorkCompiler-Run-ID": "session_demo"})
 
     # 2. Send Anthropic turn
     payload_2 = {
@@ -122,7 +122,7 @@ def test_list_traces_and_compile_trigger(client):
         "messages": [{"role": "user", "content": "Compute pricing offer"}],
         "tools": [{"name": "price_offer"}],
     }
-    client.post("/v1/messages", json=payload_2, headers={"X-OpenWorkflow-Run-ID": "session_demo"})
+    client.post("/v1/messages", json=payload_2, headers={"X-OpenWorkCompiler-Run-ID": "session_demo"})
 
     # 3. List active traces
     traces_res = client.get("/v1/workcompiler/traces")
@@ -157,11 +157,11 @@ def test_proxy_returns_4xx_for_malformed_json(client, endpoint):
 
 def test_compile_output_path_is_restricted_to_workspace(client, tmp_path, monkeypatch):
     """Compilation may write artifacts only beneath the explicit workspace root."""
-    monkeypatch.setenv("OPENWORKFLOW_WORKSPACE_DIR", str(tmp_path))
+    monkeypatch.setenv("OPENWORKCOMPILER_WORKSPACE_DIR", str(tmp_path))
     client.post(
         "/v1/chat/completions",
         json={"model": "gpt-4o", "messages": [], "tools": []},
-        headers={"X-OpenWorkflow-Run-ID": "workspace_path_test"},
+        headers={"X-OpenWorkCompiler-Run-ID": "workspace_path_test"},
     )
 
     blocked = client.post(
@@ -258,7 +258,7 @@ def test_codex_backend_responses_passthrough_streams_and_captures(client, monkey
     response = client.post("/backend-api/codex/responses", json=payload, headers=headers)
 
     assert response.status_code == 200
-    assert response.headers["X-OpenWorkflow-Response-Mode"] == "passthrough"
+    assert response.headers["X-OpenWorkCompiler-Response-Mode"] == "passthrough"
     assert response.headers["content-type"].startswith("text/event-stream")
     assert response.content == _codex_like_sse()  # relayed byte-for-byte
     assert seen["url"].endswith("/backend-api/codex/responses")
@@ -295,7 +295,7 @@ def test_v1_responses_passthrough_non_streaming_json(client, monkeypatch):
     response = client.post(
         "/v1/responses",
         json={"model": "gpt-5", "input": "ping"},
-        headers={"X-OpenWorkflow-Run-ID": "run_json"},
+        headers={"X-OpenWorkCompiler-Run-ID": "run_json"},
     )
     assert response.status_code == 200
     assert response.json()["id"] == "resp_json"
@@ -429,7 +429,7 @@ def test_compile_emits_build_tree_when_build_dir_given(client, monkeypatch, tmp_
     import httpx
     from adapters.proxy import server as proxy_server
 
-    monkeypatch.setenv("OPENWORKFLOW_WORKSPACE_DIR", str(tmp_path))
+    monkeypatch.setenv("OPENWORKCOMPILER_WORKSPACE_DIR", str(tmp_path))
 
     def handler(request: httpx.Request) -> httpx.Response:
         output = [{"type": "custom_tool_call", "name": "exec", "call_id": "c",

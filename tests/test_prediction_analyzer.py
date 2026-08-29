@@ -1,4 +1,4 @@
-"""Unit tests for PredictionAnalyzer in OpenWorkflow WorkCompiler.
+"""Unit tests for PredictionAnalyzer in OpenWorkCompiler WorkCompiler.
 
 Tests detection of traditional ML lowering candidates:
 - Categorical classification (ticket classification, fraud detection, churn tiers)

@@ -1,4 +1,4 @@
-"""Unit tests for SLMAnalyzer in OpenWorkflow WorkCompiler."""
+"""Unit tests for SLMAnalyzer in OpenWorkCompiler WorkCompiler."""
 
 import pytest
 from core.compiler.analyzers.slm import SLMAnalyzer

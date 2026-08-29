@@ -13,7 +13,7 @@ from core.work_ir import load_work_ir
 
 
 def _import_handler(path: Path):
-    spec = importlib.util.spec_from_file_location(f"openworkflow_build_handlers.{path.stem}", path)
+    spec = importlib.util.spec_from_file_location(f"openworkcompiler_build_handlers.{path.stem}", path)
     if spec is None or spec.loader is None:
         raise ImportError(f"cannot import handler module {path}")
     module = importlib.util.module_from_spec(spec)
