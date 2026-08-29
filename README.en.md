@@ -67,9 +67,9 @@ Measured: on the same renewal-proposal task the compiled build produced identica
 
 ## 30-second demo: use it from inside Codex
 
-![Real recording: inside the Codex TUI, the $ow-compile-work / $ow-traces / $ow-compile-trace skills compile an OpenWorkLang file, list captured sessions, and compile the session itself into work.yaml](docs/demo/openworkcompiler-codex-demo.gif)
+![Real recording: pipx one-line install → owc agent list → owc proxy, then inside the Codex TUI the $ow-compile-work / $ow-traces / $ow-compile-trace / $ow-bench skills compile an OpenWorkLang file, list captured sessions, compile the session itself and benchmark it](docs/demo/openworkcompiler-codex-demo.gif)
 
-A **real interactive Codex session**, not a mock-up. Point Codex at the OpenWorkCompiler proxy (ChatGPT login reused as-is) and invoke the three skills shipped in this repository with `$` mentions.
+A **real interactive Codex session**, not a mock-up. Install `owc` with one line — `pipx install "git+https://github.com/baryonlabs/workcompiler.git"` (`owc agent list` shows the agent CLIs it found) — start `owc proxy`, point Codex at it (ChatGPT login reused as-is) and invoke the skills shipped in this repository with `$` mentions.
 
 | Step | Typed in Codex | Result |
 | :--- | :--- | :--- |
@@ -82,11 +82,11 @@ A **real interactive Codex session**, not a mock-up. Point Codex at the OpenWork
 
 | | recorded agent (Codex) | compiled build | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 46,460 | 16,843 | **−64%** |
-| wall time | 33.8 s | 23.1 s | **1.5×** |
-| outputs reproduced (code-tier steps) | — | **2/2 exact** | |
+| LLM tokens | 119,974 | 35,510 | **−70%** |
+| wall time | 65.0 s | 29.7 s | **2.2×** |
+| outputs reproduced (code-tier steps) | — | **2/4** (the two `shell_curl` steps query the proxy's trace list, which differs per session) | |
 
-The two shell steps (`shell_python3`, `shell_find`) lowered to the code tier and reproduced the same output with zero tokens in tens of milliseconds; the remaining cost is the final summary (`respond`), still escalated to a frontier LLM — that is what the `models/slm/` training candidate takes over once promoted.
+The shell steps (`shell_python3`, `shell_find`, `shell_curl`) lowered to the code tier and replayed with zero tokens in tens of milliseconds (compile and search output identical; the proxy trace-list `curl` differs per session and is reported as a mismatch); the remaining cost is the final summary (`respond`), still escalated to a frontier LLM — that is what the `models/slm/` training candidate takes over once promoted.
 
 **A real business task — customer contract renewal proposal** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): verify the active CRM contract → aggregate 3 months of usage → price with the current policy → write the proposal and pricing JSON; artifacts in [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
 
@@ -639,7 +639,7 @@ openworkcompiler/
 ├── vendor/openworklang/         # submodule: the OpenWorkLang language (baryonlabs/openworklang)
 ├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + loader + benchmark (token ledger) + front-agent runner
 ├── examples/cases/              # four business cases: beginner materials → $ow-define → agent run → compile → bench (transcripts · traces · builds)
-├── tests/                       # Complete pytest suite (191 tests)
+├── tests/                       # Complete pytest suite (192 tests)
 └── examples/                    # Sample workflows, LinkML schemas, and runnable demo scripts
 ```
 

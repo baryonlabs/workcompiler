@@ -1,7 +1,7 @@
-# OpenWorkCompiler × Codex CLI — everything runs inside the interactive Codex TUI.
+# OpenWorkCompiler × Codex CLI — one-line install (pipx → owc), then everything runs inside the interactive Codex TUI.
 # Rendered with vhs (https://github.com/charmbracelet/vhs). Regenerate from the repo root:
 #
-#   export CODEX_HOME=/path/to/codex-home   # contains auth.json + the config.toml below
+#   mkdir -p build/codex-home && cp ~/.codex/auth.json build/codex-home/   # + the config.toml below (the tape exports CODEX_HOME=$PWD/build/codex-home)
 #   vhs docs/demo/openworkcompiler-codex-demo.tape
 #
 # codex-home/config.toml — Codex talks to the OpenWorkCompiler proxy, ChatGPT login reused as-is:
@@ -21,11 +21,11 @@
 #
 # The $ow-* skills are discovered automatically from .agents/skills/ in this repository.
 #
-# Post-process to keep the GIF small (raw vhs output is ~24 MB; this brings it to ~6.8 MB):
+# Post-process to keep the GIF small (raw vhs output is ~33 MB; this brings it to ~7.8 MB):
 #
 #   ffmpeg -y -i docs/demo/openworkcompiler-codex-demo.gif \
-#     -vf "fps=6,scale=1000:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=64:stats_mode=diff[p];[b][p]paletteuse=dither=none:diff_mode=rectangle" \
-#     build/codex-demo.gif && gifsicle -O3 --lossy=120 build/codex-demo.gif -o docs/demo/openworkcompiler-codex-demo.gif
+#     -vf "fps=5,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=48:stats_mode=diff[p];[b][p]paletteuse=dither=none:diff_mode=rectangle" \
+#     build/codex-demo.gif && gifsicle -O3 --lossy=140 build/codex-demo.gif -o docs/demo/openworkcompiler-codex-demo.gif
 
 Output docs/demo/openworkcompiler-codex-demo.gif
 
@@ -39,14 +39,21 @@ Set Theme "Catppuccin Mocha"
 Set TypingSpeed 35ms
 Set Framerate 20
 
-# --- prelude: the only thing outside Codex is starting the zero-code proxy ---
+# --- prelude: one-line install, detect agents, start the zero-code proxy (everything else runs inside Codex) ---
 Hide
-Type "export PS1='\[\e[1;32m\]openworkflow\[\e[0m\] $ ' && mkdir -p build && clear"
+Type "export CODEX_HOME=$PWD/build/codex-home PS1='\[\e[1;32m\]openworkcompiler\[\e[0m\] $ ' && mkdir -p build && clear"
 Enter
 Show
-Type "python3 -m uvicorn adapters.proxy.server:app --port 8787 > build/openworkcompiler-proxy.log 2>&1 &"
+Type `pipx install --force "git+https://github.com/baryonlabs/workcompiler.git"`
 Enter
-Sleep 2s
+Wait+Screen@180s /installed package openworkcompiler/
+Sleep 1s
+Type "owc version && owc agent list"
+Enter
+Sleep 4s
+Type "(owc proxy --port 8787 > build/openworkcompiler-proxy.log 2>&1 &) && sleep 2 && head -4 build/openworkcompiler-proxy.log"
+Enter
+Sleep 4s
 
 Type "codex"
 Enter

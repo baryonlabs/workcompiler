@@ -1,14 +1,15 @@
 {
   "work": "codex-session",
   "build_dir": "/Users/hongmartin/orca/projects/open-workflow/build/codex_session",
-  "artifact_count": 7,
+  "artifact_count": 8,
   "by_tier": {
     "work_ir": [
       "work.yaml"
     ],
     "code": [
       "handlers/shell_python3.py",
-      "handlers/shell_find.py"
+      "handlers/shell_find.py",
+      "handlers/shell_curl.py"
     ],
     "frontier_llm": [
       "prompts/respond.prompt.md"
@@ -49,6 +50,12 @@
       "tier": "frontier_llm",
       "kind": "prompt",
       "path": "prompts/respond.prompt.md"
+    },
+    {
+      "action": "shell_curl",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_curl.py"
     },
     {
       "action": "*",

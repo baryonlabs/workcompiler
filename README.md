@@ -67,9 +67,9 @@ flowchart LR
 
 ## 30초 데모: Codex 안에서 그대로 쓰기
 
-![Codex TUI 안에서 $ow-compile-work / $ow-traces / $ow-compile-trace 스킬로 OpenWorkLang 컴파일, 캡처 세션 조회, 세션의 work.yaml 컴파일까지 수행하는 실제 녹화](docs/demo/openworkcompiler-codex-demo.gif)
+![pipx 한 줄 설치 → owc agent list → owc proxy, 그다음 Codex TUI 안에서 $ow-compile-work / $ow-traces / $ow-compile-trace / $ow-bench 스킬로 OpenWorkLang 컴파일, 캡처 세션 조회, 세션 컴파일, 벤치마크까지 수행하는 실제 녹화](docs/demo/openworkcompiler-codex-demo.gif)
 
-합성 화면이 아닌 **실제 Codex 대화형 세션**입니다. Codex를 OpenWorkCompiler 프록시로 향하게 한 뒤(ChatGPT 로그인 그대로), 저장소의 스킬 3개를 `$` 멘션으로 호출하면 됩니다.
+합성 화면이 아닌 **실제 Codex 대화형 세션**입니다. `pipx install "git+https://github.com/baryonlabs/workcompiler.git"` 한 줄로 `owc`를 설치하고(`owc agent list`가 설치된 에이전트 CLI를 보여줌), `owc proxy`를 띄운 뒤 Codex를 프록시로 향하게 하면(ChatGPT 로그인 그대로) 저장소의 스킬을 `$` 멘션으로 호출할 수 있습니다.
 
 | 순서 | Codex 입력 | 결과 |
 | :--- | :--- | :--- |
@@ -82,11 +82,11 @@ flowchart LR
 
 | | 기록된 에이전트 (Codex) | 컴파일된 빌드 | 차이 |
 | :-- | --: | --: | --: |
-| LLM 토큰 | 46,460 | 16,843 | **−64%** |
-| 벽시계 시간 | 33.8 s | 23.1 s | **1.5×** |
-| 결과 재현 (code 계층 스텝) | — | **2/2 일치** | |
+| LLM 토큰 | 119,974 | 35,510 | **−70%** |
+| 벽시계 시간 | 65.0 s | 29.7 s | **2.2×** |
+| 결과 재현 (code 계층 스텝) | — | **2/4 일치** (`shell_curl` 2개는 실행마다 달라지는 트레이스 목록 조회) | |
 
-셸 스텝 2개(`shell_python3`, `shell_find`)는 code 계층으로 내려가 토큰 0·수십 ms에 같은 출력을 냈고, 남은 비용은 아직 frontier LLM으로 에스컬레이션되는 최종 요약(`respond`)뿐입니다 — 이 부분이 `models/slm/` 학습 후보가 승격되면 내려갑니다.
+셸 스텝(`shell_python3`, `shell_find`, `shell_curl`)은 code 계층으로 내려가 토큰 0·수십 ms에 재실행됐고(컴파일·탐색 출력은 그대로 일치, 프록시 트레이스 목록 `curl`은 세션마다 내용이 달라 불일치로 표시), 남은 비용은 아직 frontier LLM으로 에스컬레이션되는 최종 요약(`respond`)뿐입니다 — 이 부분이 `models/slm/` 학습 후보가 승격되면 내려갑니다.
 
 **실제 업무 작업 — 고객 계약 갱신 제안서** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): CRM 활성 계약 확인 → 3개월 사용량 집계 → 현행 가격정책으로 산정 → 제안서·가격 JSON 작성; 원본은 [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
 
@@ -665,7 +665,7 @@ openworkcompiler/
 ├── vendor/openworklang/         # 서브모듈: OpenWorkLang 언어 (baryonlabs/openworklang)
 ├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + 로더 + 벤치마크(토큰 원장) + 앞단 에이전트 실행
 ├── examples/cases/              # 4가지 업무 사례: 초보자 자료 → $ow-define → 에이전트 수행 → 컴파일 → 벤치 (transcript · 트레이스 · 빌드 포함)
-├── tests/                       # pytest 테스트 수트 (191개 테스트 전원 통과)
+├── tests/                       # pytest 테스트 수트 (192개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트
 ```
 

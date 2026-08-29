@@ -16,22 +16,95 @@ states:
   - python3_shelled
   - find_shelled
   - respond_completed
+  - curl_shelled
 actions:
   - shell_python3
   - shell_find
   - respond
+  - shell_curl
 dependencies:
   shell_find:
     - shell_python3
   respond:
     - shell_find
+  shell_curl:
+    - respond
 invariants:
+  - keep_report_evidence_auditable
+  - require_quality_engineer_approval
+  - gate_causation_by_calibration
+  - use_authoritative_thresholds
+  - bound_cause_to_trusted_evidence
+  - verify_bound_mes_anomaly
+  - keep_decision_artifacts_auditable
+  - apply_refund_eligibility_rules
+  - enforce_finance_approval_threshold
+  - verify_receipt_before_decision
+  - prove_duplicate_from_successful_payments
+  - use_authoritative_policy_v3
+  - verify_successful_payment_receipt
+  - escalate_unresolved_source_conflicts
+  - correlate_changes_without_causation
+  - classify_signature_exactly
+  - use_runbook_faithfully
+  - escalate_without_remediation
+  - select_exact_current_alert
+  - meet_triage_sla_and_output_contract
+  - enforce_discount_approval_cap
+  - verify_active_contract
+  - include_required_clauses_verbatim
   - use_current_pricing_policy
   - verify_current_contract
 quality:
   reviewer_acceptance: '>=0.95'
   factual_accuracy: '>=0.99'
 behaviors:
+  - name: keep-report-evidence-auditable
+    path: behaviors/keep-report-evidence-auditable/BEHAVIOR.md
+  - name: require-quality-engineer-approval
+    path: behaviors/require-quality-engineer-approval/BEHAVIOR.md
+  - name: gate-causation-by-calibration
+    path: behaviors/gate-causation-by-calibration/BEHAVIOR.md
+  - name: use-authoritative-thresholds
+    path: behaviors/use-authoritative-thresholds/BEHAVIOR.md
+  - name: bound-cause-to-trusted-evidence
+    path: behaviors/bound-cause-to-trusted-evidence/BEHAVIOR.md
+  - name: verify-bound-mes-anomaly
+    path: behaviors/verify-bound-mes-anomaly/BEHAVIOR.md
+  - name: keep-decision-artifacts-auditable
+    path: behaviors/keep-decision-artifacts-auditable/BEHAVIOR.md
+  - name: apply-refund-eligibility-rules
+    path: behaviors/apply-refund-eligibility-rules/BEHAVIOR.md
+  - name: enforce-finance-approval-threshold
+    path: behaviors/enforce-finance-approval-threshold/BEHAVIOR.md
+  - name: verify-receipt-before-decision
+    path: behaviors/verify-receipt-before-decision/BEHAVIOR.md
+  - name: prove-duplicate-from-successful-payments
+    path: behaviors/prove-duplicate-from-successful-payments/BEHAVIOR.md
+  - name: use-authoritative-policy-v3
+    path: behaviors/use-authoritative-policy-v3/BEHAVIOR.md
+  - name: verify-successful-payment-receipt
+    path: behaviors/verify-successful-payment-receipt/BEHAVIOR.md
+  - name: escalate-unresolved-source-conflicts
+    path: behaviors/escalate-unresolved-source-conflicts/BEHAVIOR.md
+  - name: correlate-changes-without-causation
+    path: behaviors/correlate-changes-without-causation/BEHAVIOR.md
+  - name: classify-signature-exactly
+    path: behaviors/classify-signature-exactly/BEHAVIOR.md
+  - name: use-runbook-faithfully
+    path: behaviors/use-runbook-faithfully/BEHAVIOR.md
+  - name: escalate-without-remediation
+    path: behaviors/escalate-without-remediation/BEHAVIOR.md
+  - name: select-exact-current-alert
+    path: behaviors/select-exact-current-alert/BEHAVIOR.md
+  - name: meet-triage-sla-and-output-contract
+    path: behaviors/meet-triage-sla-and-output-contract/BEHAVIOR.md
+  - name: enforce-discount-approval-cap
+    path: behaviors/enforce-discount-approval-cap/BEHAVIOR.md
+  - name: verify-active-contract
+    path: behaviors/verify-active-contract/BEHAVIOR.md
+  - name: include-required-clauses-verbatim
+    path: behaviors/include-required-clauses-verbatim/BEHAVIOR.md
   - name: use-current-pricing-policy
     path: behaviors/use-current-pricing-policy/BEHAVIOR.md
   - name: verify-current-contract
@@ -52,3 +125,6 @@ executors:
     preferred: claude-3-5-sonnet
     fallback:
       - human
+  shell_curl:
+    type: code
+    handler: services.shell_curl
