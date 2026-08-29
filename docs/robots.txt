@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://baryonlabs.github.io/workcompiler/sitemap.xml

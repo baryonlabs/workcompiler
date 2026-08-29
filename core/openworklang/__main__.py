@@ -18,8 +18,7 @@ import sys
 from pathlib import Path
 
 from core.build.emitter import emit_build
-from core.openworklang.compiler import OpenWorkLangCompiler
-from core.openworklang.parser import parse_openworklang
+from core.openworklang import OpenWorkLangCompiler, parse_openworklang
 from core.work_ir import save_work_ir
 
 

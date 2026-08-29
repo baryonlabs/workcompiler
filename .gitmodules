@@ -1,0 +1,3 @@
+[submodule "vendor/openworklang"]
+	path = vendor/openworklang
+	url = https://github.com/baryonlabs/openworklang.git

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenWorkCompiler — 검증된 AI 에이전트 업무를 결정론적 실행으로 컴파일</title>
+<meta name="description" content="OpenWorkCompiler는 Codex·LLM 에이전트가 한 번 수행해 검증된 업무를 code · rule · ML · SLM 계층의 반복 가능한 실행 자산으로 컴파일합니다. 실측: 토큰 −76~−92%, 7~19× 빠른 재실행, 예외만 앞단 에이전트가 처리.">
+<meta name="keywords" content="OpenWorkCompiler, work compiler, AI agent, LLM compiler, Codex, agentic workflow, deterministic execution, SLM, OpenWorkLang, Work IR, LinkML, token cost reduction">
+<link rel="canonical" href="https://baryonlabs.github.io/workcompiler/">
+<link rel="alternate" hreflang="ko" href="https://baryonlabs.github.io/workcompiler/">
+<link rel="alternate" hreflang="en" href="https://baryonlabs.github.io/workcompiler/#en">
+<link rel="alternate" hreflang="x-default" href="https://baryonlabs.github.io/workcompiler/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="OpenWorkCompiler">
+<meta property="og:title" content="OpenWorkCompiler — compile verified AI agent work into deterministic execution">
+<meta property="og:description" content="Let an agent do the work once, verify it, compile it: code · rule · ML · SLM tiers run for free, a front agent handles the exceptions. Measured: −76…−92% tokens, 7–19× faster.">
+<meta property="og:url" content="https://baryonlabs.github.io/workcompiler/">
+<meta property="og:image" content="https://baryonlabs.github.io/workcompiler/banner.png">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OpenWorkCompiler">
+<meta name="twitter:description" content="Compile verified AI agent work into deterministic, repeatable execution. −76…−92% tokens, 7–19× faster.">
+<meta name="twitter:image" content="https://baryonlabs.github.io/workcompiler/banner.png">
+<link rel="icon" href="logo.png" type="image/png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "OpenWorkCompiler",
+  "alternateName": "workcompiler",
+  "description": "Compiles verified AI agent work (Codex, LLM agents) into deterministic, repeatable execution across code, rule, ML and SLM tiers, with a front agent for exceptions.",
+  "codeRepository": "https://github.com/baryonlabs/workcompiler",
+  "programmingLanguage": "Python",
+  "runtimePlatform": "Python 3.10+",
+  "license": "https://github.com/baryonlabs/workcompiler/blob/main/LICENSE",
+  "author": {"@type": "Organization", "name": "Baryon Labs", "url": "https://github.com/baryonlabs"},
+  "url": "https://baryonlabs.github.io/workcompiler/",
+  "keywords": ["work compiler", "AI agent", "LLM compiler", "Codex", "deterministic execution", "SLM", "OpenWorkLang"],
+  "version": "0.2.0",
+  "isPartOf": {"@type": "SoftwareApplication", "name": "OpenWorkLang", "url": "https://github.com/baryonlabs/openworklang"}
+}
+</script>
+<style>
+  :root{--bg:#0b1020;--fg:#e8edf7;--muted:#9aa7c2;--card:#131a2e;--line:#22304f;--blue:#4f8cff;--green:#2ecc8a;--max:1040px}
+  @media (prefers-color-scheme: light){:root{--bg:#f7f9fd;--fg:#101728;--muted:#4d5a75;--card:#ffffff;--line:#dde4f2}}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 -apple-system,"Apple SD Gothic Neo","Pretendard","Segoe UI",Roboto,sans-serif}
+  a{color:var(--blue)}a:hover{text-decoration:underline}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+  header{padding:48px 0 24px;text-align:center}
+  header img.logo{width:min(360px,80%);height:auto;border-radius:12px}
+  h1{font-size:clamp(28px,4.5vw,44px);margin:20px 0 8px;letter-spacing:-.02em}
+  .tag{color:var(--muted);font-size:18px;margin:0 0 20px}
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:18px 0 6px}
+  .btn{display:inline-block;padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);text-decoration:none;font-weight:600}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+  .lang{font-size:14px;color:var(--muted);margin-top:10px}
+  section{padding:36px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(22px,3vw,30px);margin:0 0 14px;letter-spacing:-.01em}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .card h3{margin:0 0 8px;font-size:17px}.card p{margin:0;color:var(--muted);font-size:15px}
+  .banner{width:100%;height:auto;border-radius:14px;border:1px solid var(--line)}
+  .demo{width:100%;height:auto;border-radius:14px;border:1px solid var(--line)}
+  table{width:100%;border-collapse:collapse;font-size:15px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tbl{overflow-x:auto}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0}
+  .kpi div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+  .kpi b{display:block;font-size:30px;color:var(--green)}.kpi span{color:var(--muted);font-size:14px}
+  pre{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto;font-size:14px;line-height:1.5}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  ol.flow{counter-reset:s;list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  ol.flow li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 14px 14px 46px;position:relative;font-size:15px}
+  ol.flow li::before{counter-increment:s;content:counter(s);position:absolute;left:14px;top:12px;width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;display:grid;place-items:center;font-size:13px}
+  footer{padding:30px 0 50px;color:var(--muted);font-size:14px;text-align:center;border-top:1px solid var(--line)}
+  .en{border-top:2px dashed var(--line)}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <img class="logo" src="logo.png" alt="OpenWorkCompiler 로고" width="800" height="533">
+  <h1>OpenWorkCompiler</h1>
+  <p class="tag">검증된 AI 에이전트 업무를 <strong>반복 가능한 결정형 실행</strong>으로 컴파일합니다.<br>사람은 WHAT을 정의하고, 컴파일러가 HOW를 code · rule · ML · SLM으로 내립니다. 예외만 앞단 에이전트가 맡습니다.</p>
+  <div class="cta">
+    <a class="btn primary" href="https://github.com/baryonlabs/workcompiler">GitHub 저장소</a>
+    <a class="btn" href="https://github.com/baryonlabs/workcompiler/releases/latest">최신 릴리즈</a>
+    <a class="btn" href="https://github.com/baryonlabs/openworklang">OpenWorkLang</a>
+    <a class="btn" href="#en">English</a>
+  </div>
+  <p class="lang">Codex CLI · OpenAI Responses API · Python 3.10+ · MIT-style OSS</p>
+</header>
+
+<main class="wrap">
+<section id="overview">
+  <h2>비결정형 업무 → 결정형 실행</h2>
+  <img class="banner" src="banner.png" alt="OpenWorkCompiler 개요: Agent 중심 비결정형 수행과 컴파일 후 결정형 수행의 비교" width="1400" height="933" loading="lazy">
+  <div class="kpi">
+    <div><b>−76~−92%</b><span>LLM 토큰 (4개 업무 사례, 컴파일 후 재실행)</span></div>
+    <div><b>7~19×</b><span>더 빠른 재실행 (벽시계 시간)</span></div>
+    <div><b>동일</b><span>판정·금액·분류·산출물 파일 (바이트 단위 일치)</span></div>
+    <div><b>0</b><span>바꿔야 할 에이전트 코드 (Zero-code 프록시)</span></div>
+  </div>
+</section>
+
+<section id="how">
+  <h2>어떻게 동작하나요</h2>
+  <ol class="flow">
+    <li><strong>WHAT 정의</strong> — <code>$ow-define</code>(grill-me 인터뷰)으로 메모·노트·이전 완성물에서 <code>TASK.md</code>와 <code>BEHAVIOR.md</code>를 만듭니다. 프롬프트 지식 불필요.</li>
+    <li><strong>에이전트 1회 수행</strong> — Codex가 그대로 일합니다. Zero-code 프록시가 모든 턴(모델·토큰·도구 결과)을 TraceIR로 캡처합니다.</li>
+    <li><strong>사람이 품질 확인</strong> — 결과가 곧 WHAT임을 승인하면 규칙이 굳어집니다.</li>
+    <li><strong>LLM 컴파일</strong> — 트레이스 → Work IR → <code>build/&lt;work&gt;/</code>: <code>handlers/*.py</code>, <code>rules/</code>, <code>models/ml|slm/</code>, <code>prompts/</code>, 그리고 HOW를 담은 <code>&lt;work&gt;.work</code>.</li>
+    <li><strong>벤치마크</strong> — 같은 세션을 재실행해 결과 일치·토큰·속도를 모델별 원장으로 비교합니다.</li>
+    <li><strong>하이브리드 실행</strong> — 앞단 에이전트가 새 요청의 파라미터를 바인딩하고, code 계층은 토큰 0으로, 합성 스텝만 에이전트로 에스컬레이션합니다.</li>
+  </ol>
+</section>
+
+<section id="demo">
+  <h2>Codex TUI 안에서 그대로</h2>
+  <img class="demo" src="demo/openworkcompiler-codex-demo.gif" alt="Codex TUI에서 $ow-compile-work, $ow-traces, $ow-compile-trace, $ow-bench 스킬을 실행하는 실제 녹화" loading="lazy">
+  <p style="color:var(--muted)">합성 화면이 아닌 실제 Codex 세션입니다. 초보자가 <code>$ow-define</code>으로 업무를 정의하는 녹화는 <a href="https://github.com/baryonlabs/workcompiler/tree/main/examples/cases">examples/cases</a>에 있습니다.</p>
+</section>
+
+<section id="results">
+  <h2>실측 결과</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>업무 사례</th><th class="num">에이전트 1회 (gpt-5.6-sol)</th><th class="num">컴파일된 빌드 재실행</th><th>결과</th></tr></thead>
+    <tbody>
+      <tr><td>고객 계약 갱신 제안</td><td class="num">160,876 토큰 · 134 s</td><td class="num">24,819 (−85%) · 7.1 s</td><td>270석 · $116,640 · 7/7 재현</td></tr>
+      <tr><td>인보이스/환불 승인</td><td class="num">280,023 토큰 · 114 s</td><td class="num">21,999 (−92%) · 6.0 s</td><td>중복결제 전액 환불 → 재무 승인 대기</td></tr>
+      <tr><td>제조 품질 이상 대응</td><td class="num">138,200 토큰 · 142 s</td><td class="num">32,661 (−76%) · 12.7 s</td><td>야간 5.5% 이상, 보정 만료 센서 제외 · 5/5 재현</td></tr>
+      <tr><td>보안/운영 장애 분류</td><td class="num">159,640 토큰 · 88 s</td><td class="num">21,081 (−87%) · 5.3 s</td><td>권한상승 → 즉시 온콜, 변경 연관</td></tr>
+      <tr><td>새 고객 하이브리드 실행 (CUST-1002)</td><td class="num">Codex 단독 32,572 · 83 s</td><td class="num">26,481 · 40.2 s (2.1×)</td><td>앞단 에이전트 + code 6스텝 + 에스컬레이션 2</td></tr>
+    </tbody>
+  </table></div>
+  <p style="color:var(--muted)">모든 수치는 저장소의 <a href="https://github.com/baryonlabs/workcompiler/tree/main/examples">examples/</a>에 transcript·트레이스·빌드·<code>BENCHMARK.md</code>(토큰 원장)로 재현 가능하게 들어 있습니다.</p>
+</section>
+
+<section id="start">
+  <h2>시작하기</h2>
+<pre><code># 1. 프록시 + Codex (ChatGPT 로그인 그대로, 코드 수정 없음)
+git clone --recurse-submodules https://github.com/baryonlabs/workcompiler.git &amp;&amp; cd workcompiler
+python3 -m uvicorn adapters.proxy.server:app --port 8787 &amp;
+codex                    # $ow-define · $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench
+
+# 2. 셸에서 직접
+python3 -m core.openworklang compile examples/quality_analysis.work        # .work → build/quality_analyst/
+python3 -m core.build bench build/&lt;work&gt;                                  # 에이전트 vs 빌드
+python3 -m core.build run build/&lt;work&gt; --request "…" --escalate codex     # 앞단 에이전트 + 빌드</code></pre>
+</section>
+
+<section id="en" class="en" lang="en">
+  <h2>OpenWorkCompiler (English)</h2>
+  <p><strong>Compile verified AI agent work into deterministic, repeatable execution.</strong> Humans define the WHAT (<code>TASK.md</code>, <code>BEHAVIOR.md</code> via the <code>$ow-define</code> interview); an agent such as Codex does the work once through a zero-code proxy that captures every turn; a human confirms the quality; the compiler lowers the verified session into <code>build/&lt;work&gt;/</code> — Python handlers, rules, ML/SLM training packages, prompt contracts and an editable <strong>OpenWorkLang</strong> <code>.work</code> spec stating the HOW and its escalation limits. A front agent binds parameters for new requests and escalates only the synthesized steps.</p>
+  <div class="grid">
+    <div class="card"><h3>Measured</h3><p>Four business cases driven from a beginner's raw materials: −76…−92% tokens and 7–19× faster on replay, identical decisions and deliverables. Hybrid run for a new customer: 2.1× faster than Codex alone.</p></div>
+    <div class="card"><h3>Zero-code proxy</h3><p>Transparent passthrough for the OpenAI Responses API and the ChatGPT Codex backend; per-step model, tokens (cached), tool results captured into TraceIR.</p></div>
+    <div class="card"><h3>Token ledger</h3><p>Every step: which model spent how many tokens when recorded vs. what executes it after compilation (code / rule / model); <code>ledger.jsonl</code> tracks the shift from frontier → SLM → code.</p></div>
+    <div class="card"><h3>OpenWorkLang</h3><p>The <code>.work</code> language (parser, compiler, spec) lives in <a href="https://github.com/baryonlabs/openworklang">baryonlabs/openworklang</a> and is vendored as a submodule.</p></div>
+  </div>
+  <p style="margin-top:14px"><a class="btn primary" href="https://github.com/baryonlabs/workcompiler/blob/main/README.en.md">English README</a> <a class="btn" href="https://github.com/baryonlabs/workcompiler">Repository</a></p>
+</section>
+
+<section id="cases">
+  <h2>적용 사례를 수집하고 있습니다 · We are collecting adoption cases</h2>
+  <p>OpenWorkCompiler를 실제 업무에 적용한 사례(WHAT, 컴파일 결과, 전후 토큰·시간, 남은 에스컬레이션)를 모읍니다. 허락하에 <code>examples/cases/</code>에 소개합니다. / Applied it to a real task? Tell us what compiled and what still escalates.</p>
+  <p><a class="btn primary" href="mailto:hello@baryon.ai">hello@baryon.ai</a> <a class="btn" href="https://github.com/baryonlabs/workcompiler/issues">Open a case issue</a> <a class="btn" href="https://github.com/baryonlabs/workcompiler/blob/main/CONTRIBUTING.md">Contributing</a></p>
+</section>
+</main>
+
+<footer class="wrap">
+  <p>MIT License · Copyright © 2026 Baryon Labs, Seungwoo Hong · <a href="https://github.com/baryonlabs/workcompiler">github.com/baryonlabs/workcompiler</a> · <a href="https://github.com/baryonlabs/openworklang">openworklang</a></p>
+</footer>
+</body>
+</html>

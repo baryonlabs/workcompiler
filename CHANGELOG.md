@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Rename**: OpenWorkflow → **OpenWorkCompiler** (package `openworkcompiler`, `X-OpenWorkCompiler-*` headers, `OPENWORKCOMPILER_*` env vars, demo assets). Recorded transcripts/traces kept verbatim.
+- **OpenWorkLang split out** into [baryonlabs/openworklang](https://github.com/baryonlabs/openworklang) (pure `.work` parser/compiler → Work IR dict + LinkML, CLI, spec, tests), vendored as the `vendor/openworklang` submodule; `core/openworklang` is now a thin adapter.
+- GitHub Pages landing page (`docs/index.html`, SEO metadata, sitemap), repository About/topics.
+- LICENSE (MIT, © Baryon Labs, Seungwoo Hong), CONTRIBUTING.md (DCO), reference-papers section, adoption-case call (hello@baryon.ai).
+
 ## v0.2.0 — 2026-08-29
 
 Human-defined WHAT, compiler-defined HOW — the full loop, measured.

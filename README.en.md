@@ -429,6 +429,8 @@ work quality_analyst {
 Human Intent ──▶ OpenWorkLang (.work) ──▶ OpenWorkLang Compiler ──▶ Work IR (work.yaml) ──▶ Durable Runtime
 ```
 
+The language itself (parser, compiler, spec) is developed in its own repository, **[baryonlabs/openworklang](https://github.com/baryonlabs/openworklang)**, vendored here as the `vendor/openworklang` submodule (`git clone --recurse-submodules …` or `git submodule update --init`). `core/openworklang` is a thin adapter that binds that package to the runtime's Work IR model.
+
 Compile from the command line:
 
 ```bash
@@ -576,6 +578,7 @@ openworkcompiler/
 ├── agents/                      # Guide and measurement fleet specs
 ├── docs/                        # Specifications, architecture, usage guides, and diagrams
 ├── .agents/skills/              # Codex skills: $ow-define (WHAT, grilling interview) · $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench · grill-me/grilling (mattpocock/skills, skills-lock.json)
+├── vendor/openworklang/         # submodule: the OpenWorkLang language (baryonlabs/openworklang)
 ├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + loader + benchmark (token ledger) + front-agent runner
 ├── examples/cases/              # four business cases: beginner materials → $ow-define → agent run → compile → bench (transcripts · traces · builds)
 ├── tests/                       # Complete pytest suite (154 tests)
@@ -632,10 +635,41 @@ OpenWorkCompiler builds upon and integrates with the following open-source proje
 | **LLM Tracing & Evals** | **Langfuse** | [langfuse/langfuse](https://github.com/langfuse/langfuse) | Open-source LLM engineering & observability platform |
 | **Observability** | **OpenTelemetry** | [opentelemetry.io](https://opentelemetry.io) | Cloud-native observability framework for telemetry data |
 | **Durable Execution** | **Temporal** | [temporalio/temporal](https://github.com/temporalio/temporal) | Durable state machine & workflow execution engine |
+| **Agent programming language** | **OpenWorkLang** | [baryonlabs/openworklang](https://github.com/baryonlabs/openworklang) | `.work` parser/compiler — developed separately, vendored here as the `vendor/openworklang` submodule |
 | **Compiler Research** | **LLMCompiler** | [SqueezeAILab/LLMCompiler](https://github.com/SqueezeAILab/LLMCompiler) | ICML 2024 compiler for parallel LLM function calling |
 
 ---
 
+## Reference papers (prior work on work compilation)
+
+OpenWorkCompiler's direction — "the LLM compiles the work, execution is deterministic" — builds on the following research. Notes and PDFs live in [`docs/related-work/`](docs/related-work/).
+
+| Paper | Authors / lab | Links | Relation to OpenWorkCompiler |
+| :--- | :--- | :--- | :--- |
+| **An LLM Compiler for Parallel Function Calling (LLMCompiler)**, ICML 2024 | Kim, Moon, Tabrizi, Lee, Mahoney, Keutzer, Gholami — UC Berkeley SqueezeAI Lab | [arXiv:2312.04511](https://arxiv.org/abs/2312.04511) · [code](https://github.com/SqueezeAILab/LLMCompiler) | Plans function calls as a DAG and executes them in parallel (3.7× lower latency, 6.7× lower cost). Origin of the Work IR `dependencies` DAG and execution-order inference |
+| **Blueprint First, Model Second** (2025) | A framework that fixes the execution blueprint before the model runs | [arXiv:2508.02721](https://arxiv.org/abs/2508.02721) | Decoupling reasoning (LLM) from execution (deterministic engine) — the basis of `BEHAVIOR.md` → invariants → runtime judges |
+| **The New Compiler Stack** — survey on LLM + compiler synergy (2026) | Survey | [arXiv:2601.02045](https://arxiv.org/abs/2601.02045) | Background for framing the 8-tier executor lowering (code/rule/ml/slm/llm) as a compiler problem |
+| **ACCLAIM: Agentic Code Optimization via Compiler-LLM Cooperation** (2026) | Mikek, Vashchilenko, Lu, Xu — Amazon Science | [arXiv:2604.04238](https://arxiv.org/abs/2604.04238) | LLM output checked by a compiler toolchain (translation validation) — the model for the benchmark's output-reproduction check and the Oracle Gate |
+| **FlowCompile** (2026) | Li, Gan et al. — UMass Amherst Embodied AGI Lab | [arXiv:2605.13647](https://arxiv.org/abs/2605.13647) | Global compile-time optimization of structured LLM workflows via static analysis (up to 6.4×) — rationale for the DeterminismAnalyzer / PredictionAnalyzer / SLMAnalyzer trio |
+
+---
+
+## We are collecting adoption cases
+
+If you have applied OpenWorkCompiler to a real task — however small — we want to hear about it: what the WHAT looked like (`TASK.md` / `BEHAVIOR.md`), what the compiler lowered to code / rule / ml / slm, the before/after tokens and time from `BENCHMARK.md`, and what still escalates to an agent. With permission (anonymized on request) cases are featured in `examples/cases/`.
+
+**Contact: [hello@baryon.ai](mailto:hello@baryon.ai)** · or open an [issue](https://github.com/baryonlabs/workcompiler/issues) with the `case` label
+
+## Contributing
+
+Bug reports, feature requests, code, docs, translations and contributions to the `.work` language ([baryonlabs/openworklang](https://github.com/baryonlabs/openworklang)) are welcome. Setup, PR rules and the DCO sign-off are in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+
+```bash
+git clone --recurse-submodules https://github.com/baryonlabs/workcompiler.git
+python3 -m pip install -e ".[dev]" && python3 -m pytest -q
+git commit -s -m "feat: …"        # DCO sign-off
+```
+
 ## License
 
-MIT
+[MIT License](LICENSE) — Copyright © 2026 **Baryon Labs, Seungwoo Hong**. Contributors retain copyright to their contributions and license them to the project under the same MIT terms ([DCO](https://developercertificate.org/)).

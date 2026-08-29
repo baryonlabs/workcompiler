@@ -455,6 +455,8 @@ work quality_analyst {
 Human Intent ──▶ OpenWorkLang (.work) ──▶ OpenWorkLang Compiler ──▶ Work IR (work.yaml) ──▶ Durable Runtime
 ```
 
+언어(파서·컴파일러·명세)는 별도 저장소 **[baryonlabs/openworklang](https://github.com/baryonlabs/openworklang)** 에서 개발되며, 이 저장소에는 `vendor/openworklang` 서브모듈로 들어옵니다 (`git clone --recurse-submodules …` 또는 `git submodule update --init`). `core/openworklang`은 그 패키지를 런타임의 Work IR 모델에 연결하는 얇은 어댑터입니다.
+
 명령줄에서 바로 컴파일할 수 있습니다:
 
 ```bash
@@ -602,6 +604,7 @@ openworkcompiler/
 ├── agents/                      # 가이드 및 측정 에이전트 규격
 ├── docs/                        # 명세서, 아키텍처, 사용 가이드, 다이어그램
 ├── .agents/skills/              # Codex 스킬: $ow-define(WHAT, grilling 인터뷰) · $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench · grill-me/grilling(mattpocock/skills, skills-lock.json)
+├── vendor/openworklang/         # 서브모듈: OpenWorkLang 언어 (baryonlabs/openworklang)
 ├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + 로더 + 벤치마크(토큰 원장) + 앞단 에이전트 실행
 ├── examples/cases/              # 4가지 업무 사례: 초보자 자료 → $ow-define → 에이전트 수행 → 컴파일 → 벤치 (transcript · 트레이스 · 빌드 포함)
 ├── tests/                       # pytest 테스트 수트 (154개 테스트 전원 통과)
@@ -658,10 +661,41 @@ OpenWorkCompiler는 다음 오픈소스 프로젝트, 표준 규격 및 연구 �
 | **LLM 트레이싱 & 평가** | **Langfuse** | [langfuse/langfuse](https://github.com/langfuse/langfuse) | 오픈소스 LLM 엔지니어링 및 관측 플랫폼 |
 | **관측성** | **OpenTelemetry** | [opentelemetry.io](https://opentelemetry.io) | 텔레메트리 데이터를 위한 클라우드 네이티브 관측 프레임워크 |
 | **지속성 실행 엔진** | **Temporal** | [temporalio/temporal](https://github.com/temporalio/temporal) | 내결함성 지속성 상태 머신 및 워크플로우 실행 엔진 |
+| **에이전트 프로그래밍 언어** | **OpenWorkLang** | [baryonlabs/openworklang](https://github.com/baryonlabs/openworklang) | `.work` 언어 파서·컴파일러 — 이 저장소의 `vendor/openworklang` 서브모듈로 별도 개발 |
 | **컴파일러 선행 연구** | **LLMCompiler** | [SqueezeAILab/LLMCompiler](https://github.com/SqueezeAILab/LLMCompiler) | ICML 2024 병렬 LLM 함수 호출 컴파일러 연구 |
 
 ---
 
+## 참고 논문 (Work Compilation 선행 연구)
+
+OpenWorkCompiler의 "LLM이 업무를 컴파일하고, 실행은 결정론적으로" 방향은 아래 연구 흐름 위에 있습니다. 정리 노트와 PDF는 [`docs/related-work/`](docs/related-work/)에 있습니다.
+
+| 연구 | 저자 / 기관 | 링크 | OpenWorkCompiler와의 관계 |
+| :--- | :--- | :--- | :--- |
+| **An LLM Compiler for Parallel Function Calling (LLMCompiler)**, ICML 2024 | Kim, Moon, Tabrizi, Lee, Mahoney, Keutzer, Gholami — UC Berkeley SqueezeAI Lab | [arXiv:2312.04511](https://arxiv.org/abs/2312.04511) · [code](https://github.com/SqueezeAILab/LLMCompiler) | 함수 호출을 DAG로 계획·병렬 실행(지연 3.7×↓, 비용 6.7×↓). Work IR의 `dependencies` DAG와 실행 순서 추론의 출발점 |
+| **Blueprint First, Model Second** (2025) | 실행 청사진을 모델 실행 전에 고정하는 프레임워크 | [arXiv:2508.02721](https://arxiv.org/abs/2508.02721) | 추론(LLM)과 실행(결정론 엔진)의 분리 — `BEHAVIOR.md` → invariants → 런타임 판정의 근거 |
+| **The New Compiler Stack** — LLM+컴파일러 시너지 서베이 (2026) | 서베이 | [arXiv:2601.02045](https://arxiv.org/abs/2601.02045) | 8단계 executor 하위 통합(code/rule/ml/slm/llm)을 컴파일러 관점으로 정리한 배경 |
+| **ACCLAIM: Agentic Code Optimization via Compiler-LLM Cooperation** (2026) | Mikek, Vashchilenko, Lu, Xu — Amazon Science | [arXiv:2604.04238](https://arxiv.org/abs/2604.04238) | LLM 출력이 컴파일러 도구체인(translation validation)으로 검증되는 구조 — 벤치마크의 "결과 재현" 검사와 Oracle Gate의 모델 |
+| **FlowCompile** (2026) | Li, Gan et al. — UMass Amherst Embodied AGI Lab | [arXiv:2605.13647](https://arxiv.org/abs/2605.13647) | 구조화된 LLM 워크플로우의 정적 분석 기반 전역 컴파일 최적화(최대 6.4×) — DeterminismAnalyzer / PredictionAnalyzer / SLMAnalyzer 3대 분석기의 설계 근거 |
+
+---
+
+## 적용 사례를 수집하고 있습니다
+
+OpenWorkCompiler를 실제 업무에 적용한 사례를 모으고 있습니다 — 작은 업무라도 좋습니다. WHAT(`TASK.md` / `BEHAVIOR.md`)이 어떻게 생겼는지, 컴파일러가 무엇을 code / rule / ml / slm으로 내렸는지, `BENCHMARK.md`의 전후 토큰·시간, 아직 에이전트로 남는 부분이 무엇인지 알려 주세요. 허락하에(요청 시 익명으로) `examples/cases/`에 소개합니다.
+
+**문의: [hello@baryon.ai](mailto:hello@baryon.ai)** · 또는 `case` 라벨로 [이슈](https://github.com/baryonlabs/workcompiler/issues) 등록
+
+## 기여하기
+
+버그·기능 제안·코드·문서·번역, 그리고 `.work` 언어([baryonlabs/openworklang](https://github.com/baryonlabs/openworklang)) 기여를 환영합니다. 개발 환경, PR 규칙, DCO 서명 절차는 **[CONTRIBUTING.md](CONTRIBUTING.md)** 를 참조하세요.
+
+```bash
+git clone --recurse-submodules https://github.com/baryonlabs/workcompiler.git
+python3 -m pip install -e ".[dev]" && python3 -m pytest -q
+git commit -s -m "feat: …"        # DCO sign-off
+```
+
 ## 라이선스
 
-MIT
+[MIT License](LICENSE) — Copyright © 2026 **Baryon Labs, Seungwoo Hong**. 기여자는 자신의 기여분 저작권을 보유하며 같은 MIT 조건으로 프로젝트에 제공합니다([DCO](https://developercertificate.org/)).
