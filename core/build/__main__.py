@@ -134,7 +134,10 @@ def main(argv=None) -> int:
     e.set_defaults(func=cmd_run)
 
     args = parser.parse_args(argv)
-    return args.func(args)
+    from core import telemetry
+    telemetry.notice("core.build")
+    with telemetry.span("cli.core.build", command=getattr(args, "command", "")):
+        return args.func(args)
 
 
 if __name__ == "__main__":

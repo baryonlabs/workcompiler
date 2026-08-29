@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use OpenWorkCompiler in research, please cite it as below."
+title: "OpenWorkCompiler: compiling verified AI agent work into deterministic execution"
+authors:
+  - family-names: Hong
+    given-names: Seungwoo
+    affiliation: Baryon Labs
+type: software
+version: 0.2.0
+date-released: 2026-08-29
+repository-code: https://github.com/baryonlabs/workcompiler
+url: https://baryonlabs.github.io/workcompiler/
+license: MIT
+keywords:
+  - work compiler
+  - AI agents
+  - LLM compiler
+  - deterministic execution
+  - small language models
+  - OpenWorkLang

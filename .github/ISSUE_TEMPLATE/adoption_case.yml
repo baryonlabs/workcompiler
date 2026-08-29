@@ -1,0 +1,18 @@
+name: Adoption case
+description: Tell us about a real task you compiled with OpenWorkCompiler (anonymized is fine)
+labels: [case]
+body:
+  - type: markdown
+    attributes:
+      value: We are collecting real-world cases. Share what you can; with your permission we feature cases in `examples/cases/`. Prefer email? hello@baryon.ai
+  - type: input
+    attributes: {label: Task in one sentence, placeholder: "Monthly vendor invoice reconciliation for the finance team"}
+    validations: {required: true}
+  - type: textarea
+    attributes: {label: The WHAT, description: What did TASK.md / BEHAVIOR.md pin down? Which rules mattered?}
+  - type: textarea
+    attributes: {label: What compiled to what, description: Which steps became code / rule / ml / slm, which still escalate to an agent?}
+  - type: textarea
+    attributes: {label: Numbers, description: Before/after tokens and time from BENCHMARK.md or RUN_REPORT.md; models used.}
+  - type: dropdown
+    attributes: {label: May we feature this case?, options: ["Yes, as is", "Yes, anonymized", "No, internal only"]}

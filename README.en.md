@@ -4,6 +4,15 @@
 
 # OpenWorkCompiler
 
+<p align="center">
+  <a href="https://github.com/baryonlabs/workcompiler/actions/workflows/ci.yml"><img src="https://github.com/baryonlabs/workcompiler/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/baryonlabs/workcompiler/releases/latest"><img src="https://img.shields.io/github/v/release/baryonlabs/workcompiler?display_name=tag" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
+  <a href="https://baryonlabs.github.io/workcompiler/"><img src="https://img.shields.io/badge/site-baryonlabs.github.io%2Fworkcompiler-0b7285" alt="Website"></a>
+  <a href="https://github.com/baryonlabs/openworklang"><img src="https://img.shields.io/badge/OpenWorkLang-submodule-6f42c1" alt="OpenWorkLang"></a>
+</p>
+
 ![OpenWorkCompiler turns non-deterministic agent work into repeatable deterministic execution — (A) agent-centric run, (B) compiled deterministic run, (C) before/after, (D) efficiency gains](docs/banner.png)
 
 **The execution layer for AI work.**
@@ -279,7 +288,7 @@ The recording script is [`docs/demo/openworkcompiler-codex-demo.tape`](docs/demo
    requires_openai_auth = true      # reuse the ChatGPT login token as-is
    ```
 
-2. Start the proxy and launch Codex from the repository root; the skills load from `.agents/skills/` automatically.
+2. Start the proxy and launch Codex from the repository root; the skills load from `.agents/skills/` automatically. Telemetry (OpenTelemetry-style spans) is **on by default and local-only** (`build/telemetry/spans.jsonl`, metadata only) and announced at startup — opt-out and OTLP export: [docs/TELEMETRY.md](docs/TELEMETRY.md).
 
    ```bash
    python3 -m uvicorn adapters.proxy.server:app --port 8787 &
@@ -589,6 +598,26 @@ openworkcompiler/
 
 ## Usage & Demonstration
 
+### Install (one line)
+
+```bash
+pipx install "git+https://github.com/baryonlabs/workcompiler.git"    # isolated install → the `owc` command
+# or: pip install "git+https://github.com/baryonlabs/workcompiler.git"
+owc version
+```
+
+`owc` covers the proxy, compiling, building, benchmarking and running (the OpenWorkLang submodule is installed as a dependency):
+
+```bash
+owc proxy --port 8787                                   # zero-code proxy (localhost only)
+owc compile examples/quality_analysis.work              # .work → build/quality_analyst/
+owc build from-trace trace.json --target my-work        # captured session → build tree
+owc build bench build/my_work                           # agent vs. build: outputs · tokens · speed
+owc build run build/my_work --request "…" --escalate codex   # front agent + build
+```
+
+The Codex skills (`$ow-*`) load when Codex runs in a directory containing `.agents/skills/` — clone the repository: `git clone --recurse-submodules https://github.com/baryonlabs/workcompiler.git`. Development install: `pip install -e ".[dev]"`; OTLP telemetry export: `".[telemetry]"` (local file by default, see [docs/TELEMETRY.md](docs/TELEMETRY.md)).
+
 For complete API documentation and a step-by-step developer guide, see **[Usage Guide](docs/usage.md)**.
 
 ### Pipeline demo (Python script run)
@@ -661,6 +690,8 @@ If you have applied OpenWorkCompiler to a real task — however small — we wan
 **Contact: [hello@baryon.ai](mailto:hello@baryon.ai)** · or open an [issue](https://github.com/baryonlabs/workcompiler/issues) with the `case` label
 
 ## Contributing
+
+The open-source project checklist (license, CoC, security, CI, templates, telemetry disclosure, …) and its status live in [docs/OSS-CHECKLIST.md](docs/OSS-CHECKLIST.md).
 
 Bug reports, feature requests, code, docs, translations and contributions to the `.work` language ([baryonlabs/openworklang](https://github.com/baryonlabs/openworklang)) are welcome. Setup, PR rules and the DCO sign-off are in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 

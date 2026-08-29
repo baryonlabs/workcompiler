@@ -1,0 +1,15 @@
+name: Bug report
+description: Something is wrong in the proxy, compiler, build backend, benchmark or a skill
+labels: [bug]
+body:
+  - type: textarea
+    attributes: {label: What happened, description: What did you run and what did you see?}
+    validations: {required: true}
+  - type: textarea
+    attributes: {label: What you expected}
+  - type: textarea
+    attributes:
+      label: Trace / build / report
+      description: Attach or paste the relevant `build/<work>/trace.json`, `BENCHMARK.md`, `RUN_REPORT.md` or proxy log (redact secrets and customer data).
+  - type: input
+    attributes: {label: Version, placeholder: "v0.2.0 / commit sha, Python version, Codex version"}

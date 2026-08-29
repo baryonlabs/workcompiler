@@ -22,6 +22,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from core.build.bench import BENCH_ACTIVE_ENV, _clip, _is_self_referential, _normalizer, append_ledger
 from core.build.loader import load_build_into_engine
+from core import telemetry
 from core.work_ir import TraceIR, load_work_ir, normalize_tool_output
 
 Escalator = Callable[[str, Dict[str, Any]], Dict[str, Any]]   # (prompt, context) -> {"output", "tokens", "files"}
@@ -255,7 +256,9 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
             os.environ[BENCH_ACTIVE_ENV] = "1"
             try:
                 # only bound parameters are passed: recorded cmd/patch must be re-rendered, not reused verbatim
-                result = engine.get_executor(tier).execute(action, dict(values))
+                with telemetry.span("run.step", work=work_ir.work, step=step.step_id, action=action, tier=tier, mode="code") as tspan:
+                    result = engine.get_executor(tier).execute(action, dict(values))
+                    tspan["success"] = bool(result.success)
             finally:
                 os.environ.pop(BENCH_ACTIVE_ENV, None)
             elapsed = (time.perf_counter() - t0) * 1000.0
@@ -278,7 +281,10 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
             continue
         prompt = _escalation_prompt(root, action, values, report.steps, recorded_example)
         try:
-            res = backend(prompt, {"action": action, "params": values})
+            with telemetry.span("run.escalation", work=work_ir.work, step=step.step_id, action=action, tier=tier,
+                                backend=escalate) as tspan:
+                res = backend(prompt, {"action": action, "params": values})
+                tspan.update({"model": res.get("model"), "tokens": res.get("tokens", 0), "exit_code": res.get("exit_code", 0)})
             ok = res.get("exit_code", 0) == 0
             report.steps.append(RunStep(step.step_id, action, f"escalated:{escalate}", int(res.get("tokens", 0)),
                                         float(res.get("latency_ms", 0.0)), ok, str(res.get("output", "")),
@@ -288,6 +294,9 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
         except Exception as exc:  # noqa: BLE001
             report.steps.append(RunStep(step.step_id, action, f"escalated:{escalate}", 0, 0.0, False, "", f"{reason}; {exc}"))
 
+    t = report.totals()
+    telemetry.event("run.report", work=work_ir.work, tokens=t["tokens"], latency_ms=t["latency_ms"], code_steps=t["code_steps"],
+                    escalated_steps=t["escalated_steps"], params=json.dumps(values, ensure_ascii=False)[:200])
     out = Path(out_dir) if out_dir else root / "runs"
     out.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S")

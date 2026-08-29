@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from core.build.loader import load_build_into_engine
+from core import telemetry
 from core.work_ir import TraceIR, TraceStep, load_work_ir, normalize_tool_output
 
 
@@ -348,7 +349,11 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
             t0 = time.perf_counter()
             os.environ[BENCH_ACTIVE_ENV] = "1"
             try:
-                result = engine.get_executor(tier).execute(action, dict(inputs))
+                with telemetry.span("bench.step", work=work_ir.work, run_id=trace.run_id, step=step.step_id,
+                                    action=action, tier=tier, recorded_model=_step_model(step),
+                                    recorded_tokens=rec_tokens) as tspan:
+                    result = engine.get_executor(tier).execute(action, dict(inputs))
+                    tspan["success"] = bool(result.success)
             finally:
                 os.environ.pop(BENCH_ACTIVE_ENV, None)
             elapsed = (time.perf_counter() - t0) * 1000.0
@@ -391,6 +396,10 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
                                          recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step)))
 
     report.actions = [benches[a] for a in work_ir.actions]
+    t = report.totals()
+    telemetry.event("bench.report", work=work_ir.work, run_id=trace.run_id, recorded_tokens=t["recorded_tokens"],
+                    compiled_tokens=t["compiled_tokens"], token_savings_pct=t["token_savings_pct"],
+                    speedup_x=t["speedup_x"], outputs_matched=t["outputs_matched"], outputs_checked=t["outputs_checked"])
 
     for step in reversed(trace.steps):
         out = step.output if isinstance(step.output, dict) else {}

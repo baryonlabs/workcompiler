@@ -32,9 +32,12 @@ from starlette.responses import Response
 
 from adapters.proxy.interceptor import TrajectoryInterceptor, responses_object_from_sse
 from core.build.emitter import emit_build
+from core import telemetry
 from adapters.agentbehavior import parse_behavior_md
 from core.compiler import WorkCompiler
 from core.work_ir import save_work_ir, WorkIR
+
+telemetry.notice("proxy")
 
 app = FastAPI(
     title="OpenWorkCompiler Zero-Code Agent Proxy",
@@ -199,6 +202,8 @@ async def trigger_work_compilation(
 
     interceptor = active_interceptors[run_id]
     trace_ir = interceptor.finalize_trace(status="success")
+    telemetry.event("proxy.compile", run_id=run_id, target=target_name, steps=len(trace_ir.steps),
+                    build_dir=bool(request_data.get("build_dir")))
 
     # Discover behaviors from workspace + custom header
     behaviors = discover_behavior_contracts()
@@ -336,7 +341,13 @@ async def _relay_responses_api(request: Request, upstream_url: str) -> Response:
                     except Exception:
                         final_response = None
                 if final_response is not None:
-                    interceptor.intercept_responses_request_response(payload, final_response, duration_ms=duration_ms)
+                    step = interceptor.intercept_responses_request_response(payload, final_response, duration_ms=duration_ms)
+                    usage = step.token_usage
+                    telemetry.event("proxy.turn", run_id=interceptor.run_id, source_agent=interceptor.source_agent,
+                                    action=step.action, model=getattr(step, "model", ""),
+                                    prompt_tokens=usage.prompt_tokens, completion_tokens=usage.completion_tokens,
+                                    total_tokens=usage.total_tokens, cached_tokens=getattr(step, "cached_tokens", 0),
+                                    latency_ms=round(duration_ms, 1), upstream_status=upstream_response.status_code)
 
     return StreamingResponse(
         relay(),

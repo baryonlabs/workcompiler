@@ -6,6 +6,9 @@
 - **OpenWorkLang split out** into [baryonlabs/openworklang](https://github.com/baryonlabs/openworklang) (pure `.work` parser/compiler → Work IR dict + LinkML, CLI, spec, tests), vendored as the `vendor/openworklang` submodule; `core/openworklang` is now a thin adapter.
 - GitHub Pages landing page (`docs/index.html`, SEO metadata, sitemap), repository About/topics.
 - LICENSE (MIT, © Baryon Labs, Seungwoo Hong), CONTRIBUTING.md (DCO), reference-papers section, adoption-case call (hello@baryon.ai).
+- **Telemetry**: OpenTelemetry-style spans (proxy turns, compiles, bench/run steps, CLIs), on by default, local JSONL by default, OTLP via the `telemetry` extra; `docs/TELEMETRY.md` documents the opt-out.
+- `owc` console script (`pipx install git+https://github.com/baryonlabs/workcompiler.git`): proxy · compile · build (from-trace / bench / run); openworklang declared as a git dependency.
+- OSS hygiene: CI (GitHub Actions, Python 3.10–3.13), issue/PR templates, CODE_OF_CONDUCT, SECURITY, CITATION.cff, CODEOWNERS, .editorconfig, README badges, `docs/OSS-CHECKLIST.md`.
 
 ## v0.2.0 — 2026-08-29
 

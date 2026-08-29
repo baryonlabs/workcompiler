@@ -89,7 +89,10 @@ def main(argv: list[str] | None = None) -> int:
     c.set_defaults(func=_cmd_compile)
 
     args = parser.parse_args(argv)
-    return args.func(args)
+    from core import telemetry
+    telemetry.notice("core.openworklang")
+    with telemetry.span("cli.core.openworklang", command=getattr(args, "command", "")):
+        return args.func(args)
 
 
 if __name__ == "__main__":

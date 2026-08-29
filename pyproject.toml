@@ -11,14 +11,30 @@ license = {text = "MIT"}
 authors = [{name = "Baryon Labs, Seungwoo Hong", email = "hello@baryon.ai"}]
 dependencies = [
   "fastapi>=0.110",
+  "uvicorn>=0.23",
+  "httpx>=0.27",
   "pydantic>=2.0",
   "PyYAML>=6.0",
+  "openworklang @ git+https://github.com/baryonlabs/openworklang.git",
 ]
+
+[project.scripts]
+owc = "core.cli:main"
+
+[project.urls]
+Homepage = "https://baryonlabs.github.io/workcompiler/"
+Repository = "https://github.com/baryonlabs/workcompiler"
+Changelog = "https://github.com/baryonlabs/workcompiler/blob/main/CHANGELOG.md"
+Issues = "https://github.com/baryonlabs/workcompiler/issues"
 
 [project.optional-dependencies]
 dev = [
-  "httpx>=0.27",
   "pytest>=8.0",
+]
+telemetry = [
+  "opentelemetry-api>=1.25",
+  "opentelemetry-sdk>=1.25",
+  "opentelemetry-exporter-otlp-proto-http>=1.25",
 ]
 
 [tool.pytest.ini_options]

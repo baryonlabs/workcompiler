@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Share an adoption case (email)
+    url: mailto:hello@baryon.ai
+    about: Applied OpenWorkCompiler to a real task? We are collecting cases — email us or use the "Adoption case" template.
+  - name: OpenWorkLang (the .work language)
+    url: https://github.com/baryonlabs/openworklang/issues
+    about: Parser / compiler / spec issues for the .work language belong in its own repository.

@@ -140,7 +140,10 @@
 
 <section id="start">
   <h2>시작하기</h2>
-<pre><code># 1. 프록시 + Codex (ChatGPT 로그인 그대로, 코드 수정 없음)
+<pre><code># 0. 한 줄 설치 (pipx) → owc 명령
+pipx install "git+https://github.com/baryonlabs/workcompiler.git" &amp;&amp; owc version
+
+# 1. 프록시 + Codex (ChatGPT 로그인 그대로, 코드 수정 없음)
 git clone --recurse-submodules https://github.com/baryonlabs/workcompiler.git &amp;&amp; cd workcompiler
 python3 -m uvicorn adapters.proxy.server:app --port 8787 &amp;
 codex                    # $ow-define · $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench

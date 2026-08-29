@@ -4,6 +4,15 @@
 
 # OpenWorkCompiler
 
+<p align="center">
+  <a href="https://github.com/baryonlabs/workcompiler/actions/workflows/ci.yml"><img src="https://github.com/baryonlabs/workcompiler/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/baryonlabs/workcompiler/releases/latest"><img src="https://img.shields.io/github/v/release/baryonlabs/workcompiler?display_name=tag" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
+  <a href="https://baryonlabs.github.io/workcompiler/"><img src="https://img.shields.io/badge/site-baryonlabs.github.io%2Fworkcompiler-0b7285" alt="Website"></a>
+  <a href="https://github.com/baryonlabs/openworklang"><img src="https://img.shields.io/badge/OpenWorkLang-submodule-6f42c1" alt="OpenWorkLang"></a>
+</p>
+
 ![OpenWorkCompiler는 비결정형 업무를 반복 가능한 결정형 실행으로 바꾸도록 도와줍니다 — (A) Agent 중심 비결정형 수행, (B) 컴파일 후 결정형 수행, (C) Before/After, (D) 효율성 향상 포인트](docs/banner.png)
 
 **AI 작업을 위한 실행 레이어 (The execution layer for AI work)**
@@ -305,7 +314,7 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
    requires_openai_auth = true      # ChatGPT 로그인 토큰을 그대로 사용
    ```
 
-2. 프록시를 띄우고 저장소 루트에서 Codex를 실행합니다. 스킬은 `.agents/skills/`에서 자동으로 로드됩니다.
+2. 프록시를 띄우고 저장소 루트에서 Codex를 실행합니다. 스킬은 `.agents/skills/`에서 자동으로 로드됩니다. 텔레메트리(OpenTelemetry 스타일 span)는 **기본 켜짐·로컬 파일 전용**(`build/telemetry/spans.jsonl`, 메타데이터만)이며 시작 시 안내가 출력됩니다 — 끄는 법·OTLP 내보내기는 [docs/TELEMETRY.md](docs/TELEMETRY.md).
 
    ```bash
    python3 -m uvicorn adapters.proxy.server:app --port 8787 &
@@ -615,6 +624,26 @@ openworkcompiler/
 
 ## 사용 가이드 & 데모 실행
 
+### 설치 (한 줄)
+
+```bash
+pipx install "git+https://github.com/baryonlabs/workcompiler.git"    # 격리 설치 → `owc` 명령
+# 또는: pip install "git+https://github.com/baryonlabs/workcompiler.git"
+owc version
+```
+
+`owc` 하나로 프록시·컴파일·빌드·벤치·실행을 씁니다 (서브모듈 OpenWorkLang은 의존성으로 함께 설치됩니다):
+
+```bash
+owc proxy --port 8787                                   # Zero-code 프록시 (localhost 전용)
+owc compile examples/quality_analysis.work              # .work → build/quality_analyst/
+owc build from-trace trace.json --target my-work        # 캡처한 세션 → 빌드 트리
+owc build bench build/my_work                           # 에이전트 vs 빌드: 결과 · 토큰 · 속도
+owc build run build/my_work --request "…" --escalate codex   # 앞단 에이전트 + 빌드
+```
+
+Codex 스킬(`$ow-*`)은 저장소를 클론해 `.agents/skills/`가 있는 디렉터리에서 Codex를 실행할 때 로드됩니다: `git clone --recurse-submodules https://github.com/baryonlabs/workcompiler.git`. 개발용 설치는 `pip install -e ".[dev]"`, OTLP 텔레메트리 내보내기는 `".[telemetry]"`(기본은 로컬 파일, [docs/TELEMETRY.md](docs/TELEMETRY.md)).
+
 전체 파이프라인 개발자 가이드 및 상세 사용법은 **[사용 가이드(docs/usage.md)](docs/usage.md)**를 참조하세요.
 
 ### 파이프라인 데모 (Python 스크립트 실행 화면)
@@ -687,6 +716,8 @@ OpenWorkCompiler를 실제 업무에 적용한 사례를 모으고 있습니다 
 **문의: [hello@baryon.ai](mailto:hello@baryon.ai)** · 또는 `case` 라벨로 [이슈](https://github.com/baryonlabs/workcompiler/issues) 등록
 
 ## 기여하기
+
+오픈소스 운영 체크리스트(라이선스·CoC·보안·CI·템플릿·텔레메트리 고지 등)와 상태는 [docs/OSS-CHECKLIST.md](docs/OSS-CHECKLIST.md)에 있습니다.
 
 버그·기능 제안·코드·문서·번역, 그리고 `.work` 언어([baryonlabs/openworklang](https://github.com/baryonlabs/openworklang)) 기여를 환영합니다. 개발 환경, PR 규칙, DCO 서명 절차는 **[CONTRIBUTING.md](CONTRIBUTING.md)** 를 참조하세요.
 
