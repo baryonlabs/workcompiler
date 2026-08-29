@@ -12,6 +12,44 @@ Let AI do the work once. OpenWorkflow learns how to run it reliably thereafter.
 
 ---
 
+## Human / AI split: humans own the WHAT, the compiler owns the HOW
+
+```mermaid
+flowchart LR
+    subgraph HUMAN["Human — what (WHAT) · whether it is right (verification)"]
+        direction TB
+        H1["① Define the WHAT<br/>$ow-define → grilling interview<br/>TASK.md · BEHAVIOR.md<br/>(goal · inputs · rules · acceptance)"]
+        H2["③ Confirm quality<br/>approve that the result is the WHAT<br/>(rules harden)"]
+        H4["⑤ Review / edit the HOW<br/>adjust the code/ml/slm/agent split<br/>and escalation limits in .work"]
+    end
+
+    subgraph AI["AI — how (HOW) · execution"]
+        direction TB
+        A1["② Agents solve it once<br/>Codex runs TASK.md<br/>proxy captures the trajectory<br/>(demonstrates the quality)"]
+        A2["④ LLM compile<br/>trace → Work IR → build/&lt;work&gt;/<br/>HOW codified as OpenWorkLang (.work)"]
+        A3["⑥ Hybrid execution<br/>front agent: bind params · judge exceptions<br/>code/rule · ml/slm: deterministic, 0 tokens<br/>only synthesized steps escalate to an agent"]
+    end
+
+    H1 -->|"TASK.md + BEHAVIOR.md"| A1
+    A1 -->|"deliverables + trace"| H2
+    H2 -->|"approved session"| A2
+    A2 -->|"&lt;work&gt;.work · PARAMS.json · handlers/ · prompts/"| H4
+    H4 -->|"recompile"| A3
+    A3 -.->|"quality signals · new traces (train SLM candidates → shrink the agent's share)"| A2
+```
+
+| Role | Human | AI |
+| :-- | :-- | :-- |
+| Define | **WHAT** — goal, inputs, rules, acceptance criteria as sentences (`$ow-define`) | — |
+| First run | — | agents solve it once and **demonstrate the quality** (`codex exec`, captured by the proxy) |
+| Verify | **approve** that the result's quality equals the WHAT | — |
+| Codify | review / edit the split and limits in `.work` | **LLM compile** — the verified session becomes the **HOW** (OpenWorkLang): code / rule / ml / slm / agent |
+| Execute | handle only escalated exceptions | **efficiency** (deterministic · SLM, zero-to-few tokens) + **flexibility** (a front agent binds parameters and judges exceptions) |
+
+Measured: on the same renewal-proposal task the compiled build produced identical deliverables with **−85%** tokens, **7.4×** faster than the agent, and the hybrid run for a new customer (CUST-1002) was **2.1×** faster than Codex alone with the agent's share reduced to two synthesized steps ([benchmarks](#30-second-demo-use-it-from-inside-codex)).
+
+---
+
 ## 30-second demo: use it from inside Codex
 
 ![Real recording: inside the Codex TUI, the $ow-compile-work / $ow-traces / $ow-compile-trace skills compile an OpenWorkLang file, list captured sessions, and compile the session itself into work.yaml](docs/demo/openworkflow-codex-demo.gif)

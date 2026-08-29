@@ -12,6 +12,44 @@ AI가 한 번 작업하게 하세요. OpenWorkflow는 이후 작업을 안정적
 
 ---
 
+## 사람과 AI의 역할 분담: WHAT은 사람이, HOW는 컴파일러가
+
+```mermaid
+flowchart LR
+    subgraph HUMAN["사람 — 무엇을(WHAT) · 맞는지(검증)"]
+        direction TB
+        H1["① WHAT 정의<br/>$ow-define → grilling 인터뷰<br/>TASK.md · BEHAVIOR.md<br/>(목표 · 입력 · 규칙 · 수용 기준)"]
+        H2["③ 품질 확인<br/>결과가 곧 WHAT임을 승인<br/>(규칙이 굳어짐)"]
+        H4["⑤ HOW 검토·수정<br/>.work 파일에서 code/ml/slm/agent<br/>분할과 한계(escalation) 조정"]
+    end
+
+    subgraph AI["AI — 어떻게(HOW) · 실행"]
+        direction TB
+        A1["② 에이전트가 1회 해결<br/>Codex가 TASK.md 수행<br/>프록시가 trajectory 캡처<br/>(품질을 보여 줌)"]
+        A2["④ LLM 컴파일<br/>trace → Work IR → build/&lt;work&gt;/<br/>HOW를 OpenWorkLang(.work)으로 규정화"]
+        A3["⑥ 하이브리드 실행<br/>앞단 에이전트: 파라미터 바인딩 · 예외 판단<br/>code/rule · ml/slm: 토큰 0 결정론 실행<br/>합성 스텝만 에이전트로 에스컬레이션"]
+    end
+
+    H1 -->|"TASK.md + BEHAVIOR.md"| A1
+    A1 -->|"결과물 + 트레이스"| H2
+    H2 -->|"승인된 세션"| A2
+    A2 -->|"&lt;work&gt;.work · PARAMS.json · handlers/ · prompts/"| H4
+    H4 -->|"재컴파일"| A3
+    A3 -.->|"품질 신호 · 새 트레이스 (SLM 후보 학습 → 에이전트 몫 축소)"| A2
+```
+
+| 역할 | 사람 | AI |
+| :-- | :-- | :-- |
+| 정의 | **WHAT** — 목표·입력·규칙·수용 기준을 문장으로 확정 (`$ow-define`) | — |
+| 첫 수행 | — | 에이전트가 한 번 해결해 **품질을 보여 줌** (`codex exec`, 프록시 캡처) |
+| 검증 | 결과의 품질이 WHAT과 같음을 **승인** | — |
+| 규정화 | `.work`의 분할·한계를 검토·수정 | **LLM 컴파일** — 검증된 세션을 **HOW**(OpenWorkLang)로: code / rule / ml / slm / agent |
+| 실행 | 에스컬레이션된 예외만 처리 | **효율성**(결정론·SLM, 토큰 0~소량) + **유연성**(앞단 에이전트가 파라미터·예외 담당) |
+
+실측: 같은 갱신 제안서 작업에서 컴파일된 빌드는 에이전트 대비 토큰 **−85%**, **7.4×** 빠르게 같은 산출물을 냈고, 새 고객(CUST-1002)에 대한 하이브리드 실행은 Codex 단독 대비 **2.1×** 빠르며 에이전트 몫은 합성 스텝 2개로 줄었습니다 ([벤치마크](#30초-데모-codex-안에서-그대로-쓰기)).
+
+---
+
 ## 30초 데모: Codex 안에서 그대로 쓰기
 
 ![Codex TUI 안에서 $ow-compile-work / $ow-traces / $ow-compile-trace 스킬로 OpenWorkLang 컴파일, 캡처 세션 조회, 세션의 work.yaml 컴파일까지 수행하는 실제 녹화](docs/demo/openworkflow-codex-demo.gif)
