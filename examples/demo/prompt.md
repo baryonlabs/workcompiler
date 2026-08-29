@@ -1,12 +1,13 @@
 # Codex에 입력한 프롬프트
 
-README 상단 데모(`docs/demo/openworkflow-codex-demo.gif`)에서 Codex TUI에 입력한 것은 아래 세 줄이 전부입니다.
+README 상단 데모(`docs/demo/openworkflow-codex-demo.gif`)에서 Codex TUI에 입력한 것은 아래 네 줄이 전부입니다.
 `$ow-…`는 저장소 `.agents/skills/`에 있는 스킬을 명시적으로 호출하는 멘션입니다 (Codex가 리포지토리를 열면 자동 탐지).
 
 ```text
 $ow-compile-work examples/quality_analysis.work
 $ow-traces
 $ow-compile-trace codex-session
+$ow-bench codex-session
 ```
 
 사전 조건은 프록시 한 줄뿐입니다 (Codex는 `~/.codex/config.toml` 또는 별도 `CODEX_HOME`에서 프록시를 provider로 지정 — README "Zero-Code 에이전트 프록시" 참고):
@@ -36,3 +37,9 @@ codex
 - traces 중 steps_count가 가장 큰 run_id 선택
 - `POST /v1/workcompiler/compile` (`target_name`, `output_path: build/<target>.work.yaml`) 실행 후 `{status, work_name, actions, executors_summary}` 표시
 - `build/<target>.work.yaml` 앞 30줄 출력, 셸 스텝이 워크플로우 액션이 됐음을 설명, 끝에 ✅
+
+### 4. `$ow-bench <target>` — [.agents/skills/ow-bench/SKILL.md](../../.agents/skills/ow-bench/SKILL.md)
+
+- `python3 -m core.build bench build/<target>` 실행 — 빌드에 동봉된 `trace.json`(원본 세션)에 대해 code/rule 계층 핸들러를 재실행
+- 액션별 토큰(기록 → 컴파일), 지연, 결과 일치 여부를 표로 출력하고 `BENCHMARK.md`/`benchmark.json` 저장
+- 절감 토큰·속도·재현 수와 아직 에스컬레이션되는 액션을 설명, 끝에 📊

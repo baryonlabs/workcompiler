@@ -449,9 +449,69 @@ def test_compile_emits_build_tree_when_build_dir_given(client, monkeypatch, tmp_
     build = compiled.json()["build"]
     assert build["by_tier"]["code"] == ["handlers/shell_ls.py"]
     handler_py = (tmp_path / "build" / "ls_bot" / "handlers" / "shell_ls.py").read_text()
-    assert "COMMAND = 'ls examples'" in handler_py
+    assert "COMMANDS = ['ls examples']" in handler_py
 
     # build_dir must stay inside the workspace
     escaped = client.post("/v1/workcompiler/compile",
                           json={"run_id": "build-thread", "target_name": "ls-bot", "build_dir": "../outside"})
     assert escaped.status_code == 403
+
+
+def test_tool_outputs_from_next_request_are_attached_to_the_calling_step():
+    interceptor = TrajectoryInterceptor(run_id="tool-results")
+    call = {"type": "custom_tool_call", "name": "exec", "call_id": "call_9",
+            "input": 'await tools.exec_command({ "cmd": "ls examples", "workdir": "/r" })'}
+    interceptor.intercept_responses_request_response(
+        {"input": [{"type": "message", "role": "user", "content": [{"type": "input_text", "text": "list"}]}]},
+        {"id": "r1", "status": "completed", "output": [call], "usage": {"input_tokens": 10, "output_tokens": 2}},
+        duration_ms=1200.0,
+    )
+    interceptor.intercept_responses_request_response(
+        {"input": [{"type": "custom_tool_call_output", "call_id": "call_9", "output": "demo\nquality_analysis.work\n"}]},
+        {"id": "r2", "status": "completed",
+         "output": [{"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "two files"}]}],
+         "usage": {"input_tokens": 12, "output_tokens": 3}},
+        duration_ms=800.0,
+    )
+    first, second = interceptor.steps
+    assert first.action == "shell_ls"
+    assert first.output["tool_result"] == "demo\nquality_analysis.work\n"
+    assert first.output["tool_calls"][0]["result"] == first.output["tool_result"]
+    assert second.action == "respond" and "tool_result" not in second.output
+
+
+def test_codex_code_mode_tool_output_envelope_is_unwrapped():
+    from core.work_ir import normalize_tool_output
+
+    envelope = [
+        {"type": "input_text", "text": "Script completed\nWall time 0.2 seconds\nOutput:\n"},
+        {"type": "input_text", "text": json.dumps({"chunk_id": "e1f6", "exit_code": 0, "output": "line1\nline2\n"})},
+    ]
+    assert normalize_tool_output(envelope) == "line1\nline2\n"
+    assert normalize_tool_output("plain stdout") == "plain stdout"
+    assert normalize_tool_output("Script completed\nOutput:\nraw") == "raw"
+
+
+def test_batched_code_mode_calls_record_every_command_and_concatenate_results():
+    from adapters.proxy.interceptor import _shell_program
+    from core.work_ir import normalize_tool_output
+
+    snippet = ('const a = await tools.exec_command({cmd:"find build -type f | sort"});\n'
+               'const b = await tools.exec_command({cmd:"sed -n \'1,5p\' build/work.yaml"});\n'
+               'text(a.output + b.output);')
+    args = {"raw_args": snippet}
+    assert _shell_program(args) == "find"
+    assert args["cmds"] == ["find build -type f | sort", "sed -n '1,5p' build/work.yaml"]
+
+    envelope = [{"type": "input_text", "text": (
+        "---RESULT 1---\n" + json.dumps({"chunk_id": "a", "exit_code": 0, "output": "x\ny\n"}) + "\n"
+        "---RESULT 2---\n" + json.dumps({"chunk_id": "b", "exit_code": 0, "output": "work: w\n"}))}]
+    assert normalize_tool_output(envelope) == "x\ny\nwork: w\n"
+
+
+def test_concatenated_code_mode_chunks_without_markers_are_unwrapped():
+    from core.work_ir import normalize_tool_output
+
+    chunks = json.dumps({"chunk_id": "a", "output": "one\n"}) + json.dumps({"chunk_id": "b", "output": "two\n"})
+    envelope = [{"type": "input_text", "text": "Script completed\nOutput:\n"}, {"type": "input_text", "text": chunks}]
+    assert normalize_tool_output(envelope) == "one\ntwo\n"

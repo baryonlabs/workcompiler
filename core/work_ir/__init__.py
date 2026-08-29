@@ -1,5 +1,6 @@
 """OpenWorkflow Work IR and Trace IR Kernel Module."""
 
+from core.work_ir.tool_output import normalize_tool_output
 from core.work_ir.trace_ir import (
     Provenance,
     TokenUsage,
@@ -31,6 +32,7 @@ from core.work_ir.work_ir import (
 )
 
 __all__ = [
+    "normalize_tool_output",
     # Trace IR
     "TraceIR",
     "TraceStep",

@@ -23,8 +23,19 @@ AI가 한 번 작업하게 하세요. OpenWorkflow는 이후 작업을 안정적
 | 1 | `$ow-compile-work examples/quality_analysis.work` | OpenWorkLang(`.work`) → **실행 가능한 빌드 트리** `build/quality_analyst/` — `work.yaml` + `handlers/*.py`(code) + `rules/*.rule.yaml`(rule) + `models/ml|slm/<action>/`(model card·dataset·train.py) + LinkML 스키마 |
 | 2 | `$ow-traces` | 프록시가 캡처한 세션 목록 — **이 Codex 세션 자체**가 `shell_python3, shell_sed, respond, …` 스텝으로 잡힘 |
 | 3 | `$ow-compile-trace codex-session` | 캡처된 Codex 세션이 `build/codex_session/`로 컴파일됨 — 셸 스텝은 기록된 명령을 재실행하는 `handlers/shell_*.py`, 비결정 스텝은 `prompts/*.prompt.md` |
+| 4 | `$ow-bench codex-session` | **에이전트 vs 컴파일된 빌드** — 같은 세션을 재실행해 결과 일치·토큰·속도를 비교한 `BENCHMARK.md` |
 
-설정 방법과 각 단계가 실행하는 명령은 [Zero-Code 에이전트 프록시](#zero-code-에이전트-프록시-adaptersproxy) 섹션을, 입력 프롬프트·Codex 출력·컴파일 산출물 원본은 [`examples/demo/`](examples/demo/)를 참조하세요.
+**벤치마크 결과** (작업: `.work` 파일 컴파일 후 빌드 트리 점검·요약, [`examples/demo/build/codex_session/BENCHMARK.md`](examples/demo/build/codex_session/BENCHMARK.md)):
+
+| | 기록된 에이전트 (Codex) | 컴파일된 빌드 | 차이 |
+| :-- | --: | --: | --: |
+| LLM 토큰 | 46,680 | 16,782 | **−64%** |
+| 벽시계 시간 | 29.9 s | 17.4 s | **1.7×** |
+| 결과 재현 (code 계층 스텝) | — | **2/2 일치** | |
+
+셸 스텝 2개(`shell_python3`, `shell_find`)는 code 계층으로 내려가 토큰 0·수십 ms에 같은 출력을 냈고, 남은 비용은 아직 frontier LLM으로 에스컬레이션되는 최종 요약(`respond`)뿐입니다 — 이 부분이 `models/slm/` 학습 후보가 승격되면 내려갑니다.
+
+설정 방법과 각 단계가 실행하는 명령은 [Zero-Code 에이전트 프록시](#zero-code-에이전트-프록시-adaptersproxy) 섹션을, 입력 프롬프트·Codex 출력·컴파일 산출물·벤치마크 원본은 [`examples/demo/`](examples/demo/)를 참조하세요.
 
 ---
 
@@ -151,6 +162,7 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
 | 1 | `$ow-compile-work examples/quality_analysis.work` | `python3 -m core.openworklang compile …` | OpenWorkLang → `build/quality_analyst/` 빌드 트리(work.yaml, handlers/, rules/, models/ml|slm/, schema/), 8단계 executor 하위 통합 설명 |
 | 2 | `$ow-traces` | `curl localhost:8787/v1/workcompiler/traces` | 프록시가 캡처한 세션 목록 — **지금 이 Codex 세션 자체**가 `shell_python3, shell_sed, respond, …` 스텝으로 잡혀 있음 |
 | 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` (`build_dir`) | 캡처된 Codex 세션이 `build/codex_session/`로 컴파일됨 — `handlers/shell_*.py`가 기록된 명령을 재실행, `respond`는 `prompts/respond.prompt.md` |
+| 4 | `$ow-bench codex-session` | `python3 -m core.build bench build/codex_session` | 빌드에 동봉된 `trace.json`에 대해 code 계층을 재실행 → 결과 일치·토큰·지연을 액션별로 비교한 `BENCHMARK.md` |
 
 녹화 스크립트는 [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/openworkflow-codex-demo.tape)입니다.
 
@@ -180,7 +192,7 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
    codex
    ```
 
-3. Codex 안에서 스킬을 호출합니다 — `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`.
+3. Codex 안에서 스킬을 호출합니다 — `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`.
 
    스킬이 실행하는 명령은 셸에서 직접 써도 동일합니다:
 
@@ -191,6 +203,7 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
    curl -s -X POST localhost:8787/v1/workcompiler/compile -H 'Content-Type: application/json' \
      -d '{"run_id":"<run_id>","target_name":"codex-session","build_dir":"build"}'   # -> build/codex_session/
    python3 -m core.build from-trace trace.json --target codex-session   # 프록시 없이 TraceIR JSON에서 빌드
+   python3 -m core.build bench build/codex_session                       # 에이전트 vs 빌드: 결과 · 토큰 · 속도
    ```
 
    API 키 기반 클라이언트(OpenAI SDK, Agents SDK 등)는 `OPENAI_BASE_URL=http://127.0.0.1:8787/v1`만 지정하면 `/v1/responses`가 같은 방식으로 캡처됩니다.
@@ -346,7 +359,7 @@ build/quality_analyst/
 └── schema/quality_analyst.linkml.yaml         # LinkML 스키마
 ```
 
-`core.build.load_build_into_engine(engine, "build/quality_analyst")`가 `handlers/`와 `rules/`를 `DurableRuntimeEngine`에 등록하므로, 트리를 채우는 즉시 런타임에서 실행됩니다. 실제 예시는 [`examples/demo/openworkcompiled/`](examples/demo/openworkcompiled/)와 [`examples/demo/build/`](examples/demo/build/)에 있습니다.
+`core.build.load_build_into_engine(engine, "build/quality_analyst")`가 `handlers/`와 `rules/`를 `DurableRuntimeEngine`에 등록하므로, 트리를 채우는 즉시 런타임에서 실행됩니다. `python3 -m core.build bench build/<work>`는 빌드에 동봉된 원본 세션(`trace.json`)에 대해 code/rule 계층을 재실행해 **결과 일치·토큰·지연**을 에이전트 기록과 액션별로 비교한 `BENCHMARK.md`를 만듭니다. 실제 예시는 [`examples/demo/openworkcompiled/`](examples/demo/openworkcompiled/)와 [`examples/demo/build/`](examples/demo/build/)에 있습니다.
 
 상세한 문법 사양과 Python API는 **[OpenWorkLang 명세서(docs/openworklang-spec.md)](docs/openworklang-spec.md)**를 참조하세요.
 
@@ -465,9 +478,9 @@ openworkflow/
 │
 ├── agents/                      # 가이드 및 측정 에이전트 규격
 ├── docs/                        # 명세서, 아키텍처, 사용 가이드, 다이어그램
-├── .agents/skills/              # Codex 스킬: $ow-compile-work · $ow-traces · $ow-compile-trace
-├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + 런타임 로더
-├── tests/                       # pytest 테스트 수트 (138개 테스트 전원 통과)
+├── .agents/skills/              # Codex 스킬: $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench
+├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + 런타임 로더 + 벤치마크
+├── tests/                       # pytest 테스트 수트 (145개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트
 ```
 

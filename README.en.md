@@ -23,8 +23,19 @@ A **real interactive Codex session**, not a mock-up. Point Codex at the OpenWork
 | 1 | `$ow-compile-work examples/quality_analysis.work` | OpenWorkLang (`.work`) → **executable build tree** `build/quality_analyst/` — `work.yaml` + `handlers/*.py` (code) + `rules/*.rule.yaml` (rule) + `models/ml|slm/<action>/` (model card · dataset · train.py) + LinkML schema |
 | 2 | `$ow-traces` | Sessions captured by the proxy — **this very Codex session** appears as `shell_python3, shell_sed, respond, …` steps |
 | 3 | `$ow-compile-trace codex-session` | The captured Codex session compiles into `build/codex_session/` — shell steps become `handlers/shell_*.py` that replay the recorded command, non-deterministic steps become `prompts/*.prompt.md` |
+| 4 | `$ow-bench codex-session` | **Agent vs. compiled build** — replays the same session and compares output equality, tokens and speed in `BENCHMARK.md` |
 
-Setup and the exact commands each step runs are in the [Zero-Code Agent Proxy](#zero-code-agent-proxy-adaptersproxy) section; the prompts, Codex transcripts and compiled artifacts are in [`examples/demo/`](examples/demo/).
+**Benchmark** (task: compile a `.work` file, inspect the build tree, summarize — [`examples/demo/build/codex_session/BENCHMARK.md`](examples/demo/build/codex_session/BENCHMARK.md)):
+
+| | recorded agent (Codex) | compiled build | delta |
+| :-- | --: | --: | --: |
+| LLM tokens | 46,680 | 16,782 | **−64%** |
+| wall time | 29.9 s | 17.4 s | **1.7×** |
+| outputs reproduced (code-tier steps) | — | **2/2 exact** | |
+
+The two shell steps (`shell_python3`, `shell_find`) lowered to the code tier and reproduced the same output with zero tokens in tens of milliseconds; the remaining cost is the final summary (`respond`), still escalated to a frontier LLM — that is what the `models/slm/` training candidate takes over once promoted.
+
+Setup and the exact commands each step runs are in the [Zero-Code Agent Proxy](#zero-code-agent-proxy-adaptersproxy) section; the prompts, Codex transcripts, compiled artifacts and benchmark are in [`examples/demo/`](examples/demo/).
 
 ---
 
@@ -125,6 +136,7 @@ The [30-second demo](#30-second-demo-use-it-from-inside-codex) at the top of thi
 | 1 | `$ow-compile-work examples/quality_analysis.work` | `python3 -m core.openworklang compile …` | OpenWorkLang → `build/quality_analyst/` build tree (work.yaml, handlers/, rules/, models/ml|slm/, schema/), with the 8-tier executor lowering explained |
 | 2 | `$ow-traces` | `curl localhost:8787/v1/workcompiler/traces` | Sessions captured by the proxy — **this very Codex session** shows up as `shell_python3, shell_sed, respond, …` steps |
 | 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` (`build_dir`) | The captured Codex session compiles into `build/codex_session/` — `handlers/shell_*.py` replay the recorded commands, `respond` becomes `prompts/respond.prompt.md` |
+| 4 | `$ow-bench codex-session` | `python3 -m core.build bench build/codex_session` | Replays the code tier against the bundled `trace.json` → per-action output equality, tokens and latency in `BENCHMARK.md` |
 
 The recording script is [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/openworkflow-codex-demo.tape).
 
@@ -154,7 +166,7 @@ The recording script is [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/ope
    codex
    ```
 
-3. Inside Codex, invoke the skills — `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`.
+3. Inside Codex, invoke the skills — `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`.
 
    The commands the skills run work from a plain shell too:
 
@@ -165,6 +177,7 @@ The recording script is [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/ope
    curl -s -X POST localhost:8787/v1/workcompiler/compile -H 'Content-Type: application/json' \
      -d '{"run_id":"<run_id>","target_name":"codex-session","build_dir":"build"}'   # -> build/codex_session/
    python3 -m core.build from-trace trace.json --target codex-session   # build from a TraceIR JSON without the proxy
+   python3 -m core.build bench build/codex_session                       # agent vs. build: outputs · tokens · speed
    ```
 
    API-key clients (OpenAI SDK, Agents SDK, ...) only need `OPENAI_BASE_URL=http://127.0.0.1:8787/v1`; `/v1/responses` is captured the same way.
@@ -320,7 +333,7 @@ build/quality_analyst/
 └── schema/quality_analyst.linkml.yaml         # LinkML schema
 ```
 
-`core.build.load_build_into_engine(engine, "build/quality_analyst")` registers `handlers/` and `rules/` on the `DurableRuntimeEngine`, so a filled-in tree runs immediately. Real examples live in [`examples/demo/openworkcompiled/`](examples/demo/openworkcompiled/) and [`examples/demo/build/`](examples/demo/build/).
+`core.build.load_build_into_engine(engine, "build/quality_analyst")` registers `handlers/` and `rules/` on the `DurableRuntimeEngine`, so a filled-in tree runs immediately. `python3 -m core.build bench build/<work>` replays the code/rule tiers against the session bundled in the build (`trace.json`) and writes `BENCHMARK.md` comparing **output equality, tokens and latency** per action with the recorded agent. Real examples live in [`examples/demo/openworkcompiled/`](examples/demo/openworkcompiled/) and [`examples/demo/build/`](examples/demo/build/).
 
 See **[OpenWorkLang Spec](docs/openworklang-spec.md)** for full language grammar and compiler details.
 
@@ -439,9 +452,9 @@ openworkflow/
 │
 ├── agents/                      # Guide and measurement fleet specs
 ├── docs/                        # Specifications, architecture, usage guides, and diagrams
-├── .agents/skills/              # Codex skills: $ow-compile-work · $ow-traces · $ow-compile-trace
-├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + runtime loader
-├── tests/                       # Complete pytest suite (138 tests)
+├── .agents/skills/              # Codex skills: $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench
+├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + runtime loader + benchmark
+├── tests/                       # Complete pytest suite (145 tests)
 └── examples/                    # Sample workflows, LinkML schemas, and runnable demo scripts
 ```
 

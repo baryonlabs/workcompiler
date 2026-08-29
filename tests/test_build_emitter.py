@@ -78,7 +78,7 @@ def test_emit_build_from_trace_fills_datasets_and_shell_handlers(tmp_path):
     root = Path(manifest.build_dir)
 
     handler = (root / "handlers" / "shell_ls.py").read_text()
-    assert "COMMAND = 'ls examples'" in handler and "subprocess.run" in handler
+    assert "COMMANDS = ['ls examples']" in handler and "subprocess.run" in handler
 
     ml_rows = [json.loads(l) for l in (root / "models/ml/price_offer/dataset.jsonl").read_text().splitlines()]
     assert ml_rows == [{"features": {"usage": 120}, "label": {"discount": 0.1}}]
@@ -110,3 +110,88 @@ def test_load_build_into_engine_registers_handlers_and_rules(tmp_path):
 
     rule_result = engine.get_executor("rule").execute("detect_anomaly", {"production_data": "x"})
     assert rule_result.success and rule_result.metadata["matched_rules"][0]["name"] == "detect_anomaly_default"
+
+
+def test_benchmark_replays_code_tier_with_zero_tokens_and_matching_output(tmp_path):
+    from core.build.bench import run_benchmark, write_report
+    from core.work_ir import WorkIR
+
+    trace = TraceIR.model_validate({
+        "run_id": "bench-run", "source_agent": "codex-tui",
+        "steps": [
+            {"step_id": "s1", "actor": "agent", "action": "shell_printf", "latency_ms": 2500.0,
+             "token_usage": {"prompt_tokens": 900, "completion_tokens": 40, "total_tokens": 940},
+             "input": {"cmd": "printf 'alpha\\nbeta\\n'", "content": "show"},
+             "output": {"content": None, "tool_calls": [{"id": "c1", "name": "exec", "result": "alpha\nbeta\n"}],
+                        "tool_result": "alpha\nbeta\n"}},
+            {"step_id": "s2", "actor": "agent", "action": "respond", "latency_ms": 1800.0,
+             "token_usage": {"prompt_tokens": 1000, "completion_tokens": 60, "total_tokens": 1060},
+             "input": {"content": "show"}, "output": {"content": "alpha and beta", "tool_calls": []}},
+        ],
+        "result": {"status": "success", "outputs": {}},
+    })
+    work_ir = WorkIR.model_validate({
+        "work": "bench-work", "version": "3.0", "inputs": ["cmd"], "outputs": ["content"],
+        "states": ["initialized", "printf_shelled", "respond_completed"],
+        "actions": ["shell_printf", "respond"], "dependencies": {"respond": ["shell_printf"]},
+        "executors": {"shell_printf": {"type": "code"}, "respond": {"type": "frontier_llm"}},
+    })
+    manifest = emit_build(work_ir, tmp_path, traces=[trace])
+    report = run_benchmark(manifest.build_dir, trace)
+
+    totals = report.totals()
+    assert totals["recorded_tokens"] == 2000
+    assert totals["compiled_tokens"] == 1060           # only the escalated respond step still costs tokens
+    assert totals["token_savings_pct"] == 47.0
+    assert totals["outputs_matched"] == 1 and totals["outputs_checked"] == 1
+    assert totals["compiled_actions"] == 1 and totals["escalated_actions"] == 1
+    code_action = report.actions[0]
+    assert code_action.steps[0].output_match is True
+    assert code_action.compiled_latency_ms < code_action.recorded_latency_ms
+    assert report.final_answer == "alpha and beta"
+
+    paths = write_report(report, tmp_path / "report")
+    md = Path(paths["markdown"]).read_text()
+    assert "| LLM tokens | 2,000 | 1,060 | −47.0% |" in md
+
+
+def test_benchmark_skips_self_referential_steps(tmp_path, monkeypatch):
+    from core.build.bench import BENCH_ACTIVE_ENV, run_benchmark
+    from core.build.__main__ import main
+    from core.work_ir import WorkIR
+
+    trace = TraceIR.model_validate({
+        "run_id": "self", "source_agent": "codex-tui",
+        "steps": [
+            {"step_id": "s1", "actor": "agent", "action": "shell_python3", "latency_ms": 1000.0,
+             "token_usage": {"prompt_tokens": 10, "completion_tokens": 1, "total_tokens": 11},
+             "input": {"cmd": "python3 -m core.build bench build/self"}, "output": {"tool_calls": [], "tool_result": "x"}},
+            {"step_id": "s2", "actor": "agent", "action": "shell_curl", "latency_ms": 1000.0,
+             "token_usage": {"prompt_tokens": 10, "completion_tokens": 1, "total_tokens": 11},
+             "input": {"cmd": "curl -s -X POST localhost:8787/v1/workcompiler/compile -d '{}'"}, "output": {"tool_calls": [], "tool_result": "y"}},
+        ],
+        "result": {"status": "success", "outputs": {}},
+    })
+    work_ir = WorkIR.model_validate({
+        "work": "self", "version": "3.0", "inputs": ["cmd"], "outputs": ["content"],
+        "states": ["initialized", "python3_shelled", "curl_shelled"],
+        "actions": ["shell_python3", "shell_curl"], "dependencies": {"shell_curl": ["shell_python3"]},
+        "executors": {"shell_python3": {"type": "code"}, "shell_curl": {"type": "code"}},
+    })
+    manifest = emit_build(work_ir, tmp_path, traces=[trace])
+    report = run_benchmark(manifest.build_dir, trace)
+    assert all(s.executor_used.endswith("(skipped)") for a in report.actions for s in a.steps)
+    assert report.totals()["outputs_checked"] == 0
+
+    monkeypatch.setenv(BENCH_ACTIVE_ENV, "1")
+    assert main(["bench", manifest.build_dir]) == 0  # nested call is a no-op
+
+
+def test_benchmark_compare_unwraps_json_repacked_outputs():
+    from core.build.bench import _compare
+
+    recorded = json.dumps({"tree": "a/x.py\na/y.py\n", "work_yaml": "work: w\nversion: '1'\n", "exits": [0, 0]})
+    compiled = "a/x.py\na/y.py\nwork: w\nversion: '1'\n"
+    assert _compare(recorded, compiled) == (True, "")
+    assert _compare("b\na\n", "a\nb\n") == (True, "same lines, different order")
+    assert _compare("a\n", "a\nb\n") == (False, "")

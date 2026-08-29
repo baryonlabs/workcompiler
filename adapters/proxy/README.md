@@ -40,7 +40,9 @@ curl -s -X POST localhost:8787/v1/workcompiler/compile -H 'Content-Type: applica
 ```
 
 Inside the Codex TUI the same operations are available as repository skills (`.agents/skills/`):
-`$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`.
+`$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`.
+Tool results that the agent feeds back (`*_call_output` items) are attached to the calling step as
+`tool_result`, so a compiled build can be benchmarked against what the agent actually observed.
 
 A real recording of this flow lives in `docs/demo/openworkflow-codex-demo.gif`
 (regenerate with `vhs docs/demo/openworkflow-codex-demo.tape`).

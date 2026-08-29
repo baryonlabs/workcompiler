@@ -79,6 +79,15 @@ Sleep 1s
 Enter
 Sleep 80s
 
+# 4) Benchmark the compiled build against the recorded session: result, tokens, speed
+Type "$ow-bench"
+Sleep 1.5s
+Enter
+Type " codex-session"
+Sleep 1s
+Enter
+Sleep 70s
+
 Type "/quit"
 Sleep 500ms
 Enter

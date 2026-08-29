@@ -13,14 +13,18 @@ outputs:
   - status
 states:
   - initialized
-  - curl_shelled
+  - python3_shelled
+  - find_shelled
   - respond_completed
 actions:
-  - shell_curl
+  - shell_python3
+  - shell_find
   - respond
 dependencies:
+  shell_find:
+    - shell_python3
   respond:
-    - shell_curl
+    - shell_find
 invariants:
   - use_current_pricing_policy
   - verify_current_contract
@@ -37,9 +41,12 @@ escalation:
   on_quality_drop: require_human_review
   on_timeout: escalate_to_human
 executors:
-  shell_curl:
+  shell_python3:
     type: code
-    handler: services.shell_curl
+    handler: services.shell_python3
+  shell_find:
+    type: code
+    handler: services.shell_find
   respond:
     type: frontier_llm
     preferred: claude-3-5-sonnet

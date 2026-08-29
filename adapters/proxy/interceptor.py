@@ -13,7 +13,7 @@ import shlex
 import time
 import uuid
 from typing import Any, Dict, List, Optional
-from core.work_ir import TraceIR, TraceStep, TraceResult, TraceStatus, TokenUsage
+from core.work_ir import TraceIR, TraceStep, TraceResult, TraceStatus, TokenUsage, normalize_tool_output
 
 
 # Tool names that Codex CLI / OpenAI agents use for running shell commands. For these the
@@ -32,28 +32,39 @@ _CODE_MODE_CMD_RE = re.compile(
 )
 
 
+def _code_mode_commands(snippet: str) -> List[str]:
+    """Extract every ``cmd`` string from a Codex code-mode snippet (one snippet may batch several)."""
+    commands: List[str] = []
+    for match in _CODE_MODE_CMD_RE.finditer(snippet):
+        literal = match.group(1)
+        quote, body = literal[0], literal[1:-1]
+        if quote == '"':
+            try:
+                commands.append(json.loads(literal))
+                continue
+            except Exception:
+                commands.append(body)
+                continue
+        commands.append(body.replace("\\" + quote, quote).replace("\\n", "\n"))
+    return commands
+
+
 def _code_mode_command(snippet: str) -> Optional[str]:
-    """Extract the ``cmd`` string from a Codex code-mode ``exec_command`` call."""
-    match = _CODE_MODE_CMD_RE.search(snippet)
-    if not match:
-        return None
-    literal = match.group(1)
-    quote, body = literal[0], literal[1:-1]
-    if quote == '"':
-        try:
-            return json.loads(literal)
-        except Exception:
-            return body
-    return body.replace("\\" + quote, quote).replace("\\n", "\n")
+    """First ``cmd`` of a Codex code-mode ``exec_command`` call, if any."""
+    commands = _code_mode_commands(snippet)
+    return commands[0] if commands else None
 
 
 def _shell_program(arguments: Dict[str, Any]) -> Optional[str]:
     """Best-effort extraction of the program name from shell tool-call arguments."""
     command = arguments.get("command") or arguments.get("cmd")
     if command is None and isinstance(arguments.get("raw_args"), str):
-        command = _code_mode_command(arguments["raw_args"])
-        if command is not None:
+        commands = _code_mode_commands(arguments["raw_args"])
+        if commands:
+            command = commands[0]
             arguments["cmd"] = command
+            if len(commands) > 1:
+                arguments["cmds"] = commands
     if isinstance(command, list) and command:
         tokens = [str(t) for t in command]
         # Codex wraps commands as ["bash", "-lc", "<script>"]; unwrap the script.
@@ -265,6 +276,7 @@ class TrajectoryInterceptor:
         self.raw_responses.append(response_payload)
 
         # --- Request side: the latest user message and any tool outputs fed back in ---
+        self._attach_tool_results(request_payload)
         user_input: Dict[str, Any] = {}
         request_input = request_payload.get("input", [])
         if isinstance(request_input, str):
@@ -332,6 +344,36 @@ class TrajectoryInterceptor:
         )
         self.steps.append(step)
         return step
+
+    def _attach_tool_results(self, request_payload: Dict[str, Any]) -> None:
+        """Attach ``*_call_output`` items of this request to the earlier step that issued the call.
+
+        The Responses API returns tool results in the *next* request's ``input`` as
+        ``function_call_output`` / ``custom_tool_call_output`` items keyed by ``call_id``.
+        Recording them makes the trace replayable and lets a compiled build be checked
+        against the outputs the agent actually observed.
+        """
+        items = request_payload.get("input")
+        if not isinstance(items, list):
+            return
+        for item in items:
+            if not isinstance(item, dict) or not str(item.get("type", "")).endswith("_call_output"):
+                continue
+            call_id = item.get("call_id")
+            output = item.get("output")
+            if not call_id or output is None:
+                continue
+            for step in reversed(self.steps):
+                step_output = step.output if isinstance(step.output, dict) else {}
+                for call in step_output.get("tool_calls", []) or []:
+                    if isinstance(call, dict) and call.get("id") == call_id and "result" not in call:
+                        call["result"] = normalize_tool_output(output)
+                        step_output["tool_result"] = call["result"]
+                        step_output["tool_result_raw"] = output
+                        break
+                else:
+                    continue
+                break
 
     def finalize_trace(self, status: str = "success") -> TraceIR:
         """Construct canonical TraceIR object from intercepted steps."""

@@ -110,11 +110,15 @@ def _example_io(steps: Sequence[TraceStep]) -> tuple[Dict[str, Any], Dict[str, A
     return _as_dict(steps[0].input), _as_dict(steps[0].output)
 
 
-def _shell_command(example_input: Dict[str, Any]) -> Optional[str]:
+def _shell_commands(example_input: Dict[str, Any]) -> List[str]:
+    """All shell commands a recorded step ran (Codex may batch several per tool call)."""
+    cmds = example_input.get("cmds")
+    if isinstance(cmds, list) and cmds:
+        return [str(c) for c in cmds]
     cmd = example_input.get("cmd") or example_input.get("command")
-    if isinstance(cmd, list):
-        return " ".join(shlex.quote(str(c)) for c in cmd)
-    return cmd if isinstance(cmd, str) and cmd.strip() else None
+    if isinstance(cmd, list) and cmd:
+        return [" ".join(shlex.quote(str(c)) for c in cmd)]
+    return [cmd] if isinstance(cmd, str) and cmd.strip() else []
 
 
 def _write(path: Path, content: str) -> None:
@@ -132,32 +136,40 @@ def _jsonl(path: Path, rows: Iterable[Dict[str, Any]]) -> int:
 
 def _emit_code_handler(root: Path, action: str, executor: Dict[str, Any], steps: Sequence[TraceStep], work: str) -> Path:
     example_in, example_out = _example_io(steps)
-    cmd = _shell_command(example_in)
+    cmds = _shell_commands(example_in)
     input_keys = [k for k in example_in.keys() if not k.startswith("__")]
     handler_ref = executor.get("handler") or f"handlers.{action}"
 
-    if cmd:
-        body = f'''COMMAND = {cmd!r}
+    if cmds:
+        body = f'''COMMANDS = {cmds!r}
 
 
 def run(**inputs):
-    """Re-run the shell command captured from the approved agent trace.
+    """Re-run the shell command(s) captured from the approved agent trace, in order.
 
-    Inputs may override ``cmd``; everything else is exposed to the command as
-    environment variables (OW_<KEY>).
+    ``cmds``/``cmd`` in inputs override the recorded commands; every other scalar input is
+    exposed to the commands as an environment variable (OW_<KEY>). LC_ALL defaults to "C"
+    to match the agent sandbox so ordering-sensitive output (sort, ls) reproduces exactly.
     """
-    command = inputs.get("cmd") or COMMAND
+    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else COMMANDS)
     env = dict(os.environ)
+    env.setdefault("LC_ALL", "C")
     for key, value in inputs.items():
-        if key != "cmd" and isinstance(value, (str, int, float)):
+        if key not in ("cmd", "cmds") and isinstance(value, (str, int, float)):
             env[f"OW_{{key.upper()}}"] = str(value)
-    completed = subprocess.run(command, shell=True, capture_output=True, text=True, env=env, timeout=600)
+    results = []
+    for command in commands:
+        completed = subprocess.run(command, shell=True, capture_output=True, text=True, env=env, timeout=600)
+        results.append({{"cmd": command, "exit_code": completed.returncode,
+                        "stdout": completed.stdout, "stderr": completed.stderr}})
+    stdout = "".join(r["stdout"] for r in results)
     return {{
-        "cmd": command,
-        "exit_code": completed.returncode,
-        "stdout": completed.stdout,
-        "stderr": completed.stderr,
-        "content": completed.stdout.strip(),
+        "cmds": commands,
+        "results": results,
+        "exit_code": max((r["exit_code"] for r in results), default=0),
+        "stdout": stdout,
+        "stderr": "".join(r["stderr"] for r in results),
+        "content": stdout.strip(),
     }}
 '''
         imports = "import os\nimport subprocess\n"
@@ -460,6 +472,12 @@ def emit_build(
             manifest.add(action, tier, "review", _emit_human(root, action, executor, work_ir.work, invariants), root)
         else:  # frontier_llm and anything unknown
             manifest.add(action, tier, "prompt", _emit_prompt(root, action, executor, steps, work_ir.work, invariants), root)
+
+    if traces:
+        trace_path = root / "trace.json"
+        payload = {"traces": [t.model_dump(mode="json") for t in traces]}
+        _write(trace_path, json.dumps(payload, indent=2, ensure_ascii=False, default=str) + "\n")
+        manifest.add("*", "trace", "trace.json", trace_path, root)
 
     if linkml_yaml:
         p = root / "schema" / f"{_slug(work_ir.work)}.linkml.yaml"

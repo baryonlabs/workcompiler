@@ -3,6 +3,7 @@
     python3 -m core.build from-work  build/x/work.yaml            [--build-dir build]
     python3 -m core.build from-trace trace.json --target NAME     [--build-dir build] [--behaviors DIR]
     python3 -m core.build show       build/<work>
+    python3 -m core.build bench      build/<work> [--trace trace.json] [--no-replay]
 """
 
 from __future__ import annotations
@@ -45,6 +46,34 @@ def cmd_from_trace(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_bench(args: argparse.Namespace) -> int:
+    import os
+    from core.build.bench import BENCH_ACTIVE_ENV, run_benchmark, write_report
+
+    if os.environ.get(BENCH_ACTIVE_ENV):
+        print("[bench] nested benchmark call skipped (a benchmark is already replaying this build)")
+        return 0
+
+    trace_path = Path(args.trace) if args.trace else Path(args.build_dir) / "trace.json"
+    payload = json.loads(trace_path.read_text(encoding="utf-8"))
+    if "traces" in payload:
+        payload = payload["traces"][0]
+    trace = TraceIR.model_validate(payload.get("trace", payload))
+    report = run_benchmark(args.build_dir, trace, replay=not args.no_replay)
+    paths = write_report(report, args.out or args.build_dir)
+    t = report.totals()
+    print(f"[bench] {report.work}: tokens {t['recorded_tokens']:,} -> {t['compiled_tokens']:,} "
+          f"(-{t['token_savings_pct']}%), wall {t['recorded_latency_ms']/1000:.1f}s -> {t['compiled_latency_ms']/1000:.2f}s"
+          + (f" ({t['speedup_x']}x)" if t['speedup_x'] else "")
+          + f", outputs reproduced {t['outputs_matched']}/{t['outputs_checked']}, "
+          f"compiled/escalated actions {t['compiled_actions']}/{t['escalated_actions']}")
+    for a in report.actions:
+        print(f"  {a.action:20s} {a.tier:13s} tokens {a.recorded_tokens:>7,} -> {a.compiled_tokens:<6,} "
+              f"latency {a.recorded_latency_ms/1000:6.1f}s -> {a.compiled_latency_ms/1000:5.2f}s  match {a.matches}")
+    print(f"  report: {paths['markdown']}")
+    return 0
+
+
 def cmd_show(args: argparse.Namespace) -> int:
     manifest = json.loads((Path(args.build_dir) / "MANIFEST.json").read_text(encoding="utf-8"))
     print(json.dumps(manifest["by_tier"], indent=2, ensure_ascii=False))
@@ -70,6 +99,13 @@ def main(argv=None) -> int:
     c = sub.add_parser("show", help="Print the artifact index of a build directory")
     c.add_argument("build_dir")
     c.set_defaults(func=cmd_show)
+
+    d = sub.add_parser("bench", help="Replay a build against the trace it came from: result, tokens, speed")
+    d.add_argument("build_dir")
+    d.add_argument("--trace", help="TraceIR JSON (default: <build_dir>/trace.json written at compile time)")
+    d.add_argument("--no-replay", action="store_true", help="Only account costs; do not execute handlers")
+    d.add_argument("--out", help="Directory for BENCHMARK.md / benchmark.json (default: build dir)")
+    d.set_defaults(func=cmd_bench)
 
     args = parser.parse_args(argv)
     return args.func(args)
