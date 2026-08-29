@@ -13,7 +13,7 @@ from core.work_ir import WorkIR, ExecutorType
 
 def test_parse_openworklang_file():
     """Test parsing an OpenWorkLang (.work) file into OpenWorkLangAST."""
-    example_path = Path("/Users/hongmartin/orca/projects/open-workflow/examples/quality_analysis.work")
+    example_path = Path(__file__).resolve().parents[1] / "examples" / "quality_analysis.work"
     ast: OpenWorkLangAST = parse_openworklang(example_path)
 
     assert ast.name == "quality_analyst"
@@ -35,7 +35,7 @@ def test_parse_openworklang_file():
 
 def test_compile_openworklang_to_work_ir():
     """Test compiling OpenWorkLangAST to executable WorkIR."""
-    example_path = Path("/Users/hongmartin/orca/projects/open-workflow/examples/quality_analysis.work")
+    example_path = Path(__file__).resolve().parents[1] / "examples" / "quality_analysis.work"
     ast = parse_openworklang(example_path)
 
     compiler = OpenWorkLangCompiler()
@@ -64,7 +64,7 @@ def test_compile_openworklang_to_work_ir():
 
 def test_compile_openworklang_to_linkml():
     """Test compiling OpenWorkLangAST to LinkML YAML schema."""
-    example_path = Path("/Users/hongmartin/orca/projects/open-workflow/examples/quality_analysis.work")
+    example_path = Path(__file__).resolve().parents[1] / "examples" / "quality_analysis.work"
     ast = parse_openworklang(example_path)
 
     compiler = OpenWorkLangCompiler()
