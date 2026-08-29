@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.png" alt="OpenWorkCompiler logo" width="420">
+</p>
+
 # OpenWorkflow
 
 ![OpenWorkCompiler turns non-deterministic agent work into repeatable deterministic execution — (A) agent-centric run, (B) compiled deterministic run, (C) before/after, (D) efficiency gains](docs/banner.png)

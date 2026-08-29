@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.png" alt="OpenWorkCompiler 로고" width="420">
+</p>
+
 # OpenWorkflow
 
 ![OpenWorkCompiler는 비결정형 업무를 반복 가능한 결정형 실행으로 바꾸도록 도와줍니다 — (A) Agent 중심 비결정형 수행, (B) 컴파일 후 결정형 수행, (C) Before/After, (D) 효율성 향상 포인트](docs/banner.png)
