@@ -101,6 +101,21 @@ python3 -m core.build run build/customer_renewal_codex \
 
 토큰 절감이 첫 벤치보다 작은 이유는 명확합니다: 남은 두 에스컬레이션이 각각 새 Codex 세션(시스템 프롬프트 포함 10–16k 토큰)이기 때문입니다. 이 두 스텝이 `models/slm/` 후보로 승격되거나 제안서 문안이 템플릿(code)으로 내려가면 그때 토큰이 0에 가까워집니다 — 어디까지 내려갈 수 있는지가 `.work` 파일의 `escalation` 블록에 명시됩니다.
 
+### 프롬프트를 모르는 사람도 되나요? — 4가지 업무 사례를 채팅만으로
+
+업무 자료(팀장 메모 · 본인 노트 · 이전 완성물 · 데이터 파일)만 가진 **완전 초보자**가 Codex TUI에서 `$ow-define`을 치고 "추천안대로"라고 답하는 것만으로 WHAT이 만들어지고, 그 뒤 에이전트 1회 수행 → 컴파일 → 재실행까지 4가지 업무 사례 전부를 실제로 돌렸습니다 ([`examples/cases/`](examples/cases/) — 시나리오·transcript·트레이스·빌드·토큰 원장 포함):
+
+![초보자가 Codex TUI에서 $ow-define으로 환불 승인 업무를 정의하는 실제 녹화](docs/demo/openworkflow-define-demo.gif)
+
+| 사례 | 초보자가 가진 것 | `$ow-define` 결과 | 에이전트 1회 (gpt-5.6-sol) | 컴파일된 빌드 재실행 |
+| :-- | :-- | :-- | --: | --: |
+| 고객 계약 갱신 제안 | 영업팀장 메모 · 이전 제안서 · CRM/사용량/가격정책 | TASK 9단계 · BEHAVIOR 4 | 160,876 토큰 · 134 s | 24,819 (−85%) · 7.1 s · 7/7 재현 |
+| 인보이스/환불 승인 | CS팀장 메모 · 이전 판정서 · 주문/결제/정책 v3 | TASK 10단계 · BEHAVIOR 6 | 280,023 토큰 · 114 s | 21,999 (−92%) · 6.0 s · 판정 동일 |
+| 제조 품질 이상 대응 | 품질팀장 메모 · 이전 보고서 · MES/센서/보정 로그 | TASK 8단계 · BEHAVIOR 6 | 138,200 토큰 · 142 s | 32,661 (−76%) · 12.7 s · 5/5 재현 |
+| 보안/운영 장애 분류 | 온콜 리드 메모 · 이전 노트 · 알람/시그니처/런북 | TASK 10단계 · BEHAVIOR 6 | 159,640 토큰 · 88 s | 21,081 (−87%) · 5.3 s · 분류 동일 |
+
+각 빌드의 `BENCHMARK.md`에는 **토큰 원장**이 있습니다 — 스텝마다 "기록 시 어떤 모델이 프롬프트(캐시)+완성 몇 토큰을 썼고, 컴파일 후엔 무엇(code / rule / 모델)이 몇 토큰을 쓰는지", 그리고 모델별 합계. 실행마다 `ledger.jsonl`에 누적되어 모델 교체(frontier → SLM → code)의 효과를 추적할 수 있습니다.
+
 ### WHAT → HOW: 이 파이프라인이 만드는 두 산출물
 
 | | 무엇 | 어디에 |
@@ -581,8 +596,9 @@ openworkflow/
 ├── agents/                      # 가이드 및 측정 에이전트 규격
 ├── docs/                        # 명세서, 아키텍처, 사용 가이드, 다이어그램
 ├── .agents/skills/              # Codex 스킬: $ow-define(WHAT, grilling 인터뷰) · $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench · grill-me/grilling(mattpocock/skills, skills-lock.json)
-├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + 런타임 로더 + 벤치마크
-├── tests/                       # pytest 테스트 수트 (151개 테스트 전원 통과)
+├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + 로더 + 벤치마크(토큰 원장) + 앞단 에이전트 실행
+├── examples/cases/              # 4가지 업무 사례: 초보자 자료 → $ow-define → 에이전트 수행 → 컴파일 → 벤치 (transcript · 트레이스 · 빌드 포함)
+├── tests/                       # pytest 테스트 수트 (154개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트
 ```
 

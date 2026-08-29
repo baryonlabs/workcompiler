@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from core.build.bench import BENCH_ACTIVE_ENV, _clip, _is_self_referential, _normalizer
+from core.build.bench import BENCH_ACTIVE_ENV, _clip, _is_self_referential, _normalizer, append_ledger
 from core.build.loader import load_build_into_engine
 from core.work_ir import TraceIR, load_work_ir, normalize_tool_output
 
@@ -105,11 +105,13 @@ def codex_escalator(prompt: str, context: Dict[str, Any]) -> Dict[str, Any]:
     m = re.search(r"tokens used\n([\d,]+)", text)
     if m:
         tokens = int(m.group(1).replace(",", ""))
+    model_m = re.search(r"^model:\s*(\S+)", text, re.M)
+    model = model_m.group(1) if model_m else "codex"
     # the final assistant message follows the last "codex" marker
     parts = re.split(r"^codex\n", text, flags=re.M)
     answer = parts[-1].split("\ntokens used\n")[0].strip() if len(parts) > 1 else text.strip()
     return {"output": answer, "tokens": tokens, "latency_ms": elapsed, "exit_code": proc.returncode,
-            "raw": text if proc.returncode else ""}
+            "model": model, "raw": text if proc.returncode else ""}
 
 
 # --------------------------------------------------------------------------- run
@@ -124,6 +126,9 @@ class RunStep:
     ok: bool
     output: str
     note: str = ""
+    model: str = ""               # what executed this step now: "code" / "rule" / a model id
+    recorded_model: str = ""      # what executed it in the recorded session
+    recorded_tokens: int = 0
 
 
 @dataclass
@@ -150,9 +155,20 @@ class RunReport:
             "speedup_x": round(self.recorded_latency_ms / latency, 1) if latency and self.recorded_latency_ms else None,
         }
 
+    def by_model(self) -> Dict[str, Dict[str, int]]:
+        out: Dict[str, Dict[str, int]] = {}
+        for s in self.steps:
+            out.setdefault(s.recorded_model or "?", {"recorded_tokens": 0, "run_tokens": 0})["recorded_tokens"] += s.recorded_tokens
+            out.setdefault(s.model or "?", {"recorded_tokens": 0, "run_tokens": 0})["run_tokens"] += s.tokens
+        return out
+
+    def ledger_rows(self) -> List[Dict[str, Any]]:
+        return [{"step": s.step_id, "action": s.action, "recorded_model": s.recorded_model, "recorded_tokens": s.recorded_tokens,
+                 "run_executor": s.model, "run_tokens": s.tokens, "mode": s.mode, "params": self.params} for s in self.steps]
+
     def to_dict(self) -> Dict[str, Any]:
         return {"work": self.work, "build_dir": self.build_dir, "request": self.request, "params": self.params,
-                "binding": self.binding, "totals": self.totals(),
+                "binding": self.binding, "totals": self.totals(), "by_model": self.by_model(), "ledger": self.ledger_rows(),
                 "steps": [s.__dict__ for s in self.steps]}
 
     def to_markdown(self) -> str:
@@ -170,8 +186,12 @@ class RunReport:
             lines.append(f"| token savings | −{t['token_savings_pct']}% | |")
         if t["speedup_x"]:
             lines.append(f"| speedup | {t['speedup_x']}× | |")
-        lines += ["", "## Steps", "", "| step | action | mode | tokens | latency | ok | note |", "| :-- | :-- | :-- | --: | --: | :-- | :-- |"]
-        lines += [f"| {s.step_id} | `{s.action}` | {s.mode} | {s.tokens:,} | {s.latency_ms/1000:.2f} s | {'✓' if s.ok else '✗'} | {s.note} |" for s in self.steps]
+        lines += ["", "## Steps", "", "| step | action | mode | recorded model → tokens | this run: executor → tokens | latency | ok | note |",
+                  "| :-- | :-- | :-- | :-- | :-- | --: | :-- | :-- |"]
+        lines += [f"| {s.step_id} | `{s.action}` | {s.mode} | {s.recorded_model or '?'} → {s.recorded_tokens:,} | {s.model or '?'} → {s.tokens:,} | "
+                  f"{s.latency_ms/1000:.2f} s | {'✓' if s.ok else '✗'} | {s.note} |" for s in self.steps]
+        lines += ["", "## Token ledger by model / executor", "", "| model / executor | recorded session | this run |", "| :-- | --: | --: |"]
+        lines += [f"| {k} | {v['recorded_tokens']:,} | {v['run_tokens']:,} |" for k, v in self.by_model().items()]
         lines += ["", "## Outputs", ""]
         for s in self.steps:
             lines += [f"### {s.step_id} · `{s.action}` — {s.mode}", "", "```", _clip(s.output, 800), "```", ""]
@@ -227,7 +247,9 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
 
         if tier in ("code", "rule", "http") and action not in synthesized:
             if _is_self_referential(inputs):
-                report.steps.append(RunStep(step.step_id, action, "skipped", 0, 0.0, True, "", "self-referential step not replayed"))
+                report.steps.append(RunStep(step.step_id, action, "skipped", 0, 0.0, True, "", "self-referential step not replayed",
+                                            model="skipped", recorded_model=str(getattr(step, "model", "") or ""),
+                                            recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0)))
                 continue
             t0 = time.perf_counter()
             os.environ[BENCH_ACTIVE_ENV] = "1"
@@ -242,13 +264,17 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
             note = "" if result.success else f"executor failed: {result.error}"
             if out.get("exit_code") not in (None, 0):
                 note = (note + "; " if note else "") + f"exit_code={out.get('exit_code')}"
-            report.steps.append(RunStep(step.step_id, action, "code", 0, elapsed, bool(result.success), text, note))
+            report.steps.append(RunStep(step.step_id, action, "code", 0, elapsed, bool(result.success), text, note,
+                                        model=tier, recorded_model=str(getattr(step, "model", "") or ""),
+                                        recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0)))
             continue
 
         reason = "synthesized content (agent computed it)" if action in synthesized else f"{tier} tier"
         if backend is None:
             report.steps.append(RunStep(step.step_id, action, "needs_agent", 0, 0.0, True, "",
-                                        f"{reason}; run with --escalate codex to execute"))
+                                        f"{reason}; run with --escalate codex to execute", model="(not run)",
+                                        recorded_model=str(getattr(step, "model", "") or ""),
+                                        recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0)))
             continue
         prompt = _escalation_prompt(root, action, values, report.steps, recorded_example)
         try:
@@ -256,7 +282,9 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
             ok = res.get("exit_code", 0) == 0
             report.steps.append(RunStep(step.step_id, action, f"escalated:{escalate}", int(res.get("tokens", 0)),
                                         float(res.get("latency_ms", 0.0)), ok, str(res.get("output", "")),
-                                        reason if ok else f"{reason}; escalation failed: {_clip(res.get('raw', ''), 300)}"))
+                                        reason if ok else f"{reason}; escalation failed: {_clip(res.get('raw', ''), 300)}",
+                                        model=str(res.get("model") or escalate), recorded_model=str(getattr(step, "model", "") or ""),
+                                        recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0)))
         except Exception as exc:  # noqa: BLE001
             report.steps.append(RunStep(step.step_id, action, f"escalated:{escalate}", 0, 0.0, False, "", f"{reason}; {exc}"))
 
@@ -266,4 +294,5 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
     (out / f"RUN-{stamp}.md").write_text(report.to_markdown(), encoding="utf-8")
     (out / f"run-{stamp}.json").write_text(json.dumps(report.to_dict(), indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
     (out / "RUN_REPORT.md").write_text(report.to_markdown(), encoding="utf-8")
+    append_ledger(root, "run", stamp, report.ledger_rows())
     return report

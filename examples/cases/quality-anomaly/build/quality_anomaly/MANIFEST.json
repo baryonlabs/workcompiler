@@ -1,0 +1,72 @@
+{
+  "work": "quality-anomaly",
+  "build_dir": "/Users/hongmartin/orca/projects/open-workflow/build/quality_anomaly",
+  "artifact_count": 7,
+  "by_tier": {
+    "work_ir": [
+      "work.yaml"
+    ],
+    "code": [
+      "handlers/shell_sed.py",
+      "handlers/shell_python3.py"
+    ],
+    "frontier_llm": [
+      "prompts/respond.prompt.md"
+    ],
+    "params": [
+      "PARAMS.json"
+    ],
+    "trace": [
+      "trace.json"
+    ],
+    "openworklang": [
+      "quality_anomaly.work"
+    ]
+  },
+  "params": [],
+  "synthesized_actions": [],
+  "artifacts": [
+    {
+      "action": "*",
+      "tier": "work_ir",
+      "kind": "work.yaml",
+      "path": "work.yaml"
+    },
+    {
+      "action": "shell_sed",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_sed.py"
+    },
+    {
+      "action": "shell_python3",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_python3.py"
+    },
+    {
+      "action": "respond",
+      "tier": "frontier_llm",
+      "kind": "prompt",
+      "path": "prompts/respond.prompt.md"
+    },
+    {
+      "action": "*",
+      "tier": "params",
+      "kind": "PARAMS.json",
+      "path": "PARAMS.json"
+    },
+    {
+      "action": "*",
+      "tier": "trace",
+      "kind": "trace.json",
+      "path": "trace.json"
+    },
+    {
+      "action": "*",
+      "tier": "openworklang",
+      "kind": "work_source",
+      "path": "quality_anomaly.work"
+    }
+  ]
+}

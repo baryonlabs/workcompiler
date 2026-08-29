@@ -1,0 +1,89 @@
+{
+  "customer_id": "CUST-1001",
+  "customer_name": "ACME Manufacturing Co.",
+  "proposal_date": "2026-08-29",
+  "source_files": {
+    "sales_lead_memo": "examples/cases/renewal-proposal/materials/memo-from-sales-lead.md",
+    "notes": "examples/cases/renewal-proposal/materials/notes.txt",
+    "structure_tone_precedent": "examples/cases/renewal-proposal/materials/previous/proposal-CUST-0993.md",
+    "contracts": "examples/cases/renewal-proposal/materials/data/contracts.json",
+    "usage": "examples/cases/renewal-proposal/materials/data/usage-2026-07.csv",
+    "pricing_policy": "examples/cases/renewal-proposal/materials/data/pricing_v2.yaml"
+  },
+  "policy": {
+    "name": "pricing_v2",
+    "version": "pricing_v2",
+    "effective_from": "2026-01-01",
+    "validated_effective_on_proposal_date": true,
+    "max_total_discount_pct": 20
+  },
+  "active_contract": {
+    "contract_id": "CTR-2024-0917",
+    "status": "active",
+    "plan": "enterprise",
+    "start_date": "2024-09-01",
+    "end_date": "2026-09-30",
+    "current_seats": 240
+  },
+  "usage": {
+    "window": [
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ],
+    "monthly": [
+      {
+        "month": "2026-05",
+        "seats_active": 238,
+        "api_calls": 1840000
+      },
+      {
+        "month": "2026-06",
+        "seats_active": 247,
+        "api_calls": 2010000
+      },
+      {
+        "month": "2026-07",
+        "seats_active": 262,
+        "api_calls": 2265000
+      }
+    ],
+    "peak_seats_active": 262,
+    "active_seat_growth_pct": 10.08,
+    "average_api_calls": 2038333.33
+  },
+  "seat_recommendation": {
+    "active_contract_seats": 240,
+    "three_month_peak_seats_active": 262,
+    "greater_input": 262,
+    "rounding_multiple": 10,
+    "recommended_committed_seats": 270
+  },
+  "currency": "USD",
+  "term_months": 12,
+  "per_seat_list_price_monthly": 40.00,
+  "monthly_list_total": 10800.00,
+  "annual_list_total": 129600.00,
+  "discounts": [
+    {
+      "type": "volume",
+      "applied": true,
+      "pct": 10,
+      "eligibility_reason": "270 committed seats qualify for the highest applicable pricing_v2 volume band of at least 200 seats."
+    },
+    {
+      "type": "loyalty",
+      "applied": false,
+      "pct": 0,
+      "eligibility_reason": "Not eligible: the active contract reaches two full calendar years on 2026-09-01, after the 2026-08-29 proposal date."
+    }
+  ],
+  "combined_discount_before_cap_pct": 10,
+  "combined_discount_after_cap_pct": 10,
+  "monthly_discount_amount": 1080.00,
+  "annual_discount_amount": 12960.00,
+  "monthly_final_total": 9720.00,
+  "annual_final_total": 116640.00,
+  "approval_required": false,
+  "approval_status": "not_required"
+}

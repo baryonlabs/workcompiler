@@ -1,0 +1,9 @@
+[bench] renewal-proposal: tokens 160,876 -> 24,819 (-84.6%), wall 133.7s -> 7.11s (18.8x), outputs reproduced 7/7, compiled/escalated actions 6/1
+  shell_sed            code          tokens  14,235 -> 0      latency    4.8s ->  0.01s  match 1/1
+  shell_cat            code          tokens  33,641 -> 0      latency   24.2s ->  0.09s  match 2/2
+  shell_python3        code          tokens  20,500 -> 0      latency   21.2s ->  0.04s  match 1/1
+  shell_mkdir          code          tokens  21,017 -> 0      latency   11.6s ->  0.00s  match 1/1
+  write_pricing_cust_1001 code          tokens  22,481 -> 0      latency   30.7s ->  0.00s  match 1/1
+  shell_jq             code          tokens  24,183 -> 0      latency   34.4s ->  0.04s  match 1/1
+  respond              frontier_llm  tokens  24,819 -> 24,819 latency    6.9s ->  6.91s  match n/a
+  report: build/renewal_proposal/BENCHMARK.md

@@ -681,6 +681,17 @@ class DeterminismAnalyzer:
         steps = steps or []
         behaviors = behaviors or []
 
+        # 0. Replayable evidence wins: a recorded shell command or file patch is deterministic code
+        #    regardless of what the action is called or which behavior contracts mention it.
+        if steps and all(self._shell_command_of(step) or self._patch_of(step) for step in steps):
+            return DeterminismAnalysisResult(
+                is_deterministic=True,
+                tier="code",
+                confidence=0.9,
+                handler=f"handlers.{action_name}",
+                reasoning=f"Action '{action_name}' replays a recorded shell command / file patch",
+            )
+
         # 1. Check attached behavior contracts for Rule/Policy categorization
         extracted_rules: List[str] = []
         for b in behaviors:
@@ -712,16 +723,6 @@ class DeterminismAnalyzer:
                         handler=step_res["handler"],
                         reasoning=f"Step analysis detected deterministic pattern: {step_res['pattern_type']}",
                     )
-
-        # 2b. Recorded shell commands / file patches (Codex / agent tool calls) are replayable deterministic code
-        if steps and all(self._shell_command_of(step) or self._patch_of(step) for step in steps):
-            return DeterminismAnalysisResult(
-                is_deterministic=True,
-                tier="code",
-                confidence=0.9,
-                handler=f"handlers.{action_name}",
-                reasoning=f"Action '{action_name}' replays a recorded shell command",
-            )
 
         # 3. Heuristic Action Name Analysis
         if any(k in act_lower for k in self.RULE_KEYWORDS):

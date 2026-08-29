@@ -37,7 +37,10 @@ def _join_parts(output: Any) -> str:
 
 
 def _json_chunks(text: str) -> list:
-    """Decode every top-level JSON object embedded in ``text`` (chunks may be concatenated)."""
+    """Decode every top-level JSON object embedded in ``text`` (chunks may be concatenated).
+
+    Returns ``[(obj, start, end), ...]`` so callers can also strip metadata-only chunks.
+    """
     chunks = []
     pos = 0
     while True:
@@ -49,7 +52,7 @@ def _json_chunks(text: str) -> list:
         except ValueError:
             pos = start + 1
             continue
-        chunks.append(obj)
+        chunks.append((obj, start, end))
         pos = end
     return chunks
 
@@ -63,9 +66,19 @@ def normalize_tool_output(output: Any) -> str:
     of running the commands back to back.
     """
     text = _RESULT_MARKER_RE.sub("", _join_parts(output))
-    outputs = [c["output"] for c in _json_chunks(text) if isinstance(c, dict) and isinstance(c.get("output"), str)]
+    chunks = _json_chunks(text)
+    outputs = [c["output"] for c, _, _ in chunks if isinstance(c, dict) and isinstance(c.get("output"), str)]
     if outputs:
         return "".join(outputs)
+    # metadata-only chunks ({"chunk_id":..,"exit_code":..} with no "output") are envelope noise: strip them
+    meta = [(s, e) for c, s, e in chunks if isinstance(c, dict) and "chunk_id" in c and "output" not in c]
+    if meta:
+        for start, end in reversed(meta):
+            text = text[:start] + text[end:]
+        text = text.replace("Script completed\n", "")
+        if "Output:\n" in text:
+            text = text.split("Output:\n", 1)[1]
+        return text
     marker = "Output:\n"
     if marker in text:
         return text.split(marker, 1)[1]

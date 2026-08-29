@@ -528,3 +528,34 @@ def test_code_mode_apply_patch_becomes_a_write_action():
     assert step.action == "write_proposal_cust_1001"
     assert step.input["patch"] == patch
     assert step.input["files"] == ["/repo/build/renewal/proposal-CUST-1001.md"]
+
+
+def test_recorded_patch_step_is_code_even_when_behaviors_or_name_suggest_a_rule():
+    from core.compiler.analyzers.determinism import DeterminismAnalyzer
+    from core.work_ir import TraceStep
+
+    step = TraceStep(step_id="s", actor="agent", action="write_decision_rr_2026_0827_03",
+                     input={"patch": "*** Begin Patch\n*** Add File: build/x/decision.md\n+ok\n*** End Patch"},
+                     output={"tool_calls": []})
+    behaviors = [{"name": "apply-refund-eligibility-rules", "intent": "apply refund policy rules to the decision",
+                  "evidence": "decision computed from policy", "decision": {"true": "", "false": "", "na": "", "raw": ""},
+                  "execution": "", "recovery": "", "failure_modes": "", "sections": {}}]
+    res = DeterminismAnalyzer().analyze_action("write_decision_rr_2026_0827_03", steps=[step], behaviors=behaviors)
+    assert res.tier == "code" and res.handler == "handlers.write_decision_rr_2026_0827_03"
+
+
+def test_metadata_only_code_mode_chunk_is_stripped_from_tool_output():
+    from core.work_ir import normalize_tool_output
+
+    text = json.dumps({"chunk_id": "98f0a2", "wall_time_seconds": 1e-6, "exit_code": 0, "original_token_count": 8}) + "created build/x/\n"
+    assert normalize_tool_output([{"type": "input_text", "text": text}]) == "created build/x/\n"
+
+
+def test_interceptor_records_model_and_cached_tokens_per_step():
+    interceptor = TrajectoryInterceptor(run_id="m")
+    step = interceptor.intercept_responses_request_response(
+        {"model": "gpt-5-codex", "input": "hi"},
+        {"id": "r", "model": "gpt-5-codex", "status": "completed",
+         "output": [{"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "hello"}]}],
+         "usage": {"input_tokens": 100, "output_tokens": 5, "input_tokens_details": {"cached_tokens": 60}}})
+    assert step.model == "gpt-5-codex" and step.cached_tokens == 60

@@ -1,0 +1,5 @@
+{"alerts": [
+  {"alert_id": "ALR-2026-0828-15", "time": "2026-08-28T21:05:00Z", "host": "web-03", "user": "svc-deploy", "rule": "ssh-bruteforce", "severity": "medium", "detail": "37 failed ssh logins in 5m from 203.0.113.9"},
+  {"alert_id": "ALR-2026-0828-17", "time": "2026-08-28T23:41:00Z", "host": "db-01", "user": "app-reader", "rule": "sudo-from-service-account", "severity": "high", "detail": "sudo -i executed by app-reader on db-01; new user 'backup2' created"},
+  {"alert_id": "ALR-2026-0828-18", "time": "2026-08-29T00:10:00Z", "host": "web-03", "user": "-", "rule": "disk-usage-high", "severity": "low", "detail": "/var 91% used"}
+]}

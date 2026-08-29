@@ -119,7 +119,7 @@ def test_benchmark_replays_code_tier_with_zero_tokens_and_matching_output(tmp_pa
     trace = TraceIR.model_validate({
         "run_id": "bench-run", "source_agent": "codex-tui",
         "steps": [
-            {"step_id": "s1", "actor": "agent", "action": "shell_printf", "latency_ms": 2500.0,
+            {"step_id": "s1", "actor": "agent", "action": "shell_printf", "latency_ms": 2500.0, "model": "gpt-5-codex",
              "token_usage": {"prompt_tokens": 900, "completion_tokens": 40, "total_tokens": 940},
              "input": {"cmd": "printf 'alpha\\nbeta\\n'", "content": "show"},
              "output": {"content": None, "tool_calls": [{"id": "c1", "name": "exec", "result": "alpha\nbeta\n"}],
@@ -153,6 +153,11 @@ def test_benchmark_replays_code_tier_with_zero_tokens_and_matching_output(tmp_pa
     paths = write_report(report, tmp_path / "report")
     md = Path(paths["markdown"]).read_text()
     assert "| LLM tokens | 2,000 | 1,060 | −47.0% |" in md
+    # token ledger: recorded model vs compiled executor, per step and per model
+    assert "| s1 | `shell_printf` | gpt-5-codex | 900 (0) + 40 = 940 | code | 0 |" in md
+    assert report.by_model()["gpt-5-codex"][0] == 940 and report.by_model()["code"] == (0, 0)
+    ledger = (tmp_path / "report" / "ledger.jsonl").read_text().splitlines()
+    assert len(ledger) == 2 and json.loads(ledger[0])["compiled_executor"] == "code"
 
 
 def test_benchmark_skips_self_referential_steps(tmp_path, monkeypatch):

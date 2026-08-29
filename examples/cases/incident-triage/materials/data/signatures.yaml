@@ -1,0 +1,13 @@
+signatures:
+  - rule: ssh-bruteforce
+    class: known
+    runbook: runbooks/RB-ssh-bruteforce.md
+    default_action: block-source-ip
+  - rule: disk-usage-high
+    class: known
+    runbook: runbooks/RB-disk-usage.md
+    default_action: cleanup-logs
+  - rule: sudo-from-service-account
+    class: privilege_escalation
+    runbook: null
+    default_action: page-oncall-immediately

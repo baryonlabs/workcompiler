@@ -373,6 +373,8 @@ class TrajectoryInterceptor:
             output=output_payload,
             latency_ms=duration_ms,
             token_usage=TokenUsage(prompt_tokens=p_tokens, completion_tokens=c_tokens, total_tokens=t_tokens),
+            model=str(response_payload.get("model") or request_payload.get("model") or ""),
+            cached_tokens=int(((usage.get("input_tokens_details") or {}).get("cached_tokens", 0)) or 0),
         )
         self.steps.append(step)
         return step

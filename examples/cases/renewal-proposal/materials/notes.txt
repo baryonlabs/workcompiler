@@ -1,0 +1,4 @@
+내 메모
+- 오늘 날짜 기준으로 2년 계산 (계약 start_date부터)
+- ACME(CUST-1001)가 9월 말 만료라 이번 주에 보내야 함
+- 파일 이름: proposal-<고객ID>.md, pricing-<고객ID>.json 로 통일

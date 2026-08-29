@@ -36,6 +36,11 @@ class StepBench:
     recorded_output: str
     compiled_output: str
     note: str = ""
+    recorded_model: str = ""          # model that produced the recorded step (from the trace)
+    compiled_model: str = ""          # what ran it in the build: "code", "rule", or a model id
+    recorded_prompt_tokens: int = 0
+    recorded_completion_tokens: int = 0
+    recorded_cached_tokens: int = 0   # part of the prompt served from the provider's cache (billed cheaper)
 
 
 @dataclass
@@ -104,10 +109,30 @@ class BenchReport:
             "escalated_actions": sum(1 for a in self.actions if a.tier not in ("code", "rule", "http")),
         }
 
+    def by_model(self) -> Dict[str, tuple[int, int]]:
+        """{model-or-executor: (recorded tokens, compiled tokens)} — the per-model accounting."""
+        out: Dict[str, List[int]] = {}
+        for a in self.actions:
+            for s in a.steps:
+                rec_key = s.recorded_model or "?"
+                out.setdefault(rec_key, [0, 0])[0] += s.recorded_tokens
+                comp_key = s.compiled_model or "?"
+                out.setdefault(comp_key, [0, 0])[1] += s.compiled_tokens
+        return {k: (v[0], v[1]) for k, v in out.items()}
+
+    def ledger_rows(self) -> List[Dict[str, Any]]:
+        return [{"step": s.step_id, "action": a.action, "recorded_model": s.recorded_model,
+                 "recorded_prompt_tokens": s.recorded_prompt_tokens, "recorded_cached_tokens": s.recorded_cached_tokens,
+                 "recorded_completion_tokens": s.recorded_completion_tokens,
+                 "recorded_tokens": s.recorded_tokens, "compiled_executor": s.compiled_model, "compiled_tokens": s.compiled_tokens}
+                for a in self.actions for s in a.steps]
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "work": self.work, "build_dir": self.build_dir, "run_id": self.run_id,
             "source_agent": self.source_agent, "totals": self.totals(),
+            "by_model": {k: {"recorded_tokens": v[0], "compiled_tokens": v[1]} for k, v in self.by_model().items()},
+            "ledger": self.ledger_rows(),
             "actions": [a.to_dict() for a in self.actions], "final_answer": self.final_answer,
         }
 
@@ -137,6 +162,21 @@ class BenchReport:
                 f"| `{a.action}` | {a.tier} | {used} | {a.recorded_tokens:,} → {a.compiled_tokens:,} | "
                 f"{a.recorded_latency_ms/1000:.1f} s → {a.compiled_latency_ms/1000:.2f} s | {a.matches} |"
             )
+        lines += ["", "## Token ledger — who spent what", "",
+                  "Every recorded step, the model that produced it, and what runs it in the compiled build.", "",
+                  "| step | action | recorded model | prompt (cached) + completion = total | compiled executor | compiled tokens |",
+                  "| :-- | :-- | :-- | --: | :-- | --: |"]
+        for a in self.actions:
+            for s in a.steps:
+                lines.append(f"| {s.step_id} | `{a.action}` | {s.recorded_model or '?'} | "
+                             f"{s.recorded_prompt_tokens:,} ({s.recorded_cached_tokens:,}) + {s.recorded_completion_tokens:,} = {s.recorded_tokens:,} | "
+                             f"{s.compiled_model} | {s.compiled_tokens:,} |")
+        cached = sum(s.recorded_cached_tokens for a in self.actions for s in a.steps)
+        lines += ["", "| model / executor | recorded tokens | compiled tokens |", "| :-- | --: | --: |"]
+        for key, (rt, ct) in self.by_model().items():
+            lines.append(f"| {key} | {rt:,} | {ct:,} |")
+        lines += ["", f"Recorded prompt tokens served from the provider cache: {cached:,} (counted in the totals above; billed at the cached rate).",
+                  "Totals are the sum of every request's usage as reported by the provider — each agent turn re-sends its whole context, which is why they exceed the agent CLI's own 'tokens used' figure."]
         lines += ["", "## Outputs", ""]
         for a in self.actions:
             for s in a.steps:
@@ -235,6 +275,23 @@ def _recorded_output(step: TraceStep) -> str:
     return str(out.get("content") or "")  # assistant text only; never compared against tool output
 
 
+def _step_model(step: TraceStep) -> str:
+    return str(getattr(step, "model", "") or "")
+
+
+def _step_token_split(step: TraceStep) -> tuple[int, int]:
+    usage = getattr(step, "token_usage", None)
+    if usage is None:
+        return 0, 0
+    if hasattr(usage, "prompt_tokens"):
+        return int(usage.prompt_tokens or 0), int(usage.completion_tokens or 0)
+    return int((usage or {}).get("prompt_tokens", 0)), int((usage or {}).get("completion_tokens", 0))
+
+
+def _step_cached(step: TraceStep) -> int:
+    return int(getattr(step, "cached_tokens", 0) or 0)
+
+
 def _step_tokens(step: TraceStep) -> int:
     usage = getattr(step, "token_usage", None)
     if usage is None:
@@ -282,8 +339,11 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
         executable = tier in ("code", "rule", "http")
 
         if executable and replay and _is_self_referential(inputs):
+            pt, ct = _step_token_split(step)
             bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, 0.0, f"{tier} (skipped)",
-                                         None, rec_out, "", "self-referential step (benchmarks/recompiles this build) not replayed"))
+                                         None, rec_out, "", "self-referential step (benchmarks/recompiles this build) not replayed",
+                                         recorded_model=_step_model(step), compiled_model="skipped",
+                                         recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step)))
         elif executable and replay:
             t0 = time.perf_counter()
             os.environ[BENCH_ACTIVE_ENV] = "1"
@@ -310,17 +370,25 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
                 note = "no recorded tool output to compare"
             if out.get("exit_code") not in (None, 0):
                 note = (note + "; " if note else "") + f"exit_code={out.get('exit_code')}"
+            pt, ct = _step_token_split(step)
             bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, elapsed,
                                          f"{tier}:{root.name}/handlers" if tier == "code" else tier,
-                                         match, rec_out, comp_out, note))
+                                         match, rec_out, comp_out, note,
+                                         recorded_model=_step_model(step), compiled_model=tier,
+                                         recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step)))
         elif executable:
+            pt, ct = _step_token_split(step)
             bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, 0.0, f"{tier} (replay disabled)",
-                                         None, rec_out, "", "not replayed"))
+                                         None, rec_out, "", "not replayed", recorded_model=_step_model(step),
+                                         compiled_model=tier, recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step)))
         else:
             reason = {"ml": "model not trained yet → fallback", "slm": "SLM not trained yet → fallback"}.get(tier, "")
+            pt, ct = _step_token_split(step)
             bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, rec_tokens, rec_latency,
                                          f"escalated:{tier}", None, rec_out, rec_out,
-                                         reason or "kept recorded cost (frontier/human tier)"))
+                                         reason or "kept recorded cost (frontier/human tier)",
+                                         recorded_model=_step_model(step), compiled_model=_step_model(step) or tier,
+                                         recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step)))
 
     report.actions = [benches[a] for a in work_ir.actions]
 
@@ -337,4 +405,15 @@ def write_report(report: BenchReport, out_dir: Path | str) -> Dict[str, str]:
     out.mkdir(parents=True, exist_ok=True)
     (out / "BENCHMARK.md").write_text(report.to_markdown(), encoding="utf-8")
     (out / "benchmark.json").write_text(json.dumps(report.to_dict(), indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
+    append_ledger(out, "bench", report.run_id, report.ledger_rows())
     return {"markdown": str(out / "BENCHMARK.md"), "json": str(out / "benchmark.json")}
+
+
+def append_ledger(out_dir: Path | str, kind: str, run_id: str, rows: List[Dict[str, Any]]) -> Path:
+    """Append one JSON line per step to ``ledger.jsonl`` — the cumulative token/model history of a build."""
+    path = Path(out_dir) / "ledger.jsonl"
+    stamp = time.strftime("%Y-%m-%dT%H:%M:%S")
+    with path.open("a", encoding="utf-8") as fh:
+        for row in rows:
+            fh.write(json.dumps({"at": stamp, "kind": kind, "run_id": run_id, **row}, ensure_ascii=False) + "\n")
+    return path

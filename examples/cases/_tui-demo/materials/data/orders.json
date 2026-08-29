@@ -1,0 +1,5 @@
+{"orders": [
+  {"order_id": "ORD-77001", "customer_id": "CUST-2201", "item": "Pro plan (annual)", "amount_krw": 264000, "ordered_at": "2026-08-20"},
+  {"order_id": "ORD-77002", "customer_id": "CUST-2202", "item": "Add-on storage 1TB", "amount_krw": 36000, "ordered_at": "2026-07-15"},
+  {"order_id": "ORD-77003", "customer_id": "CUST-2203", "item": "Team plan (monthly)", "amount_krw": 89000, "ordered_at": "2026-08-25"}
+]}

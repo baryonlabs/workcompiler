@@ -1,0 +1,4 @@
+change_id,host,changed_at,author,summary
+CHG-5101,web-03,2026-08-28T18:30:00Z,svc-deploy,deploy web v2.14.0
+CHG-5102,db-01,2026-08-28T22:55:00Z,dba-kim,rotate replication credentials
+CHG-5103,cache-02,2026-08-27T09:00:00Z,ops-lee,upgrade redis 7.2

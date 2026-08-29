@@ -1,0 +1,26 @@
+{
+  "params": [
+    {
+      "name": "alr_id",
+      "recorded_value": "ALR-2026-0828-17",
+      "kind": "id",
+      "steps": [
+        "step_3",
+        "step_5",
+        "step_7",
+        "step_8"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "alr_id_2",
+      "recorded_value": "ALR-2026-0810-04",
+      "kind": "id",
+      "steps": [
+        "step_6"
+      ],
+      "source": "command"
+    }
+  ],
+  "synthesized_actions": []
+}

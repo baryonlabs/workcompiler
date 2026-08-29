@@ -1,0 +1,158 @@
+{
+  "work": "refund-approval",
+  "build_dir": "/Users/hongmartin/orca/projects/open-workflow/build/refund_approval",
+  "artifact_count": 11,
+  "by_tier": {
+    "work_ir": [
+      "work.yaml"
+    ],
+    "code": [
+      "handlers/shell_sed.py",
+      "handlers/shell_cat.py",
+      "handlers/shell_jq.py",
+      "handlers/shell_python3.py",
+      "handlers/shell_mkdir.py",
+      "handlers/write_decision_rr_2026_0827_03.py"
+    ],
+    "frontier_llm": [
+      "prompts/respond.prompt.md"
+    ],
+    "params": [
+      "PARAMS.json"
+    ],
+    "trace": [
+      "trace.json"
+    ],
+    "openworklang": [
+      "refund_approval.work"
+    ]
+  },
+  "params": [
+    {
+      "name": "rr_id",
+      "recorded_value": "RR-2026-0712-01",
+      "kind": "id",
+      "steps": [
+        "step_2"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "rr_id_2",
+      "recorded_value": "RR-2026-0827-03",
+      "kind": "id",
+      "steps": [
+        "step_3",
+        "step_6",
+        "step_11",
+        "step_12",
+        "step_13",
+        "step_14"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "order_id",
+      "recorded_value": "ORD-77001",
+      "kind": "id",
+      "steps": [
+        "step_7",
+        "step_8",
+        "step_11",
+        "step_13"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "customer_id",
+      "recorded_value": "CUST-2201",
+      "kind": "id",
+      "steps": [
+        "step_7",
+        "step_11",
+        "step_13"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "rc_id",
+      "recorded_value": "RC-88102",
+      "kind": "id",
+      "steps": [
+        "step_8",
+        "step_11",
+        "step_13"
+      ],
+      "source": "command"
+    }
+  ],
+  "synthesized_actions": [],
+  "artifacts": [
+    {
+      "action": "*",
+      "tier": "work_ir",
+      "kind": "work.yaml",
+      "path": "work.yaml"
+    },
+    {
+      "action": "shell_sed",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_sed.py"
+    },
+    {
+      "action": "shell_cat",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_cat.py"
+    },
+    {
+      "action": "shell_jq",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_jq.py"
+    },
+    {
+      "action": "shell_python3",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_python3.py"
+    },
+    {
+      "action": "shell_mkdir",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_mkdir.py"
+    },
+    {
+      "action": "write_decision_rr_2026_0827_03",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/write_decision_rr_2026_0827_03.py"
+    },
+    {
+      "action": "respond",
+      "tier": "frontier_llm",
+      "kind": "prompt",
+      "path": "prompts/respond.prompt.md"
+    },
+    {
+      "action": "*",
+      "tier": "params",
+      "kind": "PARAMS.json",
+      "path": "PARAMS.json"
+    },
+    {
+      "action": "*",
+      "tier": "trace",
+      "kind": "trace.json",
+      "path": "trace.json"
+    },
+    {
+      "action": "*",
+      "tier": "openworklang",
+      "kind": "work_source",
+      "path": "refund_approval.work"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+[bench] incident-triage: tokens 159,640 -> 21,081 (-86.8%), wall 88.0s -> 5.29s (16.6x), outputs reproduced 6/8, compiled/escalated actions 5/1
+  shell_sed            code          tokens  14,231 -> 0      latency    3.3s ->  0.01s  match 1/1
+  shell_python3        code          tokens  16,080 -> 0      latency    6.2s ->  0.03s  match 0/1
+  shell_jq             code          tokens  33,886 -> 0      latency   15.2s ->  0.04s  match 2/2
+  shell_cat            code          tokens  55,255 -> 0      latency   40.0s ->  0.07s  match 2/3
+  write_triage_alr_2026_0828_17 code          tokens  19,107 -> 0      latency   18.0s ->  0.00s  match 1/1
+  respond              frontier_llm  tokens  21,081 -> 21,081 latency    5.1s ->  5.15s  match n/a
+  report: build/incident_triage/BENCHMARK.md

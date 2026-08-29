@@ -1,0 +1,41 @@
+{
+  "request_id": "RR-2026-0827-03",
+  "order_id": "ORD-77001",
+  "customer_id": "CUST-2201",
+  "requested_at": "2026-08-27",
+  "requested_amount_krw": 264000,
+  "receipt_no": "RC-88102",
+  "receipt_match": true,
+  "matched_payment": {
+    "payment_id": "PAY-90012",
+    "status": "success",
+    "amount_krw": 264000,
+    "paid_at": "2026-08-20",
+    "receipt_no": "RC-88102"
+  },
+  "successful_payment_ids": [
+    "PAY-90011",
+    "PAY-90012"
+  ],
+  "successful_payment_count": 2,
+  "days_since_payment": 7,
+  "is_duplicate_charge": true,
+  "policy_version": "v3",
+  "policy_effective_date": "2026-04-01",
+  "applied_clauses": [
+    3,
+    4
+  ],
+  "calculated_refund_amount_krw": 264000,
+  "status": "pending_finance_approval",
+  "decision_authority": "finance",
+  "rationale": "Receipt RC-88102 matches successful payment PAY-90012 for the request order. ORD-77001 has two successful payments of 264000 KRW, establishing a duplicate charge. Policy v3 clause 3 allows a full refund of the evidenced duplicate amount regardless of age, capped at the requested amount, so the calculated refund is 264000 KRW. Because this exceeds 100000 KRW, clause 4 requires Finance approval and Customer Support may not finalize the refund.",
+  "source_files": [
+    "examples/cases/refund-approval/materials/memo-from-manager.md",
+    "examples/cases/refund-approval/materials/notes.txt",
+    "examples/cases/refund-approval/materials/data/refund-policy-v3.md",
+    "examples/cases/refund-approval/materials/data/refund-requests.json",
+    "examples/cases/refund-approval/materials/data/orders.json",
+    "examples/cases/refund-approval/materials/data/payments.csv"
+  ]
+}

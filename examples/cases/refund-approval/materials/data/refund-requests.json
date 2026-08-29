@@ -1,0 +1,5 @@
+{"requests": [
+  {"request_id": "RR-2026-0827-03", "order_id": "ORD-77001", "customer_id": "CUST-2201", "requested_at": "2026-08-27", "reason": "charged twice", "receipt_no": "RC-88102", "requested_amount_krw": 264000},
+  {"request_id": "RR-2026-0826-01", "order_id": "ORD-77002", "customer_id": "CUST-2202", "requested_at": "2026-08-26", "reason": "no longer needed", "receipt_no": "RC-88103", "requested_amount_krw": 36000},
+  {"request_id": "RR-2026-0828-02", "order_id": "ORD-77003", "customer_id": "CUST-2203", "requested_at": "2026-08-28", "reason": "wrong plan", "receipt_no": "RC-99999", "requested_amount_krw": 89000}
+]}

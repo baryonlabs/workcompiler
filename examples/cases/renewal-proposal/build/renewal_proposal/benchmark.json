@@ -1,0 +1,334 @@
+{
+  "work": "renewal-proposal",
+  "build_dir": "build/renewal_proposal",
+  "run_id": "01a04b46-8059-7191-8b4b-66c272f30e93",
+  "source_agent": "codex_exec",
+  "totals": {
+    "recorded_tokens": 160876,
+    "compiled_tokens": 24819,
+    "token_savings_pct": 84.6,
+    "recorded_latency_ms": 133725.3,
+    "compiled_latency_ms": 7105.0,
+    "speedup_x": 18.8,
+    "outputs_checked": 7,
+    "outputs_matched": 7,
+    "compiled_actions": 6,
+    "escalated_actions": 1
+  },
+  "by_model": {
+    "gpt-5.6-sol": {
+      "recorded_tokens": 160876,
+      "compiled_tokens": 24819
+    },
+    "code": {
+      "recorded_tokens": 0,
+      "compiled_tokens": 0
+    }
+  },
+  "ledger": [
+    {
+      "step": "step_1",
+      "action": "shell_sed",
+      "recorded_model": "gpt-5.6-sol",
+      "recorded_prompt_tokens": 14128,
+      "recorded_cached_tokens": 7936,
+      "recorded_completion_tokens": 107,
+      "recorded_tokens": 14235,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_2",
+      "action": "shell_cat",
+      "recorded_model": "gpt-5.6-sol",
+      "recorded_prompt_tokens": 15681,
+      "recorded_cached_tokens": 13056,
+      "recorded_completion_tokens": 460,
+      "recorded_tokens": 16141,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_3",
+      "action": "shell_cat",
+      "recorded_model": "gpt-5.6-sol",
+      "recorded_prompt_tokens": 17216,
+      "recorded_cached_tokens": 15104,
+      "recorded_completion_tokens": 284,
+      "recorded_tokens": 17500,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_4",
+      "action": "shell_python3",
+      "recorded_model": "gpt-5.6-sol",
+      "recorded_prompt_tokens": 19477,
+      "recorded_cached_tokens": 16128,
+      "recorded_completion_tokens": 1023,
+      "recorded_tokens": 20500,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_5",
+      "action": "shell_mkdir",
+      "recorded_model": "gpt-5.6-sol",
+      "recorded_prompt_tokens": 20697,
+      "recorded_cached_tokens": 19200,
+      "recorded_completion_tokens": 320,
+      "recorded_tokens": 21017,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_6",
+      "action": "write_pricing_cust_1001",
+      "recorded_model": "gpt-5.6-sol",
+      "recorded_prompt_tokens": 21040,
+      "recorded_cached_tokens": 20224,
+      "recorded_completion_tokens": 1441,
+      "recorded_tokens": 22481,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_7",
+      "action": "shell_jq",
+      "recorded_model": "gpt-5.6-sol",
+      "recorded_prompt_tokens": 22505,
+      "recorded_cached_tokens": 20224,
+      "recorded_completion_tokens": 1678,
+      "recorded_tokens": 24183,
+      "compiled_executor": "code",
+      "compiled_tokens": 0
+    },
+    {
+      "step": "step_8",
+      "action": "respond",
+      "recorded_model": "gpt-5.6-sol",
+      "recorded_prompt_tokens": 24688,
+      "recorded_cached_tokens": 22272,
+      "recorded_completion_tokens": 131,
+      "recorded_tokens": 24819,
+      "compiled_executor": "gpt-5.6-sol",
+      "compiled_tokens": 24819
+    }
+  ],
+  "actions": [
+    {
+      "action": "shell_sed",
+      "tier": "code",
+      "recorded_tokens": 14235,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 4770.6,
+      "compiled_latency_ms": 9.9,
+      "output_matches": "1/1",
+      "steps": [
+        {
+          "step_id": "step_1",
+          "recorded_tokens": 14235,
+          "recorded_latency_ms": 4770.5547080840915,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 9.902458870783448,
+          "executor_used": "code:renewal_proposal/handlers",
+          "output_match": true,
+          "recorded_output": "# Task: renewal proposal for customer CUST-1001\n\nYou are the sales-operations assistant. Prepare an auditable annual renewal proposal for **CUST-1001** as of **2026-08-29**, for internal review by sales operations and the account owner. Do not send it externally.\n\nRules (from `examples/cases/renewal-proposal/behaviors/`): verify exactly one active contract before any usage-based recommendation or pricing; use only the current `pricing_v2` policy; never finalize a discount above the policy cap without recorded sales-director approval; and reproduce all current-policy required clauses verbatim. Treat `examples/cases/renewal-proposal/materials/previous/proposal-CUST-0993.md` only as a structure/tone precedent, never as a factual source. Do not use `pricing_v1_legacy.yaml` for any new-offer calculation.\n\nDo the work with auditable shell commands (`jq`, `python3`, `sed`, `cat`) from the repository root:\n\n1. **Inspect the instructions and precedent** — read `examples/cases/renewal-proposal/materials/memo-from-sales-lead.md`, `examples/cases/renewal-proposal/materials/notes.txt`, and `examples/cases/renewal-proposal/materials/previous/proposal-CUST-0993.md`. Use the prior proposal only to guide structure and professional tone.\n2. **Verify the current contract** — read `examples/cases/renewal-proposal/materials/data/contracts.json`; select records whose `customer_id` is **CUST-1001** and `status` is `active`; print the selected record and require exactly one match. Stop and report the ambiguity/missing contract without drafting if the match count is not one. Do not use the expired ACME record.\n3. **Calculate the three-month usage** — read `examples/cases/renewal-proposal/materials/data/usage-2026-07.csv`; filter to **CUST-1001** and require exactly the months `2026-05`, `2026-06`, and `2026-07`. Compute peak `seats_active`, active-seat growth from first to last month as a percentage rounded to two decimals, and average `api_calls` rounded to two decimals. Stop if the window is incomplete or duplicated.\n4. **Load and validate current pricing** — read `examples/cases/renewal-proposal/materials/data/pricing_v2.yaml` and verify `policy: pricing_v2` and that **2026-08-29** is on or after `effective_from`. Do not read pricing values from `examples/cases/renewal-proposal/materials/data/pricing_v1_legacy.yaml`, from the contract's `pricing_policy`, or from the prior proposal.\n5. **Calculate the offer** — apply `seat_recommendation`: take the greater of active-contract seats and the three-month peak, then round upward to the next multiple of 10 (an existing multiple remains unchanged). Use the v2 list price for the active contract plan. Apply only the highest qualifying volume discount band. Apply the loyalty discount only if the interval from the active contract `start_date` through **2026-08-29** is at least two full calendar years. Sum applicable discounts without exceeding `max_total_discount_pct`; if a requested discount would exceed the cap and no sales-director approval evidence exists, stop finalization and report approval required. Calculate monthly and 12-month annual list totals, discount amounts, and final totals in USD, rounded to two decimals.\n6. **Write auditable pricing evidence** — create `build/renewal-proposal/` and write `build/renewal-proposal/pricing-CUST-1001.json`. Include `customer_id`, `customer_name`, `proposal_date`, source file paths, policy/version and effective date, active-contract ID/status/plan/start/end/current seats, usage window and all calculated usage metrics, seat-recommendation inputs/result, currency and term, per-seat list price, monthly/annual list totals, each discount with its eligibility reason, combined discount before and after cap, monthly/annual discount amounts, monthly/annual final totals, and `approval_required`/`approval_status`. Use JSON numbers for numeric fields.\n7. **Draft the proposal** — write `build/renewal-proposal/proposal-CUST-1001.md` using only facts established above. Include the title and proposal date; customer and active-contract summary; usage summary (window, peak seats, growth, average API calls, and recommended commitment); a pricing table showing seats × v2 list price, each applied discount, and monthly/annual totals; and a `## Required clauses` section containing every string from `pricing_v2.yaml.required_clauses` exactly once and verbatim. Do not add unsupported customer claims, discounts, special terms, or approval claims.\n8. **Validate before completion** — use commands to parse the JSON; independently recompute its seat recommendation, discounts, and totals; verify the proposal's customer, contract, seats, discounts, and totals agree with the JSON; verify all required clauses match the v2 policy byte-for-byte; and verify neither output cites or applies `pricing_v1_legacy`. If any check fails, correct the output and rerun all validations.\n9. **Required reply** — reply with a short internal-review summary containing the recommended committed seats, final annual price, every applied discount, and these two paths: `build/renewal-proposal/proposal-CUST-1001.md` and `build/renewal-proposal/pricing-CUST-1001.json`. State clearly that the files were prepared but not sent.\n\nAcceptance requires both files at the exact paths, successful arithmetic and cross-file validation, observable compliance with all four behavior contracts, verbatim required clauses, and no unresolved approval requirement.\n",
+          "compiled_output": "# Task: renewal proposal for customer CUST-1001\n\nYou are the sales-operations assistant. Prepare an auditable annual renewal proposal for **CUST-1001** as of **2026-08-29**, for internal review by sales operations and the account owner. Do not send it externally.\n\nRules (from `examples/cases/renewal-proposal/behaviors/`): verify exactly one active contract before any usage-based recommendation or pricing; use only the current `pricing_v2` policy; never finalize a discount above the policy cap without recorded sales-director approval; and reproduce all current-policy required clauses verbatim. Treat `examples/cases/renewal-proposal/materials/previous/proposal-CUST-0993.md` only as a structure/tone precedent, never as a factual source. Do not use `pricing_v1_legacy.yaml` for any new-offer calculation.\n\nDo the work with auditable shell commands (`jq`, `python3`, `sed`, `cat`) from the repository root:\n\n1. **Inspect the instructions and precedent** — read `examples/cases/renewal-proposal/materials/memo-from-sales-lead.md`, `examples/cases/renewal-proposal/materials/notes.txt`, and `examples/cases/renewal-proposal/materials/previous/proposal-CUST-0993.md`. Use the prior proposal only to guide structure and professional tone.\n2. **Verify the current contract** — read `examples/cases/renewal-proposal/materials/data/contracts.json`; select records whose `customer_id` is **CUST-1001** and `status` is `active`; print the selected record and require exactly one match. Stop and report the ambiguity/missing contract without drafting if the match count is not one. Do not use the expired ACME record.\n3. **Calculate the three-month usage** — read `examples/cases/renewal-proposal/materials/data/usage-2026-07.csv`; filter to **CUST-1001** and require exactly the months `2026-05`, `2026-06`, and `2026-07`. Compute peak `seats_active`, active-seat growth from first to last month as a percentage rounded to two decimals, and average `api_calls` rounded to two decimals. Stop if the window is incomplete or duplicated.\n4. **Load and validate current pricing** — read `examples/cases/renewal-proposal/materials/data/pricing_v2.yaml` and verify `policy: pricing_v2` and that **2026-08-29** is on or after `effective_from`. Do not read pricing values from `examples/cases/renewal-proposal/materials/data/pricing_v1_legacy.yaml`, from the contract's `pricing_policy`, or from the prior proposal.\n5. **Calculate the offer** — apply `seat_recommendation`: take the greater of active-contract seats and the three-month peak, then round upward to the next multiple of 10 (an existing multiple remains unchanged). Use the v2 list price for the active contract plan. Apply only the highest qualifying volume discount band. Apply the loyalty discount only if the interval from the active contract `start_date` through **2026-08-29** is at least two full calendar years. Sum applicable discounts without exceeding `max_total_discount_pct`; if a requested discount would exceed the cap and no sales-director approval evidence exists, stop finalization and report approval required. Calculate monthly and 12-month annual list totals, discount amounts, and final totals in USD, rounded to two decimals.\n6. **Write auditable pricing evidence** — create `build/renewal-proposal/` and write `build/renewal-proposal/pricing-CUST-1001.json`. Include `customer_id`, `customer_name`, `proposal_date`, source file paths, policy/version and effective date, active-contract ID/status/plan/start/end/current seats, usage window and all calculated usage metrics, seat-recommendation inputs/result, currency and term, per-seat list price, monthly/annual list totals, each discount with its eligibility reason, combined discount before and after cap, monthly/annual discount amounts, monthly/annual final totals, and `approval_required`/`approval_status`. Use JSON numbers for numeric fields.\n7. **Draft the proposal** — write `build/renewal-proposal/proposal-CUST-1001.md` using only facts established above. Include the title and proposal date; customer and active-contract summary; usage summary (window, peak seats, growth, average API calls, and recommended commitment); a pricing table showing seats × v2 list price, each applied discount, and monthly/annual totals; and a `## Required clauses` section containing every string from `pricing_v2.yaml.required_clauses` exactly once and verbatim. Do not add unsupported customer claims, discounts, special terms, or approval claims.\n8. **Validate before completion** — use commands to parse the JSON; independently recompute its seat recommendation, discounts, and totals; verify the proposal's customer, contract, seats, discounts, and totals agree with the JSON; verify all required clauses match the v2 policy byte-for-byte; and verify neither output cites or applies `pricing_v1_legacy`. If any check fails, correct the output and rerun all validations.\n9. **Required reply** — reply with a short internal-review summary containing the recommended committed seats, final annual price, every applied discount, and these two paths: `build/renewal-proposal/proposal-CUST-1001.md` and `build/renewal-proposal/pricing-CUST-1001.json`. State clearly that the files were prepared but not sent.\n\nAcceptance requires both files at the exact paths, successful arithmetic and cross-file validation, observable compliance with all four behavior contracts, verbatim required clauses, and no unresolved approval requirement.\n",
+          "note": "",
+          "recorded_model": "gpt-5.6-sol",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 14128,
+          "recorded_completion_tokens": 107,
+          "recorded_cached_tokens": 7936
+        }
+      ]
+    },
+    {
+      "action": "shell_cat",
+      "tier": "code",
+      "recorded_tokens": 33641,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 24234.4,
+      "compiled_latency_ms": 94.5,
+      "output_matches": "2/2",
+      "steps": [
+        {
+          "step_id": "step_2",
+          "recorded_tokens": 16141,
+          "recorded_latency_ms": 11331.282583996654,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 59.55537501722574,
+          "executor_used": "code:renewal_proposal/handlers",
+          "output_match": true,
+          "recorded_output": "# 영업팀장 메모 (슬랙에서 복사)\n\n갱신 제안서 이제 네가 맡아줘. 대충 이렇게 해왔음:\n- CRM 파일(contracts.json)에서 그 고객 \"현재 살아있는\" 계약 찾기. 옛날 만료된 거 보고 견적 낸 사고 한 번 있었음. 꼭 status 확인.\n- 최근 3개월 사용량(usage csv) 보고 좌석 늘었으면 늘어난 만큼 잡아서 제안. 10석 단위로 올림.\n- 가격은 무조건 pricing_v2. v1_legacy는 작년에 폐기됐는데 아직 파일이 남아있음. 헷갈리지 말 것.\n- 50석 이상 5%, 200석 이상 10%, 500석 이상 15%. 2년 이상 고객은 3% 더. 합쳐서 20% 넘으면 안 됨(넘으면 이사 승인).\n- 제안서 끝에 표준 조항 3개 꼭 넣기 (자동갱신 통지 60일, DPA v3, 30일 유효).\n- 결과물은 md 파일 하나 + 계산 근거 json 하나. 예전 거 previous 폴더에 있음.\n내 메모\n- 오늘 날짜 기준으로 2년 계산 (계약 start_date부터)\n- ACME(CUST-1001)가 9월 말 만료라 이번 주에 보내야 함\n- 파일 이름: proposal-<고객ID>.md, pricing-<고객ID>.json 로 통일\n# Annual Renewal Proposal — Northwind Traders (CUST-0993)\n\nProposal date: 2026-03-02\n\n## Customer and contract summary\n- Active contract: CTR-2025-0011, Professional, 80 seats, 2025-03-15 → 2026-03-14\n\n## Usage summary\nPeak active seats 84 over the last 3 months → recommended commitment 90 seats.\n\n## Pricing (pricing_v2)\n| Calculation | Monthly (USD) | Annual (USD) |\n|---|---:|---:|\n| 90 seats × $25.00 | $2,250.00 | $27,000.00 |\n| Less 5% volume discount | −$112.50 | −$1,350.00 |\n| Total | $2,137.50 | $25,650.00 |\n\n## Required clauses\n12-month term with 60-day auto-renewal notice\nData Processing Addendum v3 attached\nPrice valid for 30 days from proposal date\njq: error (at examples/cases/renewal-proposal/materials/data/contracts.json:50): Cannot index string with string \"customer_id\"\n[\n  {\n    \"customer_id\": \"CUST-1001\",\n    \"month\": \"2026-05\",\n    \"seats_active\": \"238\",\n    \"api_calls\": \"1840000\",\n    \"storage_gb\": \"910\",\n    \"support_tickets\": \"4\"\n  },\n  {\n    \"customer_id\": \"CUST-1001\",\n    \"month\": \"2026-06\",\n    \"seats_active\": \"247\",\n    \"api_calls\": \"2010000\",\n    \"storage_gb\": \"955\",\n    \"support_tickets\": \"3\"\n  },\n  {\n    \"customer_id\": \"CUST-1001\",\n    \"month\": \"2026-07\",\n    \"seats_active\": \"262\",\n    \"api_calls\": \"2265000\",\n    \"storage_gb\": \"1010\",\n    \"support_tickets\": \"5\"\n  }\n]\n# Current enterprise pricing policy (rules.pricing_v2). Effective 2026-01-01.\n# The renewal offer MUST be computed from this table (see behaviors/use-current-pricing-policy).\npolicy: pricing_v2\neffective_from: \"2026-01-01\"\ncurrency: USD\nrenewal_term_months: 12\nlist_price_per_seat_month:\n  starter: 12.0\n  professional: 25.0\n  enterprise: 40.0\nvolume_discount_bands:            # applied on list price, by committed seats\n  - min_seats: 50\n    pct: 5\n  - min_seats: 200\n    pct: 10\n  - min_seats: 500\n    pct: 15\nloyalty_discount:                 # customers with >= min_years continuous service\n  min_years: 2\n  pct: 3\nmax_total_discount_pct: 20        # hard cap; anything beyond needs sales-director approval\nseat_recommendation:\n  rule: \"commit seats = max(current contract seats, peak seats_active of last 3 months) rounded up to next 10\"\nrequired_clauses:\n  - \"12-month term with 60-day auto-renewal notice\"\n  - \"Data Processing Addendum v3 attached\"\n  - \"Price valid for 30 days from proposal date\"\n",
+          "compiled_output": "# 영업팀장 메모 (슬랙에서 복사)\n\n갱신 제안서 이제 네가 맡아줘. 대충 이렇게 해왔음:\n- CRM 파일(contracts.json)에서 그 고객 \"현재 살아있는\" 계약 찾기. 옛날 만료된 거 보고 견적 낸 사고 한 번 있었음. 꼭 status 확인.\n- 최근 3개월 사용량(usage csv) 보고 좌석 늘었으면 늘어난 만큼 잡아서 제안. 10석 단위로 올림.\n- 가격은 무조건 pricing_v2. v1_legacy는 작년에 폐기됐는데 아직 파일이 남아있음. 헷갈리지 말 것.\n- 50석 이상 5%, 200석 이상 10%, 500석 이상 15%. 2년 이상 고객은 3% 더. 합쳐서 20% 넘으면 안 됨(넘으면 이사 승인).\n- 제안서 끝에 표준 조항 3개 꼭 넣기 (자동갱신 통지 60일, DPA v3, 30일 유효).\n- 결과물은 md 파일 하나 + 계산 근거 json 하나. 예전 거 previous 폴더에 있음.\n내 메모\n- 오늘 날짜 기준으로 2년 계산 (계약 start_date부터)\n- ACME(CUST-1001)가 9월 말 만료라 이번 주에 보내야 함\n- 파일 이름: proposal-<고객ID>.md, pricing-<고객ID>.json 로 통일\n# Annual Renewal Proposal — Northwind Traders (CUST-0993)\n\nProposal date: 2026-03-02\n\n## Customer and contract summary\n- Active contract: CTR-2025-0011, Professional, 80 seats, 2025-03-15 → 2026-03-14\n\n## Usage summary\nPeak active seats 84 over the last 3 months → recommended commitment 90 seats.\n\n## Pricing (pricing_v2)\n| Calculation | Monthly (USD) | Annual (USD) |\n|---|---:|---:|\n| 90 seats × $25.00 | $2,250.00 | $27,000.00 |\n| Less 5% volume discount | −$112.50 | −$1,350.00 |\n| Total | $2,137.50 | $25,650.00 |\n\n## Required clauses\n12-month term with 60-day auto-renewal notice\nData Processing Addendum v3 attached\nPrice valid for 30 days from proposal date\njq: error (at examples/cases/renewal-proposal/materials/data/contracts.json:50): Cannot index string with string \"customer_id\"\n[\n  {\n    \"customer_id\": \"CUST-1001\",\n    \"month\": \"2026-05\",\n    \"seats_active\": \"238\",\n    \"api_calls\": \"1840000\",\n    \"storage_gb\": \"910\",\n    \"support_tickets\": \"4\"\n  },\n  {\n    \"customer_id\": \"CUST-1001\",\n    \"month\": \"2026-06\",\n    \"seats_active\": \"247\",\n    \"api_calls\": \"2010000\",\n    \"storage_gb\": \"955\",\n    \"support_tickets\": \"3\"\n  },\n  {\n    \"customer_id\": \"CUST-1001\",\n    \"month\": \"2026-07\",\n    \"seats_active\": \"262\",\n    \"api_calls\": \"2265000\",\n    \"storage_gb\": \"1010\",\n    \"support_tickets\": \"5\"\n  }\n]\n# Current enterprise pricing policy (rules.pricing_v2). Effective 2026-01-01.\n# The renewal offer MUST be computed from this table (see behaviors/use-current-pricing-policy).\npolicy: pricing_v2\neffective_from: \"2026-01-01\"\ncurrency: USD\nrenewal_term_months: 12\nlist_price_per_seat_month:\n  starter: 12.0\n  professional: 25.0\n  enterprise: 40.0\nvolume_discount_bands:            # applied on list price, by committed seats\n  - min_seats: 50\n    pct: 5\n  - min_seats: 200\n    pct: 10\n  - min_seats: 500\n    pct: 15\nloyalty_discount:                 # customers with >= min_years continuous service\n  min_years: 2\n  pct: 3\nmax_total_discount_pct: 20        # hard cap; anything beyond needs sales-director approval\nseat_recommendation:\n  rule: \"commit seats = max(current contract seats, peak seats_active of last 3 months) rounded up to next 10\"\nrequired_clauses:\n  - \"12-month term with 60-day auto-renewal notice\"\n  - \"Data Processing Addendum v3 attached\"\n  - \"Price valid for 30 days from proposal date\"\n",
+          "note": "",
+          "recorded_model": "gpt-5.6-sol",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 15681,
+          "recorded_completion_tokens": 460,
+          "recorded_cached_tokens": 13056
+        },
+        {
+          "step_id": "step_3",
+          "recorded_tokens": 17500,
+          "recorded_latency_ms": 12903.137625195086,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 34.945958061143756,
+          "executor_used": "code:renewal_proposal/handlers",
+          "output_match": true,
+          "recorded_output": "{\n  \"generated_at\": \"2026-08-01\",\n  \"contracts\": [\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2024-0917\",\n      \"status\": \"active\",\n      \"plan\": \"enterprise\",\n      \"seats\": 240,\n      \"price_per_seat_month_usd\": 38.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2024-09-01\",\n      \"end_date\": \"2026-09-30\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    },\n    {\n      \"customer_id\": \"CUST-1002\",\n      \"customer_name\": \"Bluebird Logistics\",\n      \"contract_id\": \"CTR-2025-0142\",\n      \"status\": \"active\",\n      \"plan\": \"professional\",\n      \"seats\": 60,\n      \"price_per_seat_month_usd\": 25.0,\n      \"pricing_policy\": \"pricing_v2\",\n      \"start_date\": \"2025-11-15\",\n      \"end_date\": \"2026-11-14\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"m.lee@example.com\",\n      \"special_terms\": [\"custom SLA 99.95%\"]\n    },\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2022-0311\",\n      \"status\": \"expired\",\n      \"plan\": \"professional\",\n      \"seats\": 120,\n      \"price_per_seat_month_usd\": 22.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2022-09-01\",\n      \"end_date\": \"2024-08-31\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    }\n  ]\n}\nFILE: examples/cases/renewal-proposal/behaviors/enforce-discount-approval-cap/BEHAVIOR.md\n# BEHAVIOR: enforce-discount-approval-cap\n\n## 1. Intent\nPrevent an unauthorized renewal proposal from being finalized when requested combined discounts exceed the current policy's maximum total discount.\n\n## 2. Evidence\nThe trajectory records each discount and eligibility reason, the pre-cap combined percentage, the policy cap from `pricing_v2.yaml`, and `approval_required`/`approval_status` before proposal finalization; any above-cap case includes observable sales-director approval evidence or stops without a final proposal.\n\n## 3. Decision\n- `true`: The combined discount is at or below the policy cap, or an above-cap proposal is finalized only with recorded sales-director approval evidence.\n- `false`: A proposal is finalized above the cap without approval, approval is invented or assumed, or discount components/cap comparison are absent.\n- `na`: No discount is calculated, or the trajectory stops before an offer is proposed for reasons unrelated to the discount cap.\n\n## 4. Execution\nEvaluate the deterministic cap after all eligible discounts are assembled and before writing the final proposal. Treat missing approval evidence as not approved and halt above-cap finalization.\n\n## 5. Recovery\nStop proposal finalization and report the requested discount and required sales-director approval; resume only when verifiable approval evidence is available or the offer is revised within the cap.\n\n## 6. Failure Modes\nSilently clipping an intended exception without disclosure; exceeding 20% without approval; claiming verbal or implied approval not present in evidence; omitting a discount component to evade the cap check.\n\nFILE: examples/cases/renewal-proposal/behaviors/include-required-clauses-verbatim/BEHAVIOR.md\n# BEHAVIOR: include-required-clauses-verbatim\n\n## 1. Intent\nEnsure the renewal proposal contains every standard clause mandated by the current pricing policy, exactly and without semantic drift.\n\n## 2. Evidence\nThe trajectory reads `required_clauses` from `examples/cases/renewal-proposal/materials/data/pricing_v2.yaml` and validates that each source string occurs exactly once, unchanged, in the proposal's `## Required clauses` section.\n\n## 3. Decision\n- `true`: Every current-policy required clause appears exactly once and verbatim in the designated proposal section.\n- `false`: Any clause is missing, duplicated, paraphrased, altered, sourced from legacy material, or placed only in pricing JSON rather than the proposal.\n- `na`: The trajectory does not draft a renewal proposal.\n\n## 4. Execution\nCopy the clause strings directly from the validated v2 policy during drafting, then perform an exact string and occurrence-count check before completion.\n\n## 5. Recovery\nReload `required_clauses` from the current policy, replace the entire required-clauses section with the authoritative strings, and rerun exact-match validation.\n\n## 6. Failure Modes\nParaphrasing legal text; omitting the 60-day notice, DPA v3, or 30-day validity clause; copying legacy wording; inserting a clause twice; claiming clause compliance without checking the written file.\n\nFILE: examples/cases/renewal-proposal/behaviors/use-current-pricing-policy/BEHAVIOR.md\n# BEHAVIOR: use-current-pricing-policy\n\n## 1. Intent\nGuarantee that every new renewal offer uses the effective `pricing_v2` policy as the sole authority for list price, seat recommendation, discounts, term, cap, and required clauses.\n\n## 2. Evidence\nThe trajectory shows `examples/cases/renewal-proposal/materials/data/pricing_v2.yaml` read and validated as `policy: pricing_v2` with an effective date no later than the proposal date before pricing; calculation fields in the JSON trace to its values and do not trace to the legacy file, stored contract price, or previous proposal.\n\n## 3. Decision\n- `true`: The effective v2 policy was validated and all offer calculations and required clauses were derived from it.\n- `false`: Legacy v1, the contract's historical price/policy, the previous proposal, invented terms, or an ineffective/unvalidated policy supplied any new-offer value.\n- `na`: The trajectory performs no renewal pricing or proposal drafting.\n\n## 4. Execution\nEnforce policy validation before price calculation and proposal drafting, with deterministic checks of the policy identifier, effective date, plan price, highest qualifying volume band, loyalty eligibility, term, and clause list.\n\n## 5. Recovery\nDiscard affected calculations and prose, reload and validate `pricing_v2.yaml`, recompute the complete offer, and rerun arithmetic and clause validation.\n\n## 6. Failure Modes\nUsing `pricing_v1_legacy.yaml`; retaining the active contract's $38 historical enterprise price instead of v2's current price; stacking volume bands; granting loyalty before two full years; copying another customer's price or clauses.\n\nFILE: examples/cases/renewal-proposal/behaviors/verify-active-contract/BEHAVIOR.md\n# BEHAVIOR: verify-active-contract\n\n## 1. Intent\nEnsure every renewal proposal is based on exactly one current, active contract for the requested customer, never an expired or merely matching historical record.\n\n## 2. Evidence\nThe trajectory shows `examples/cases/renewal-proposal/materials/data/contracts.json` being read and filtered by both the bound `customer_id` and `status == active`; it records a match count of one and the selected contract before usage calculation, pricing, or drafting.\n\n## 3. Decision\n- `true`: Exactly one active contract was selected from the contract source before recommendation, pricing, and drafting.\n- `false`: Pricing or drafting used an expired, hardcoded, cached, missing, or ambiguously selected contract, or occurred before the active-contract check.\n- `na`: The trajectory does not perform a customer contract renewal or contract-based pricing.\n\n## 4. Execution\nEnforce a non-removable dependency from active-contract lookup and uniqueness validation to usage recommendation, pricing, and proposal drafting.\n\n## 5. Recovery\nStop downstream work, re-read the contract source, filter on customer and active status, and continue only after exactly one active record is established; otherwise report the missing or ambiguous contract for human resolution.\n\n## 6. Failure Modes\nSelecting the expired ACME record; matching customer ID without status; trusting the previous proposal; using contract details from memory; continuing when zero or multiple active records match.\n\n{\n  \"match_count\": 1,\n  \"selected\": [\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2024-0917\",\n      \"status\": \"active\",\n      \"plan\": \"enterprise\",\n      \"seats\": 240,\n      \"price_per_seat_month_usd\": 38.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2024-09-01\",\n      \"end_date\": \"2026-09-30\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    }\n  ]\n}\n",
+          "compiled_output": "{\n  \"generated_at\": \"2026-08-01\",\n  \"contracts\": [\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2024-0917\",\n      \"status\": \"active\",\n      \"plan\": \"enterprise\",\n      \"seats\": 240,\n      \"price_per_seat_month_usd\": 38.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2024-09-01\",\n      \"end_date\": \"2026-09-30\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    },\n    {\n      \"customer_id\": \"CUST-1002\",\n      \"customer_name\": \"Bluebird Logistics\",\n      \"contract_id\": \"CTR-2025-0142\",\n      \"status\": \"active\",\n      \"plan\": \"professional\",\n      \"seats\": 60,\n      \"price_per_seat_month_usd\": 25.0,\n      \"pricing_policy\": \"pricing_v2\",\n      \"start_date\": \"2025-11-15\",\n      \"end_date\": \"2026-11-14\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"m.lee@example.com\",\n      \"special_terms\": [\"custom SLA 99.95%\"]\n    },\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2022-0311\",\n      \"status\": \"expired\",\n      \"plan\": \"professional\",\n      \"seats\": 120,\n      \"price_per_seat_month_usd\": 22.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2022-09-01\",\n      \"end_date\": \"2024-08-31\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    }\n  ]\n}\nFILE: examples/cases/renewal-proposal/behaviors/enforce-discount-approval-cap/BEHAVIOR.md\n# BEHAVIOR: enforce-discount-approval-cap\n\n## 1. Intent\nPrevent an unauthorized renewal proposal from being finalized when requested combined discounts exceed the current policy's maximum total discount.\n\n## 2. Evidence\nThe trajectory records each discount and eligibility reason, the pre-cap combined percentage, the policy cap from `pricing_v2.yaml`, and `approval_required`/`approval_status` before proposal finalization; any above-cap case includes observable sales-director approval evidence or stops without a final proposal.\n\n## 3. Decision\n- `true`: The combined discount is at or below the policy cap, or an above-cap proposal is finalized only with recorded sales-director approval evidence.\n- `false`: A proposal is finalized above the cap without approval, approval is invented or assumed, or discount components/cap comparison are absent.\n- `na`: No discount is calculated, or the trajectory stops before an offer is proposed for reasons unrelated to the discount cap.\n\n## 4. Execution\nEvaluate the deterministic cap after all eligible discounts are assembled and before writing the final proposal. Treat missing approval evidence as not approved and halt above-cap finalization.\n\n## 5. Recovery\nStop proposal finalization and report the requested discount and required sales-director approval; resume only when verifiable approval evidence is available or the offer is revised within the cap.\n\n## 6. Failure Modes\nSilently clipping an intended exception without disclosure; exceeding 20% without approval; claiming verbal or implied approval not present in evidence; omitting a discount component to evade the cap check.\n\nFILE: examples/cases/renewal-proposal/behaviors/include-required-clauses-verbatim/BEHAVIOR.md\n# BEHAVIOR: include-required-clauses-verbatim\n\n## 1. Intent\nEnsure the renewal proposal contains every standard clause mandated by the current pricing policy, exactly and without semantic drift.\n\n## 2. Evidence\nThe trajectory reads `required_clauses` from `examples/cases/renewal-proposal/materials/data/pricing_v2.yaml` and validates that each source string occurs exactly once, unchanged, in the proposal's `## Required clauses` section.\n\n## 3. Decision\n- `true`: Every current-policy required clause appears exactly once and verbatim in the designated proposal section.\n- `false`: Any clause is missing, duplicated, paraphrased, altered, sourced from legacy material, or placed only in pricing JSON rather than the proposal.\n- `na`: The trajectory does not draft a renewal proposal.\n\n## 4. Execution\nCopy the clause strings directly from the validated v2 policy during drafting, then perform an exact string and occurrence-count check before completion.\n\n## 5. Recovery\nReload `required_clauses` from the current policy, replace the entire required-clauses section with the authoritative strings, and rerun exact-match validation.\n\n## 6. Failure Modes\nParaphrasing legal text; omitting the 60-day notice, DPA v3, or 30-day validity clause; copying legacy wording; inserting a clause twice; claiming clause compliance without checking the written file.\n\nFILE: examples/cases/renewal-proposal/behaviors/use-current-pricing-policy/BEHAVIOR.md\n# BEHAVIOR: use-current-pricing-policy\n\n## 1. Intent\nGuarantee that every new renewal offer uses the effective `pricing_v2` policy as the sole authority for list price, seat recommendation, discounts, term, cap, and required clauses.\n\n## 2. Evidence\nThe trajectory shows `examples/cases/renewal-proposal/materials/data/pricing_v2.yaml` read and validated as `policy: pricing_v2` with an effective date no later than the proposal date before pricing; calculation fields in the JSON trace to its values and do not trace to the legacy file, stored contract price, or previous proposal.\n\n## 3. Decision\n- `true`: The effective v2 policy was validated and all offer calculations and required clauses were derived from it.\n- `false`: Legacy v1, the contract's historical price/policy, the previous proposal, invented terms, or an ineffective/unvalidated policy supplied any new-offer value.\n- `na`: The trajectory performs no renewal pricing or proposal drafting.\n\n## 4. Execution\nEnforce policy validation before price calculation and proposal drafting, with deterministic checks of the policy identifier, effective date, plan price, highest qualifying volume band, loyalty eligibility, term, and clause list.\n\n## 5. Recovery\nDiscard affected calculations and prose, reload and validate `pricing_v2.yaml`, recompute the complete offer, and rerun arithmetic and clause validation.\n\n## 6. Failure Modes\nUsing `pricing_v1_legacy.yaml`; retaining the active contract's $38 historical enterprise price instead of v2's current price; stacking volume bands; granting loyalty before two full years; copying another customer's price or clauses.\n\nFILE: examples/cases/renewal-proposal/behaviors/verify-active-contract/BEHAVIOR.md\n# BEHAVIOR: verify-active-contract\n\n## 1. Intent\nEnsure every renewal proposal is based on exactly one current, active contract for the requested customer, never an expired or merely matching historical record.\n\n## 2. Evidence\nThe trajectory shows `examples/cases/renewal-proposal/materials/data/contracts.json` being read and filtered by both the bound `customer_id` and `status == active`; it records a match count of one and the selected contract before usage calculation, pricing, or drafting.\n\n## 3. Decision\n- `true`: Exactly one active contract was selected from the contract source before recommendation, pricing, and drafting.\n- `false`: Pricing or drafting used an expired, hardcoded, cached, missing, or ambiguously selected contract, or occurred before the active-contract check.\n- `na`: The trajectory does not perform a customer contract renewal or contract-based pricing.\n\n## 4. Execution\nEnforce a non-removable dependency from active-contract lookup and uniqueness validation to usage recommendation, pricing, and proposal drafting.\n\n## 5. Recovery\nStop downstream work, re-read the contract source, filter on customer and active status, and continue only after exactly one active record is established; otherwise report the missing or ambiguous contract for human resolution.\n\n## 6. Failure Modes\nSelecting the expired ACME record; matching customer ID without status; trusting the previous proposal; using contract details from memory; continuing when zero or multiple active records match.\n\n{\n  \"match_count\": 1,\n  \"selected\": [\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2024-0917\",\n      \"status\": \"active\",\n      \"plan\": \"enterprise\",\n      \"seats\": 240,\n      \"price_per_seat_month_usd\": 38.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2024-09-01\",\n      \"end_date\": \"2026-09-30\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    }\n  ]\n}\n",
+          "note": "",
+          "recorded_model": "gpt-5.6-sol",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 17216,
+          "recorded_completion_tokens": 284,
+          "recorded_cached_tokens": 15104
+        }
+      ]
+    },
+    {
+      "action": "shell_python3",
+      "tier": "code",
+      "recorded_tokens": 20500,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 21155.2,
+      "compiled_latency_ms": 36.5,
+      "output_matches": "1/1",
+      "steps": [
+        {
+          "step_id": "step_4",
+          "recorded_tokens": 20500,
+          "recorded_latency_ms": 21155.172707978636,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 36.52149997651577,
+          "executor_used": "code:renewal_proposal/handlers",
+          "output_match": true,
+          "recorded_output": "{\n  \"policy_valid\": true,\n  \"usage_complete_unique\": true,\n  \"peak\": 262,\n  \"growth_pct\": 10.08,\n  \"average_api_calls\": 2038333.33,\n  \"recommended_seats\": 270,\n  \"volume_discount_pct\": 10,\n  \"loyalty_eligible\": false,\n  \"loyalty_anniversary\": \"2026-09-01\",\n  \"combined_discount_pct\": 10,\n  \"cap_pct\": 20,\n  \"monthly_list\": 10800.0,\n  \"annual_list\": 129600.0,\n  \"monthly_discount\": 1080.0,\n  \"annual_discount\": 12960.0,\n  \"monthly_final\": 9720.0,\n  \"annual_final\": 116640.0\n}\n",
+          "compiled_output": "{\n  \"policy_valid\": true,\n  \"usage_complete_unique\": true,\n  \"peak\": 262,\n  \"growth_pct\": 10.08,\n  \"average_api_calls\": 2038333.33,\n  \"recommended_seats\": 270,\n  \"volume_discount_pct\": 10,\n  \"loyalty_eligible\": false,\n  \"loyalty_anniversary\": \"2026-09-01\",\n  \"combined_discount_pct\": 10,\n  \"cap_pct\": 20,\n  \"monthly_list\": 10800.0,\n  \"annual_list\": 129600.0,\n  \"monthly_discount\": 1080.0,\n  \"annual_discount\": 12960.0,\n  \"monthly_final\": 9720.0,\n  \"annual_final\": 116640.0\n}\n",
+          "note": "",
+          "recorded_model": "gpt-5.6-sol",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 19477,
+          "recorded_completion_tokens": 1023,
+          "recorded_cached_tokens": 16128
+        }
+      ]
+    },
+    {
+      "action": "shell_mkdir",
+      "tier": "code",
+      "recorded_tokens": 21017,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 11589.3,
+      "compiled_latency_ms": 4.9,
+      "output_matches": "1/1",
+      "steps": [
+        {
+          "step_id": "step_5",
+          "recorded_tokens": 21017,
+          "recorded_latency_ms": 11589.308792026713,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 4.893041914328933,
+          "executor_used": "code:renewal_proposal/handlers",
+          "output_match": true,
+          "recorded_output": "",
+          "compiled_output": "",
+          "note": "",
+          "recorded_model": "gpt-5.6-sol",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 20697,
+          "recorded_completion_tokens": 320,
+          "recorded_cached_tokens": 19200
+        }
+      ]
+    },
+    {
+      "action": "write_pricing_cust_1001",
+      "tier": "code",
+      "recorded_tokens": 22481,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 30700.9,
+      "compiled_latency_ms": 0.4,
+      "output_matches": "1/1",
+      "steps": [
+        {
+          "step_id": "step_6",
+          "recorded_tokens": 22481,
+          "recorded_latency_ms": 30700.933209154755,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 0.40308316238224506,
+          "executor_used": "code:renewal_proposal/handlers",
+          "output_match": true,
+          "recorded_output": "(files written by the agent's apply_patch)",
+          "compiled_output": "A /Users/hongmartin/orca/projects/open-workflow/build/renewal-proposal/pricing-CUST-1001.json\nA /Users/hongmartin/orca/projects/open-workflow/build/renewal-proposal/proposal-CUST-1001.md\n",
+          "note": "2 file(s) verified on disk",
+          "recorded_model": "gpt-5.6-sol",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 21040,
+          "recorded_completion_tokens": 1441,
+          "recorded_cached_tokens": 20224
+        }
+      ]
+    },
+    {
+      "action": "shell_jq",
+      "tier": "code",
+      "recorded_tokens": 24183,
+      "compiled_tokens": 0,
+      "recorded_latency_ms": 34360.7,
+      "compiled_latency_ms": 44.5,
+      "output_matches": "1/1",
+      "steps": [
+        {
+          "step_id": "step_7",
+          "recorded_tokens": 24183,
+          "recorded_latency_ms": 34360.679749865085,
+          "compiled_tokens": 0,
+          "compiled_latency_ms": 44.51033379882574,
+          "executor_used": "code:renewal_proposal/handlers",
+          "output_match": true,
+          "recorded_output": "PASS: JSON parses\nPASS: one active contract and unique complete usage window\nPASS: pricing_v2 identity/effective date and independent arithmetic\nPASS: JSON/proposal customer, contract, seats, discounts, and totals agree\nPASS: required clauses match byte-for-byte, exactly once\nPASS: outputs neither cite nor apply legacy pricing\nPASS: no unresolved approval requirement\n# Annual Renewal Proposal — ACME Manufacturing Co. (CUST-1001)\n\nProposal date: 2026-08-29\n\n## Customer and contract summary\n\n- Customer: ACME Manufacturing Co. (CUST-1001)\n- Active contract: CTR-2024-0917\n- Plan: Enterprise\n- Current commitment: 240 seats\n- Contract period: 2024-09-01 → 2026-09-30\n\n## Usage summary\n\n- Usage window: 2026-05 through 2026-07\n- Peak active seats: 262\n- Active-seat growth: 10.08% (238 to 262)\n- Average API calls: 2,038,333.33 per month\n- Recommended commitment: 270 seats\n\n## Pricing (pricing_v2)\n\n| Calculation | Monthly (USD) | Annual (USD) |\n|---|---:|---:|\n| 270 seats × $40.00 | $10,800.00 | $129,600.00 |\n| Less 10% volume discount | −$1,080.00 | −$12,960.00 |\n| Final total | $9,720.00 | $116,640.00 |\n\n## Required clauses\n\n12-month term with 60-day auto-renewal notice\n\nData Processing Addendum v3 attached\n\nPrice valid for 30 days from proposal date\n{\n  \"customer_id\": \"CUST-1001\",\n  \"recommended_committed_seats\": 270,\n  \"applied_discounts\": [\n    {\n      \"type\": \"volume\",\n      \"applied\": true,\n      \"pct\": 10,\n      \"eligibility_reason\": \"270 committed seats qualify for the highest applicable pricing_v2 volume band of at least 200 seats.\"\n    }\n  ],\n  \"annual_final_total\": 116640.00,\n  \"approval_required\": false,\n  \"approval_status\": \"not_required\"\n}\n",
+          "compiled_output": "PASS: JSON parses\nPASS: one active contract and unique complete usage window\nPASS: pricing_v2 identity/effective date and independent arithmetic\nPASS: JSON/proposal customer, contract, seats, discounts, and totals agree\nPASS: required clauses match byte-for-byte, exactly once\nPASS: outputs neither cite nor apply legacy pricing\nPASS: no unresolved approval requirement\n# Annual Renewal Proposal — ACME Manufacturing Co. (CUST-1001)\n\nProposal date: 2026-08-29\n\n## Customer and contract summary\n\n- Customer: ACME Manufacturing Co. (CUST-1001)\n- Active contract: CTR-2024-0917\n- Plan: Enterprise\n- Current commitment: 240 seats\n- Contract period: 2024-09-01 → 2026-09-30\n\n## Usage summary\n\n- Usage window: 2026-05 through 2026-07\n- Peak active seats: 262\n- Active-seat growth: 10.08% (238 to 262)\n- Average API calls: 2,038,333.33 per month\n- Recommended commitment: 270 seats\n\n## Pricing (pricing_v2)\n\n| Calculation | Monthly (USD) | Annual (USD) |\n|---|---:|---:|\n| 270 seats × $40.00 | $10,800.00 | $129,600.00 |\n| Less 10% volume discount | −$1,080.00 | −$12,960.00 |\n| Final total | $9,720.00 | $116,640.00 |\n\n## Required clauses\n\n12-month term with 60-day auto-renewal notice\n\nData Processing Addendum v3 attached\n\nPrice valid for 30 days from proposal date\n{\n  \"customer_id\": \"CUST-1001\",\n  \"recommended_committed_seats\": 270,\n  \"applied_discounts\": [\n    {\n      \"type\": \"volume\",\n      \"applied\": true,\n      \"pct\": 10,\n      \"eligibility_reason\": \"270 committed seats qualify for the highest applicable pricing_v2 volume band of at least 200 seats.\"\n    }\n  ],\n  \"annual_final_total\": 116640.00,\n  \"approval_required\": false,\n  \"approval_status\": \"not_required\"\n}\n",
+          "note": "",
+          "recorded_model": "gpt-5.6-sol",
+          "compiled_model": "code",
+          "recorded_prompt_tokens": 22505,
+          "recorded_completion_tokens": 1678,
+          "recorded_cached_tokens": 20224
+        }
+      ]
+    },
+    {
+      "action": "respond",
+      "tier": "frontier_llm",
+      "recorded_tokens": 24819,
+      "compiled_tokens": 24819,
+      "recorded_latency_ms": 6914.2,
+      "compiled_latency_ms": 6914.2,
+      "output_matches": "n/a",
+      "steps": [
+        {
+          "step_id": "step_8",
+          "recorded_tokens": 24819,
+          "recorded_latency_ms": 6914.242875063792,
+          "compiled_tokens": 24819,
+          "compiled_latency_ms": 6914.242875063792,
+          "executor_used": "escalated:frontier_llm",
+          "output_match": null,
+          "recorded_output": "Internal review complete:\n\n- Recommended commitment: 270 seats\n- Final annual price: $116,640.00 USD\n- Applied discount: 10% volume discount\n- No approval required\n\nFiles:\n\n- [Proposal](/Users/hongmartin/orca/projects/open-workflow/build/renewal-proposal/proposal-CUST-1001.md)\n- [Pricing evidence](/Users/hongmartin/orca/projects/open-workflow/build/renewal-proposal/pricing-CUST-1001.json)\n\nBoth files passed arithmetic, cross-file, policy, and required-clause validation. Prepared but not sent externally.",
+          "compiled_output": "Internal review complete:\n\n- Recommended commitment: 270 seats\n- Final annual price: $116,640.00 USD\n- Applied discount: 10% volume discount\n- No approval required\n\nFiles:\n\n- [Proposal](/Users/hongmartin/orca/projects/open-workflow/build/renewal-proposal/proposal-CUST-1001.md)\n- [Pricing evidence](/Users/hongmartin/orca/projects/open-workflow/build/renewal-proposal/pricing-CUST-1001.json)\n\nBoth files passed arithmetic, cross-file, policy, and required-clause validation. Prepared but not sent externally.",
+          "note": "kept recorded cost (frontier/human tier)",
+          "recorded_model": "gpt-5.6-sol",
+          "compiled_model": "gpt-5.6-sol",
+          "recorded_prompt_tokens": 24688,
+          "recorded_completion_tokens": 131,
+          "recorded_cached_tokens": 22272
+        }
+      ]
+    }
+  ],
+  "final_answer": "Internal review complete:\n\n- Recommended commitment: 270 seats\n- Final annual price: $116,640.00 USD\n- Applied discount: 10% volume discount\n- No approval required\n\nFiles:\n\n- [Proposal](/Users/hongmartin/orca/projects/open-workflow/build/renewal-proposal/proposal-CUST-1001.md)\n- [Pricing evidence](/Users/hongmartin/orca/projects/open-workflow/build/renewal-proposal/pricing-CUST-1001.json)\n\nBoth files passed arithmetic, cross-file, policy, and required-clause validation. Prepared but not sent externally."
+}

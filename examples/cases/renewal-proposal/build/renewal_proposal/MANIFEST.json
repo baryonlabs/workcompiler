@@ -1,0 +1,165 @@
+{
+  "work": "renewal-proposal",
+  "build_dir": "/Users/hongmartin/orca/projects/open-workflow/build/renewal_proposal",
+  "artifact_count": 12,
+  "by_tier": {
+    "work_ir": [
+      "work.yaml"
+    ],
+    "code": [
+      "handlers/shell_sed.py",
+      "handlers/shell_cat.py",
+      "handlers/shell_python3.py",
+      "handlers/shell_mkdir.py",
+      "handlers/write_pricing_cust_1001.py",
+      "prompts/write_pricing_cust_1001.prompt.md",
+      "handlers/shell_jq.py"
+    ],
+    "frontier_llm": [
+      "prompts/respond.prompt.md"
+    ],
+    "params": [
+      "PARAMS.json"
+    ],
+    "trace": [
+      "trace.json"
+    ],
+    "openworklang": [
+      "renewal_proposal.work"
+    ]
+  },
+  "params": [
+    {
+      "name": "customer_id",
+      "recorded_value": "CUST-0993",
+      "kind": "id",
+      "steps": [
+        "step_2",
+        "step_6"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "customer_id_2",
+      "recorded_value": "CUST-1001",
+      "kind": "id",
+      "steps": [
+        "step_2",
+        "step_3",
+        "step_4",
+        "step_6",
+        "step_7"
+      ],
+      "source": "command"
+    }
+  ],
+  "synthesized_actions": [
+    "write_pricing_cust_1001"
+  ],
+  "artifacts": [
+    {
+      "action": "*",
+      "tier": "work_ir",
+      "kind": "work.yaml",
+      "path": "work.yaml"
+    },
+    {
+      "action": "shell_sed",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_sed.py"
+    },
+    {
+      "action": "shell_cat",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_cat.py"
+    },
+    {
+      "action": "shell_python3",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_python3.py"
+    },
+    {
+      "action": "shell_mkdir",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_mkdir.py"
+    },
+    {
+      "action": "write_pricing_cust_1001",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/write_pricing_cust_1001.py",
+      "synthesized": true,
+      "synthesized_literals": [
+        "40.00",
+        "10800.00",
+        "129600.00",
+        "1080.00",
+        "12960.00",
+        "9720.00",
+        "116640.00",
+        "10,800.00",
+        "129,600.00",
+        "1,080.00",
+        "12,960.00",
+        "9,720.00",
+        "116,640.00"
+      ]
+    },
+    {
+      "action": "write_pricing_cust_1001",
+      "tier": "code",
+      "kind": "prompt",
+      "path": "prompts/write_pricing_cust_1001.prompt.md",
+      "synthesized": true,
+      "synthesized_literals": [
+        "40.00",
+        "10800.00",
+        "129600.00",
+        "1080.00",
+        "12960.00",
+        "9720.00",
+        "116640.00",
+        "10,800.00",
+        "129,600.00",
+        "1,080.00",
+        "12,960.00",
+        "9,720.00",
+        "116,640.00"
+      ]
+    },
+    {
+      "action": "shell_jq",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_jq.py"
+    },
+    {
+      "action": "respond",
+      "tier": "frontier_llm",
+      "kind": "prompt",
+      "path": "prompts/respond.prompt.md"
+    },
+    {
+      "action": "*",
+      "tier": "params",
+      "kind": "PARAMS.json",
+      "path": "PARAMS.json"
+    },
+    {
+      "action": "*",
+      "tier": "trace",
+      "kind": "trace.json",
+      "path": "trace.json"
+    },
+    {
+      "action": "*",
+      "tier": "openworklang",
+      "kind": "work_source",
+      "path": "renewal_proposal.work"
+    }
+  ]
+}

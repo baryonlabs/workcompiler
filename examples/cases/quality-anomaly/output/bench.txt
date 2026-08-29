@@ -1,0 +1,5 @@
+[bench] quality-anomaly: tokens 138,200 -> 32,661 (-76.4%), wall 142.4s -> 12.67s (11.2x), outputs reproduced 5/5, compiled/escalated actions 2/1
+  shell_sed            code          tokens  14,221 -> 0      latency    3.8s ->  0.01s  match 1/1
+  shell_python3        code          tokens  91,318 -> 0      latency  126.2s ->  0.29s  match 4/4
+  respond              frontier_llm  tokens  32,661 -> 32,661 latency   12.4s -> 12.38s  match n/a
+  report: build/quality_anomaly/BENCHMARK.md

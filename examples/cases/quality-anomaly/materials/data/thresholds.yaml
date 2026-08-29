@@ -1,0 +1,6 @@
+line: 3
+defect_rate_pct_threshold: 2.5      # shift defect rate above this = anomaly
+sensors:
+  temp_c: {max: 78.0}
+  vibration_mm_s: {max: 4.5}
+calibration_interval_days: 90        # sensor calibration older than this = untrusted

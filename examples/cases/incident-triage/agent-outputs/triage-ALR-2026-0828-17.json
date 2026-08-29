@@ -1,0 +1,25 @@
+{
+  "alert_id": "ALR-2026-0828-17",
+  "time": "2026-08-28T23:41:00Z",
+  "host": "db-01",
+  "user": "app-reader",
+  "rule": "sudo-from-service-account",
+  "severity": "high",
+  "signature": {
+    "matched": true,
+    "class": "privilege_escalation",
+    "runbook": null
+  },
+  "related_changes_within_24h": [
+    {
+      "change_id": "CHG-5102",
+      "changed_at": "2026-08-28T22:55:00Z",
+      "author": "dba-kim",
+      "summary": "rotate replication credentials"
+    }
+  ],
+  "change_correlation_possible": true,
+  "classification": "Privilege escalation.",
+  "page_oncall": true,
+  "action_decision_owner": "on-call engineer"
+}

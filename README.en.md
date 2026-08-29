@@ -101,6 +101,21 @@ python3 -m core.build run build/customer_renewal_codex \
 
 The token saving is smaller than in the first benchmark for an obvious reason: each remaining escalation is a fresh Codex session (10–16k tokens with its system prompt). Once those two steps are promoted to `models/slm/` candidates or the proposal wording is lowered to a template (code), tokens approach zero — and how far that lowering may go is stated explicitly in the `.work` file's `escalation` block.
 
+### Does it work for someone who has never written a prompt? — four business cases, chat only
+
+A **complete beginner** holding nothing but work materials (a lead's memo, their own notes, a previous deliverable, data files) types `$ow-define` in the Codex TUI and mostly answers "go with your recommendation" — that produces the WHAT; the agent's first run, compilation and replay then followed for all four business cases, for real ([`examples/cases/`](examples/cases/) — scenarios, transcripts, traces, builds and token ledgers):
+
+![Real recording: a beginner defines the refund-approval job with $ow-define in the Codex TUI](docs/demo/openworkflow-define-demo.gif)
+
+| Case | What the beginner had | `$ow-define` produced | Agent's first run (gpt-5.6-sol) | Compiled build replay |
+| :-- | :-- | :-- | --: | --: |
+| Contract renewal proposal | sales lead's memo · previous proposal · CRM/usage/pricing files | TASK 9 steps · 4 BEHAVIORs | 160,876 tokens · 134 s | 24,819 (−85%) · 7.1 s · 7/7 reproduced |
+| Invoice / refund approval | CS lead's memo · previous decision · orders/payments/policy v3 | TASK 10 steps · 6 BEHAVIORs | 280,023 tokens · 114 s | 21,999 (−92%) · 6.0 s · same decision |
+| Manufacturing quality anomaly | quality lead's memo · previous report · MES/sensor/calibration logs | TASK 8 steps · 6 BEHAVIORs | 138,200 tokens · 142 s | 32,661 (−76%) · 12.7 s · 5/5 reproduced |
+| Security / ops incident triage | on-call lead's memo · previous note · alerts/signatures/runbooks | TASK 10 steps · 6 BEHAVIORs | 159,640 tokens · 88 s | 21,081 (−87%) · 5.3 s · same classification |
+
+Every build's `BENCHMARK.md` carries a **token ledger**: per step, which model spent how many prompt (cached) + completion tokens when recorded, and what (code / rule / a model) spends how many after compilation, plus per-model totals; each run appends to `ledger.jsonl`, so the effect of swapping models (frontier → SLM → code) can be tracked over time.
+
 ### WHAT → HOW: the two artifacts this pipeline produces
 
 | | what | where |
@@ -555,8 +570,9 @@ openworkflow/
 ├── agents/                      # Guide and measurement fleet specs
 ├── docs/                        # Specifications, architecture, usage guides, and diagrams
 ├── .agents/skills/              # Codex skills: $ow-define (WHAT, grilling interview) · $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench · grill-me/grilling (mattpocock/skills, skills-lock.json)
-├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + runtime loader + benchmark
-├── tests/                       # Complete pytest suite (151 tests)
+├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + loader + benchmark (token ledger) + front-agent runner
+├── examples/cases/              # four business cases: beginner materials → $ow-define → agent run → compile → bench (transcripts · traces · builds)
+├── tests/                       # Complete pytest suite (154 tests)
 └── examples/                    # Sample workflows, LinkML schemas, and runnable demo scripts
 ```
 

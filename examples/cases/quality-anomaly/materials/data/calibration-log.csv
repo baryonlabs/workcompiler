@@ -1,0 +1,3 @@
+sensor_id,measure,last_calibrated,technician
+S3-TEMP-1,temp_c,2026-07-30,K. Han
+S3-VIB-1,vibration_mm_s,2026-04-12,J. Cho

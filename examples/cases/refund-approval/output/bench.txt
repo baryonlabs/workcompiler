@@ -1,0 +1,9 @@
+[bench] refund-approval: tokens 280,023 -> 21,999 (-92.1%), wall 113.7s -> 5.96s (19.1x), outputs reproduced 11/14, compiled/escalated actions 6/1
+  shell_sed            code          tokens  14,225 -> 0      latency    4.0s ->  0.01s  match 1/1
+  shell_cat            code          tokens  16,028 -> 0      latency    8.2s ->  0.01s  match 1/1
+  shell_jq             code          tokens 107,820 -> 0      latency   35.9s ->  0.05s  match 3/6
+  shell_python3        code          tokens  59,400 -> 0      latency   31.3s ->  0.08s  match 3/3
+  shell_mkdir          code          tokens  19,366 -> 0      latency    4.2s ->  0.01s  match 1/1
+  write_decision_rr_2026_0827_03 code          tokens  41,185 -> 0      latency   24.3s ->  0.00s  match 2/2
+  respond              frontier_llm  tokens  21,999 -> 21,999 latency    5.8s ->  5.81s  match n/a
+  report: build/refund_approval/BENCHMARK.md

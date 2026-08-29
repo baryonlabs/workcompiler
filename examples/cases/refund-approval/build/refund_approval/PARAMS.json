@@ -1,0 +1,62 @@
+{
+  "params": [
+    {
+      "name": "rr_id",
+      "recorded_value": "RR-2026-0712-01",
+      "kind": "id",
+      "steps": [
+        "step_2"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "rr_id_2",
+      "recorded_value": "RR-2026-0827-03",
+      "kind": "id",
+      "steps": [
+        "step_3",
+        "step_6",
+        "step_11",
+        "step_12",
+        "step_13",
+        "step_14"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "order_id",
+      "recorded_value": "ORD-77001",
+      "kind": "id",
+      "steps": [
+        "step_7",
+        "step_8",
+        "step_11",
+        "step_13"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "customer_id",
+      "recorded_value": "CUST-2201",
+      "kind": "id",
+      "steps": [
+        "step_7",
+        "step_11",
+        "step_13"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "rc_id",
+      "recorded_value": "RC-88102",
+      "kind": "id",
+      "steps": [
+        "step_8",
+        "step_11",
+        "step_13"
+      ],
+      "source": "command"
+    }
+  ],
+  "synthesized_actions": []
+}

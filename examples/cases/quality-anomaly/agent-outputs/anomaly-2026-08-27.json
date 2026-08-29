@@ -1,0 +1,293 @@
+{
+  "incident": {
+    "date": "2026-08-27",
+    "line": 3,
+    "shift": "night",
+    "observed_sensor_window": {
+      "start": "2026-08-27T20:00",
+      "end": "2026-08-28T03:00",
+      "inclusive": true
+    }
+  },
+  "sources": {
+    "memo": "examples/cases/quality-anomaly/materials/memo.md",
+    "notes": "examples/cases/quality-anomaly/materials/notes.txt",
+    "mes": "examples/cases/quality-anomaly/materials/data/mes-defects-2026-08.csv",
+    "sensors": "examples/cases/quality-anomaly/materials/data/sensor-2026-08-27.csv",
+    "calibration": "examples/cases/quality-anomaly/materials/data/calibration-log.csv",
+    "thresholds": "examples/cases/quality-anomaly/materials/data/thresholds.yaml",
+    "format_example": "examples/cases/quality-anomaly/materials/previous/anomaly-report-2026-06-14.md",
+    "assumptions": "examples/cases/quality-anomaly/ASSUMPTIONS.md"
+  },
+  "thresholds": {
+    "defect_rate_pct_threshold": 2.5,
+    "sensors": {
+      "temp_c": {
+        "max": 78.0
+      },
+      "vibration_mm_s": {
+        "max": 4.5
+      }
+    },
+    "calibration_interval_days": 90
+  },
+  "mes": {
+    "selected_row": {
+      "date": "2026-08-27",
+      "line": 3,
+      "shift": "night",
+      "units": 3900,
+      "defects": 215,
+      "defect_rate_pct": 5.5
+    },
+    "recomputed_rate_pct": 5.512820512820513,
+    "rate_tolerance_percentage_points": 0.05,
+    "rate_is_consistent": true,
+    "is_anomaly": true
+  },
+  "sensor_evidence": {
+    "temp_c": {
+      "unit": "°C",
+      "maximum": 78.0,
+      "exceedance_samples": [
+        {
+          "timestamp": "2026-08-27T22:00",
+          "value": 79.4
+        },
+        {
+          "timestamp": "2026-08-27T23:00",
+          "value": 81.9
+        },
+        {
+          "timestamp": "2026-08-28T00:00",
+          "value": 82.5
+        },
+        {
+          "timestamp": "2026-08-28T01:00",
+          "value": 80.7
+        }
+      ],
+      "contiguous_intervals": [
+        {
+          "start": "2026-08-27T22:00",
+          "end": "2026-08-28T01:00"
+        }
+      ],
+      "peak": {
+        "timestamp": "2026-08-28T00:00",
+        "value": 82.5
+      },
+      "calibration": {
+        "sensor_id": "S3-TEMP-1",
+        "measure": "temp_c",
+        "last_calibrated": "2026-07-30",
+        "technician": "K. Han",
+        "interval_days": 90,
+        "measurement_ages": [
+          {
+            "timestamp": "2026-08-27T20:00",
+            "age_days": 28
+          },
+          {
+            "timestamp": "2026-08-27T21:00",
+            "age_days": 28
+          },
+          {
+            "timestamp": "2026-08-27T22:00",
+            "age_days": 28
+          },
+          {
+            "timestamp": "2026-08-27T23:00",
+            "age_days": 28
+          },
+          {
+            "timestamp": "2026-08-28T00:00",
+            "age_days": 29
+          },
+          {
+            "timestamp": "2026-08-28T01:00",
+            "age_days": 29
+          },
+          {
+            "timestamp": "2026-08-28T02:00",
+            "age_days": 29
+          },
+          {
+            "timestamp": "2026-08-28T03:00",
+            "age_days": 29
+          }
+        ],
+        "age_days_min": 28,
+        "age_days_max": 29,
+        "status": "trusted"
+      },
+      "eligible_for_causal_use": true
+    },
+    "vibration_mm_s": {
+      "unit": "mm/s",
+      "maximum": 4.5,
+      "exceedance_samples": [
+        {
+          "timestamp": "2026-08-28T00:00",
+          "value": 5.1
+        },
+        {
+          "timestamp": "2026-08-28T01:00",
+          "value": 5.4
+        },
+        {
+          "timestamp": "2026-08-28T02:00",
+          "value": 4.9
+        }
+      ],
+      "contiguous_intervals": [
+        {
+          "start": "2026-08-28T00:00",
+          "end": "2026-08-28T02:00"
+        }
+      ],
+      "peak": {
+        "timestamp": "2026-08-28T01:00",
+        "value": 5.4
+      },
+      "calibration": {
+        "sensor_id": "S3-VIB-1",
+        "measure": "vibration_mm_s",
+        "last_calibrated": "2026-04-12",
+        "technician": "J. Cho",
+        "interval_days": 90,
+        "measurement_ages": [
+          {
+            "timestamp": "2026-08-27T20:00",
+            "age_days": 137
+          },
+          {
+            "timestamp": "2026-08-27T21:00",
+            "age_days": 137
+          },
+          {
+            "timestamp": "2026-08-27T22:00",
+            "age_days": 137
+          },
+          {
+            "timestamp": "2026-08-27T23:00",
+            "age_days": 137
+          },
+          {
+            "timestamp": "2026-08-28T00:00",
+            "age_days": 138
+          },
+          {
+            "timestamp": "2026-08-28T01:00",
+            "age_days": 138
+          },
+          {
+            "timestamp": "2026-08-28T02:00",
+            "age_days": 138
+          },
+          {
+            "timestamp": "2026-08-28T03:00",
+            "age_days": 138
+          }
+        ],
+        "age_days_min": 137,
+        "age_days_max": 138,
+        "status": "untrusted"
+      },
+      "eligible_for_causal_use": false
+    }
+  },
+  "candidate_root_cause": {
+    "status": "candidate",
+    "statement": "Elevated process temperature is a candidate contributor correlated with the Line 3 night-shift defect anomaly.",
+    "supporting_trusted_measures": [
+      "temp_c"
+    ],
+    "limitations": [
+      "Correlation does not establish causation.",
+      "The supplied evidence does not identify or confirm a specific failed component.",
+      "Vibration exceedances are untrusted because calibration was overdue and are excluded from causal judgment."
+    ]
+  },
+  "remediation": [
+    {
+      "action": "Inspect the Line 3 thermal process and temperature-control conditions.",
+      "approval_required": true,
+      "approval_authority": "Quality Engineer",
+      "approval_status": "pending"
+    },
+    {
+      "action": "Run a controlled verification trial after approved thermal-process inspection.",
+      "approval_required": true,
+      "approval_authority": "Quality Engineer",
+      "approval_status": "pending"
+    },
+    {
+      "action": "Recalibrate or independently verify the vibration measurement channel before causal use.",
+      "approval_required": true,
+      "approval_authority": "Quality Engineer",
+      "approval_status": "pending"
+    }
+  ],
+  "validation": {
+    "status": "passed",
+    "checks": [
+      "filenames_match_incident_date",
+      "source_incident_binding_matches",
+      "mes_unique_bound_row",
+      "mes_selected_row_recomputed",
+      "mes_rate_recomputed_and_consistent",
+      "mes_strict_anomaly_verdict",
+      "thresholds_match_authority",
+      "sensor_window_bound_line_and_time",
+      "temp_c_strict_exceedance_samples",
+      "temp_c_contiguous_intervals",
+      "temp_c_peak",
+      "temp_c_unique_calibration_by_measure",
+      "temp_c_no_future_calibration",
+      "temp_c_no_future_calibration",
+      "temp_c_no_future_calibration",
+      "temp_c_no_future_calibration",
+      "temp_c_no_future_calibration",
+      "temp_c_no_future_calibration",
+      "temp_c_no_future_calibration",
+      "temp_c_no_future_calibration",
+      "temp_c_consistent_trust_status",
+      "temp_c_calibration_ages_and_status",
+      "temp_c_causal_eligibility",
+      "vibration_mm_s_strict_exceedance_samples",
+      "vibration_mm_s_contiguous_intervals",
+      "vibration_mm_s_peak",
+      "vibration_mm_s_unique_calibration_by_measure",
+      "vibration_mm_s_no_future_calibration",
+      "vibration_mm_s_no_future_calibration",
+      "vibration_mm_s_no_future_calibration",
+      "vibration_mm_s_no_future_calibration",
+      "vibration_mm_s_no_future_calibration",
+      "vibration_mm_s_no_future_calibration",
+      "vibration_mm_s_no_future_calibration",
+      "vibration_mm_s_no_future_calibration",
+      "vibration_mm_s_consistent_trust_status",
+      "vibration_mm_s_calibration_ages_and_status",
+      "vibration_mm_s_causal_eligibility",
+      "no_untrusted_supporting_measure",
+      "untrusted_vibration_excluded_from_support",
+      "markdown_exact_sections",
+      "markdown_mes_numeric_facts_match_json",
+      "markdown_temp_c_interval_peak_match_json",
+      "markdown_temp_c_calibration_trust_match_json",
+      "markdown_vibration_mm_s_interval_peak_match_json",
+      "markdown_vibration_mm_s_calibration_trust_match_json",
+      "markdown_candidate_and_limitations_match_json",
+      "json_remediation_approval_gate",
+      "markdown_remediation_action_authority_status_match_json",
+      "json_remediation_approval_gate",
+      "markdown_remediation_action_authority_status_match_json",
+      "json_remediation_approval_gate",
+      "markdown_remediation_action_authority_status_match_json",
+      "every_remediation_has_exact_approval_statement",
+      "no_unrelated_shift_in_markdown",
+      "no_approval_or_execution_claim"
+    ]
+  }
+}

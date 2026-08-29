@@ -1,0 +1,7 @@
+# LEGACY pricing (retired 2025-12-31). Kept for historical invoices only — do NOT use for new offers.
+policy: pricing_v1_legacy
+retired_on: "2025-12-31"
+list_price_per_seat_month:
+  professional: 22.0
+  enterprise: 38.0
+flat_renewal_discount_pct: 8

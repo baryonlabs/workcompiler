@@ -1,0 +1,115 @@
+{
+  "work": "incident-triage",
+  "build_dir": "/Users/hongmartin/orca/projects/open-workflow/build/incident_triage",
+  "artifact_count": 10,
+  "by_tier": {
+    "work_ir": [
+      "work.yaml"
+    ],
+    "code": [
+      "handlers/shell_sed.py",
+      "handlers/shell_python3.py",
+      "handlers/shell_jq.py",
+      "handlers/shell_cat.py",
+      "handlers/write_triage_alr_2026_0828_17.py"
+    ],
+    "frontier_llm": [
+      "prompts/respond.prompt.md"
+    ],
+    "params": [
+      "PARAMS.json"
+    ],
+    "trace": [
+      "trace.json"
+    ],
+    "openworklang": [
+      "incident_triage.work"
+    ]
+  },
+  "params": [
+    {
+      "name": "alr_id",
+      "recorded_value": "ALR-2026-0828-17",
+      "kind": "id",
+      "steps": [
+        "step_3",
+        "step_5",
+        "step_7",
+        "step_8"
+      ],
+      "source": "command"
+    },
+    {
+      "name": "alr_id_2",
+      "recorded_value": "ALR-2026-0810-04",
+      "kind": "id",
+      "steps": [
+        "step_6"
+      ],
+      "source": "command"
+    }
+  ],
+  "synthesized_actions": [],
+  "artifacts": [
+    {
+      "action": "*",
+      "tier": "work_ir",
+      "kind": "work.yaml",
+      "path": "work.yaml"
+    },
+    {
+      "action": "shell_sed",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_sed.py"
+    },
+    {
+      "action": "shell_python3",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_python3.py"
+    },
+    {
+      "action": "shell_jq",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_jq.py"
+    },
+    {
+      "action": "shell_cat",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_cat.py"
+    },
+    {
+      "action": "write_triage_alr_2026_0828_17",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/write_triage_alr_2026_0828_17.py"
+    },
+    {
+      "action": "respond",
+      "tier": "frontier_llm",
+      "kind": "prompt",
+      "path": "prompts/respond.prompt.md"
+    },
+    {
+      "action": "*",
+      "tier": "params",
+      "kind": "PARAMS.json",
+      "path": "PARAMS.json"
+    },
+    {
+      "action": "*",
+      "tier": "trace",
+      "kind": "trace.json",
+      "path": "trace.json"
+    },
+    {
+      "action": "*",
+      "tier": "openworklang",
+      "kind": "work_source",
+      "path": "incident_triage.work"
+    }
+  ]
+}
