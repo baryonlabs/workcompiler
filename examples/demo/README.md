@@ -17,16 +17,16 @@ README 상단 "30초 데모"에 쓰인 입력과 산출물, 그리고 **원래 �
 
 | | 기록된 에이전트 (Codex) | 컴파일된 빌드 | 차이 |
 | :-- | --: | --: | --: |
-| LLM 토큰 | 46,680 | 16,782 | **−64.0%** |
-| 벽시계 시간 | 29.9 s | 17.4 s | **1.7× 빠름** |
+| LLM 토큰 | 46,460 | 16,843 | **−63.7%** |
+| 벽시계 시간 | 33.8 s | 23.1 s | **1.5× 빠름** |
 | 결과 재현 | — | **2/2 일치** | |
 | 컴파일 / 에스컬레이션 액션 | — | 2 / 1 | |
 
 | action | tier | 토큰 rec → comp | 지연 rec → comp | 결과 |
 | :-- | :-- | --: | --: | :-- |
-| `shell_python3` (OpenWorkLang 컴파일) | code | 14,520 → 0 | 5.9 s → 0.11 s | 일치 |
-| `shell_find` (트리 조회 + work.yaml/핸들러 읽기, 3개 명령 배치) | code | 15,378 → 0 | 6.7 s → 0.02 s | 일치 |
-| `respond` (최종 요약) | frontier_llm | 16,782 → 16,782 | 17.3 s → 17.3 s | 에스컬레이션(기록 비용 유지) |
+| `shell_python3` (OpenWorkLang 컴파일) | code | 14,436 → 0 | 3.6 s → 0.10 s | 일치 |
+| `shell_find` (트리 조회 + work.yaml/핸들러 읽기, 3개 명령 배치) | code | 15,181 → 0 | 7.2 s → 0.01 s | 일치 |
+| `respond` (최종 요약) | frontier_llm | 16,843 → 16,843 | 23.0 s → 23.0 s | 에스컬레이션(기록 비용 유지) |
 
 읽는 법: 셸 스텝 2개는 code 계층으로 내려가 **토큰 0, 밀리초 단위**로 같은 출력을 재현했고, 남은 비용 전부는 아직 frontier LLM에 에스컬레이션되는 `respond`(최종 요약문)입니다. 이 스텝은 `models/slm/` 학습 후보가 학습·승격되면 SLM 비용으로 내려갑니다.
 
@@ -53,7 +53,7 @@ $ow-bench codex-session
 - `step1-ow-compile-work.md`, `step2-ow-traces.md`, `step4-ow-bench.md` — 각 단계에서 Codex가 실행한 명령과 답변 (`codex exec` 출력 원문)
 - `step3-compile-response.json` — 3단계 `POST /v1/workcompiler/compile` 응답(actions · executors)
 - `proxy-traces.json` — 프록시의 세션 목록 (`GET /v1/workcompiler/traces`)
-- `proxy-trace-01a04b02-4d50-71d1-8112-430bb6ede9c1.json` — 컴파일된 1단계 세션의 TraceIR 전체 — 각 스텝의 토큰·지연과 **도구 실행 결과(`tool_result`)** 포함 (`GET /v1/workcompiler/traces/<run_id>`)
+- `proxy-trace-01a04b1c-99ae-7733-8b77-814966c86046.json` — 컴파일된 1단계 세션의 TraceIR 전체 — 각 스텝의 토큰·지연과 **도구 실행 결과(`tool_result`)** 포함 (`GET /v1/workcompiler/traces/<run_id>`)
 
 ## 재현
 
