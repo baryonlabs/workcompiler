@@ -1,5 +1,7 @@
 # OpenWorkflow
 
+![OpenWorkCompiler turns non-deterministic agent work into repeatable deterministic execution — (A) agent-centric run, (B) compiled deterministic run, (C) before/after, (D) efficiency gains](docs/banner.png)
+
 **The execution layer for AI work.**
 
 [한국어 README](README.md)

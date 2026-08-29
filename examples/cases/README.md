@@ -29,7 +29,7 @@ $ow-define 환불 승인 업무. 저는 프롬프트 같은 건 몰라요. 팀�
 네 좋아요. 그대로 파일 만들어 주세요.
 ```
 
-Codex는 자료를 먼저 읽고(`memo`, `notes`, 이전 판정서, 정책 v3, 데이터), grilling 라운드마다 번호 매긴 질문과 **추천 답**을 냈습니다 — "판정서는 누가 쓰나요? → CS 1차, 10만원 초과는 재무팀 승인 자료", "이번 건만인가요? → `request_id`를 매 실행 바뀌는 파라미터로", "보류/승인대기 건도 판정서를 만드나요? → 세 상태 모두, 단 '환불 확정' 문구 금지", "고객 통지 템플릿 CS-R2는? → 정책에 근거 없으니 제외" 등. 초보자는 "추천안대로"라고만 답하고 딱 하나(10만원 **초과**)를 바로잡았고, 그 한 줄이 생성된 `TASK.md`에 그대로 반영됐습니다("A refund of exactly 100,000 KRW does not require Finance approval; only a refund greater than 100,000 KRW does"). 결과: [`_tui-demo/TASK.md`](_tui-demo/TASK.md) + [`behaviors/`](_tui-demo/behaviors/) 7개.
+Codex는 자료를 먼저 읽고(`memo`, `notes`, 이전 판정서, 정책 v3, 데이터), grilling 라운드마다 번호 매긴 질문과 **추천 답**을 냈습니다 — "판정서는 누가 쓰나요? → CS 1차, 10만원 초과는 재무팀 승인 자료", "이번 건만인가요? → `request_id`를 매 실행 바뀌는 파라미터로", "보류/승인대기 건도 판정서를 만드나요? → 세 상태 모두, 단 '환불 확정' 문구 금지", "고객 통지 템플릿 CS-R2는? → 정책에 근거 없으니 제외" 등. 인터뷰는 3라운드 12개 질문으로 끝났고, 초보자는 "추천안대로"라고만 답하며 딱 하나(10만원 **초과**)를 바로잡았습니다. 그 한 줄이 생성된 `TASK.md`에 그대로 반영됐습니다("route a calculated refund to Finance only when it is **over** 100,000 KRW … exactly 100,000 KRW remains within CS authority"). 결과: [`_tui-demo/TASK.md`](_tui-demo/TASK.md) + [`behaviors/`](_tui-demo/behaviors/) 7개 — Codex가 파서로 자체 검증까지 마쳤습니다. 이 정의 세션의 비용: 1분 51초, 45,645 토큰(입력 37,393 + 캐시 268,800, 출력 8,252).
 
 나머지 4개 사례는 같은 스킬을 `codex exec`로 실행하되 "요청자가 자리에 없으니 추천안을 채택하고 가정을 `ASSUMPTIONS.md`에 기록하라"고 했습니다 — 초보자가 나중에 가정만 확인·수정하면 되는 흐름입니다.
 
