@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.3.0 — 2026-08-29
+
+One compiler, many agents — Claude Code and OpenAI-compatible agents join Codex on both sides of the loop.
 
 - **Multi-agent support.** The proxy now captures **Claude Code** (`/v1/messages` passthrough, `ANTHROPIC_BASE_URL`, API key or subscription login; session id from `metadata.user_id`, `tool_result` blocks attached, side calls counted as `aux_tokens`) and **OpenAI-compatible agents** (`/v1/chat/completions` passthrough for Cursor / Windsurf / opencode / Aider / SDKs; `role: tool` results attached) next to Codex; a catch-all route forwards every other path to the matching upstream. Synthetic responses now require `X-OpenWorkCompiler-Response-Mode: synthetic`.
 - **One tool vocabulary** (`adapters/proxy/tools.py`): `Bash`/`exec_command`/`run_terminal_cmd` → `shell_<prog>`, `Write`/`Edit`/`MultiEdit`/`apply_patch` → `write_<stem>` with V4A patch text (`core/work_ir/patchfmt.py`: Add / Update hunks incl. `replace_all` / Delete, `already_applied` on replay), `Read`/`Glob`/`Grep` → replayable `cat`/`find`/`grep`, bookkeeping tools → `plan`. `source_agent` + `agent_version` + protocol recorded in provenance.
