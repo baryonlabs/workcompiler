@@ -385,14 +385,14 @@ Priority 3: 잔여 실행 및 품질 보증 (Residual & Human)
 
 ## 시맨틱 스택 아키텍처 (v4)
 
-OpenWorkCompiler v4는 멀티 티어 시맨틱 스택을 도입합니다. **LinkML**을 개발자 친화적인 YAML 저작 언어로 활용하고, 이를 내장 **Semantic IR**로 컴파일한 뒤, **OWL 2** DL 의미론으로 풍부화하고 **[SHACL](https://www.w3.org/TR/shacl/)** · [pySHACL](https://github.com/RDFLib/pySHACL)을 통해 폐쇄 세계(Closed-World) 데이터 제약조건을 검증합니다.
+OpenWorkCompiler v4는 멀티 티어 시맨틱 스택을 도입합니다. **LinkML**을 개발자 친화적인 YAML 저작 언어로 활용하고, 이를 내장 **Semantic IR**로 컴파일한 뒤, **OWL 2** DL 의미론으로 풍부화하고 **SHACL**을 통해 폐쇄 세계(Closed-World) 데이터 제약조건을 검증합니다.
 
 | 계층 | 역할 | 추천 기술 |
 | :--- | :--- | :--- |
 | **Authoring DSL** | 사람이 업무 모델 작성 | **[LinkML](https://linkml.io/) (YAML DSL)** · [GitHub](https://github.com/linkml/linkml) |
 | **Semantic Canonical IR** | 내부 통일 시맨틱 모델 | **Semantic IR ([`core/semantic_ir/`](core/semantic_ir/))** |
 | **Semantic Ontology** | 개방 세계 의미/관계/추론 | **[OWL 2](https://www.w3.org/TR/owl2-overview/) (DL)** · [OWL 2 DL 프로파일](https://www.w3.org/TR/owl2-profiles/) |
-| **Constraint Validation** | 폐쇄 세계 데이터 제약 검증 | **SHACL** |
+| **Constraint Validation** | 폐쇄 세계 데이터 제약 검증 | **[SHACL](https://www.w3.org/TR/shacl/)** · [pySHACL](https://github.com/RDFLib/pySHACL) |
 | **Reasoner** | 추론 및 일관성 검사 | **[ELK](https://github.com/liveontologies/elk-reasoner) / [HermiT](http://www.hermit-reasoner.com/)** |
 | **Runtime Graph** | 지식 그래프 및 RDF 트리플 | **[Apache Jena](https://jena.apache.org/) / [RDF4J](https://rdf4j.org/) / [RDFLib](https://rdflib.readthedocs.io/)** |
 | **Execution Engine** | 지속성 워크플로우 실행 엔진 | **OpenWorkCompiler Kernel** ([`core/runtime/`](core/runtime/) · [`core/compiler/`](core/compiler/)) |
@@ -431,6 +431,8 @@ Pydantic               SHACL                  OWL                 Work IR
 ---
 
 ## OpenWorkLang: Agent 프로그래밍 언어 (`.work`)
+
+> 📦 **서브모듈 저장소: [baryonlabs/openworklang](https://github.com/baryonlabs/openworklang)** — 파서·컴파일러·[명세(SPEC.md)](https://github.com/baryonlabs/openworklang/blob/main/SPEC.md)·테스트는 여기서 개발되며, 이 저장소에는 [`vendor/openworklang`](vendor/openworklang) 으로 포함됩니다.
 
 OpenWorkCompiler는 인간의 의도, 에이전트 목표, 도구, 메모리 정책, 프로세스 불변식 및 액션 워크플로우를 실행 가능한 에이전트 프로그램으로 컴파일하는 선언형 Agent 프로그래밍 언어인 **OpenWorkLang**을 제시합니다:
 

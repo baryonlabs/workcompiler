@@ -359,14 +359,14 @@ Priority 3: Residual Execution (Fallback & Quality Assurance)
 
 ## Semantic Stack Architecture (v4)
 
-OpenWorkCompiler v4 introduces a multi-tiered semantic stack. It uses **LinkML** as the developer-friendly YAML authoring language, compiles into internal **Semantic IR**, enriches with **OWL 2** DL semantics, and validates closed-world constraints via **[SHACL](https://www.w3.org/TR/shacl/)** · [pySHACL](https://github.com/RDFLib/pySHACL):
+OpenWorkCompiler v4 introduces a multi-tiered semantic stack. It uses **LinkML** as the developer-friendly YAML authoring language, compiles into internal **Semantic IR**, enriches with **OWL 2** DL semantics, and validates closed-world constraints via **SHACL**:
 
 | Layer | Role | Target Technology |
 | :--- | :--- | :--- |
 | **Authoring DSL** | Human/Developer/LLM business model authoring | **[LinkML](https://linkml.io/) (YAML DSL)** · [GitHub](https://github.com/linkml/linkml) |
 | **Semantic Canonical IR** | Internal unified semantic model | **Semantic IR ([`core/semantic_ir/`](core/semantic_ir/))** |
 | **Semantic Ontology** | Open-world reasoning & relationship semantics | **[OWL 2](https://www.w3.org/TR/owl2-overview/) (DL)** · [OWL 2 DL profile](https://www.w3.org/TR/owl2-profiles/) |
-| **Constraint Validation** | Closed-world data verification & cardinalities | **SHACL** |
+| **Constraint Validation** | Closed-world data verification & cardinalities | **[SHACL](https://www.w3.org/TR/shacl/)** · [pySHACL](https://github.com/RDFLib/pySHACL) |
 | **Reasoner** | Inferred classification & consistency checking | **[ELK](https://github.com/liveontologies/elk-reasoner) / [HermiT](http://www.hermit-reasoner.com/)** |
 | **Runtime Graph** | Knowledge Graph & RDF triples | **[Apache Jena](https://jena.apache.org/) / [RDF4J](https://rdf4j.org/) / [RDFLib](https://rdflib.readthedocs.io/)** |
 | **Execution Engine** | Stateful workflow, action DAG & durable runtime | **OpenWorkCompiler Kernel** ([`core/runtime/`](core/runtime/) · [`core/compiler/`](core/compiler/)) |
@@ -405,6 +405,8 @@ Pydantic               SHACL                  OWL                 Work IR
 ---
 
 ## OpenWorkLang: The Agent Programming Language (`.work`)
+
+> 📦 **Submodule repository: [baryonlabs/openworklang](https://github.com/baryonlabs/openworklang)** — the parser, compiler, [spec (SPEC.md)](https://github.com/baryonlabs/openworklang/blob/main/SPEC.md) and tests are developed there and vendored here as [`vendor/openworklang`](vendor/openworklang).
 
 OpenWorkCompiler introduces **OpenWorkLang**, a declarative Agent Programming Language for compiling human intent, agent goals, tools, memory policies, process invariants, and action workflows into executable agent programs:
 
