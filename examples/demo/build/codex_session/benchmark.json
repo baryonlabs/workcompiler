@@ -1,6 +1,6 @@
 {
   "work": "codex-session",
-  "build_dir": "build/codex_session",
+  "build_dir": "examples/demo/build/codex_session",
   "run_id": "01a04b02-4d50-71d1-8112-430bb6ede9c1",
   "source_agent": "codex_exec",
   "totals": {
@@ -8,10 +8,10 @@
     "compiled_tokens": 16782,
     "token_savings_pct": 64.0,
     "recorded_latency_ms": 29935.8,
-    "compiled_latency_ms": 17430.0,
+    "compiled_latency_ms": 17427.8,
     "speedup_x": 1.7,
     "outputs_checked": 2,
-    "outputs_matched": 2,
+    "outputs_matched": 0,
     "compiled_actions": 2,
     "escalated_actions": 1
   },
@@ -22,19 +22,19 @@
       "recorded_tokens": 14520,
       "compiled_tokens": 0,
       "recorded_latency_ms": 5944.0,
-      "compiled_latency_ms": 106.6,
-      "output_matches": "1/1",
+      "compiled_latency_ms": 106.8,
+      "output_matches": "0/1",
       "steps": [
         {
           "step_id": "step_1",
           "recorded_tokens": 14520,
           "recorded_latency_ms": 5943.950084038079,
           "compiled_tokens": 0,
-          "compiled_latency_ms": 106.58079106360674,
+          "compiled_latency_ms": 106.8443339318037,
           "executor_used": "code:codex_session/handlers",
-          "output_match": true,
+          "output_match": false,
           "recorded_output": "[OpenWorkLang] examples/quality_analysis.work -> build/quality_analyst/\n  work:       quality_analyst (v4.0)\n  inputs:     production_data, quality_inspection_data, equipment_logs\n  outputs:    root_cause, evidence, confidence_score, remediation_plan\n  actions:    collect_data, detect_anomaly, find_correlation, determine_root_cause, create_report\n  invariants: verify_sensor_calibration, require_human_approval_for_remediation\n  executors:  collect_data=code, detect_anomaly=rule, find_correlation=ml, determine_root_cause=slm, create_report=slm\n  linkml:     build/quality_analyst/schema/quality_analyst.linkml.yaml\n  artifacts:\n    work_ir       work.yaml\n    code          handlers/collect_data.py\n    rule          rules/detect_anomaly.rule.yaml\n    ml            models/ml/find_correlation/model_card.yaml, models/ml/find_correlation/dataset.jsonl, models/ml/find_correlation/train.py\n    slm           models/slm/determine_root_cause/training_candidate.yaml, models/slm/determine_root_cause/dataset.jsonl, models/slm/determine_root_cause/train.py, models/slm/create_report/training_candidate.yaml, models/slm/create_report/dataset.jsonl, models/slm/create_report/train.py\n    schema        schema/quality_analyst.linkml.yaml\n",
-          "compiled_output": "[OpenWorkLang] examples/quality_analysis.work -> build/quality_analyst/\n  work:       quality_analyst (v4.0)\n  inputs:     production_data, quality_inspection_data, equipment_logs\n  outputs:    root_cause, evidence, confidence_score, remediation_plan\n  actions:    collect_data, detect_anomaly, find_correlation, determine_root_cause, create_report\n  invariants: verify_sensor_calibration, require_human_approval_for_remediation\n  executors:  collect_data=code, detect_anomaly=rule, find_correlation=ml, determine_root_cause=slm, create_report=slm\n  linkml:     build/quality_analyst/schema/quality_analyst.linkml.yaml\n  artifacts:\n    work_ir       work.yaml\n    code          handlers/collect_data.py\n    rule          rules/detect_anomaly.rule.yaml\n    ml            models/ml/find_correlation/model_card.yaml, models/ml/find_correlation/dataset.jsonl, models/ml/find_correlation/train.py\n    slm           models/slm/determine_root_cause/training_candidate.yaml, models/slm/determine_root_cause/dataset.jsonl, models/slm/determine_root_cause/train.py, models/slm/create_report/training_candidate.yaml, models/slm/create_report/dataset.jsonl, models/slm/create_report/train.py\n    schema        schema/quality_analyst.linkml.yaml\n",
+          "compiled_output": "[OpenWorkLang] examples/quality_analysis.work -> build/quality_analyst/\n  work:       quality_analyst (v4.0)\n  inputs:     production_data, quality_inspection_data, equipment_logs\n  outputs:    root_cause, evidence, confidence_score, remediation_plan\n  actions:    collect_data, detect_anomaly, find_correlation, determine_root_cause, create_report\n  invariants: verify_sensor_calibration, require_human_approval_for_remediation\n  executors:  collect_data=code, detect_anomaly=rule, find_correlation=ml, determine_root_cause=slm, create_report=slm\n  linkml:     build/quality_analyst/schema/quality_analyst.linkml.yaml\n  artifacts:\n    work_ir       work.yaml\n    code          handlers/collect_data.py\n    rule          rules/detect_anomaly.rule.yaml\n    ml            models/ml/find_correlation/model_card.yaml, models/ml/find_correlation/dataset.jsonl, models/ml/find_correlation/train.py\n    slm           models/slm/determine_root_cause/training_candidate.yaml, models/slm/determine_root_cause/dataset.jsonl, models/slm/determine_root_cause/train.py, models/slm/create_report/training_candidate.yaml, models/slm/create_report/dataset.jsonl, models/slm/create_report/train.py\n    params        PARAMS.json\n    schema        schema/quality_analyst.linkml.yaml\n    openworklang  quality_analyst.work\n",
           "note": ""
         }
       ]
@@ -45,19 +45,19 @@
       "recorded_tokens": 15378,
       "compiled_tokens": 0,
       "recorded_latency_ms": 6685.0,
-      "compiled_latency_ms": 16.6,
-      "output_matches": "1/1",
+      "compiled_latency_ms": 14.1,
+      "output_matches": "0/1",
       "steps": [
         {
           "step_id": "step_2",
           "recorded_tokens": 15378,
           "recorded_latency_ms": 6684.978167060763,
           "compiled_tokens": 0,
-          "compiled_latency_ms": 16.568209044635296,
+          "compiled_latency_ms": 14.053999911993742,
           "executor_used": "code:codex_session/handlers",
-          "output_match": true,
+          "output_match": false,
           "recorded_output": "{\"tree\":\"build/quality_analyst/MANIFEST.json\\nbuild/quality_analyst/handlers/__init__.py\\nbuild/quality_analyst/handlers/collect_data.py\\nbuild/quality_analyst/models/ml/find_correlation/dataset.jsonl\\nbuild/quality_analyst/models/ml/find_correlation/model_card.yaml\\nbuild/quality_analyst/models/ml/find_correlation/train.py\\nbuild/quality_analyst/models/slm/create_report/dataset.jsonl\\nbuild/quality_analyst/models/slm/create_report/train.py\\nbuild/quality_analyst/models/slm/create_report/training_candidate.yaml\\nbuild/quality_analyst/models/slm/determine_root_cause/dataset.jsonl\\nbuild/quality_analyst/models/slm/determine_root_cause/train.py\\nbuild/quality_analyst/models/slm/determine_root_cause/training_candidate.yaml\\nbuild/quality_analyst/rules/detect_anomaly.rule.yaml\\nbuild/quality_analyst/schema/quality_analyst.linkml.yaml\\nbuild/quality_analyst/work.yaml\\n\",\"work_yaml\":\"work: quality_analyst\\nversion: '4.0'\\ndescription: Analyze production line quality anomaly root causes and generate remediation\\n  plans\\ninputs:\\n  - production_data\\n  - quality_inspection_data\\n  - equipment_logs\\noutputs:\\n  - root_cause\\n  - evidence\\n  - confidence_score\\n  - remediation_plan\\nstates:\\n  - initialized\\n  - collect_data_completed\\n  - detect_anomaly_completed\\n  - find_correlation_completed\\n  - determine_root_cause_completed\\n  - create_report_completed\\nactions:\\n  - collect_data\\n  - detect_anomaly\\n  - find_correlation\\n  - determine_root_cause\\n\",\"handler\":\"\\\"\\\"\\\"collect_data — code-tier handler for work 'quality_analyst'.\\n\\ngenerated by OpenWorkflow build emitter (core/build) — edit freely, regenerate with care\\nexecutor handler ref: services.collect_data\\n\\\"\\\"\\\"\\n\\n\\nEXAMPLE_INPUT = {}\\nEXAMPLE_OUTPUT = {}\\n\\n\\ndef run(**inputs):\\n    \\\"\\\"\\\"Deterministic implementation of ``collect_data``.\\n\\n    TODO: replace the body below with the real logic. The recorded example\\n    (EXAMPLE_INPUT -> EXAMPLE_OUTPUT) documents the contract this handler must honour.\\n    Expected input keys: see work.yaml inputs\\n    \\\"\\\"\\\"\\n    raise NotImplementedError(\\\"handler 'collect_data' is a scaffold; implement run(**inputs)\\\")\\n\",\"exits\":[0,0,0]}",
-          "compiled_output": "build/quality_analyst/MANIFEST.json\nbuild/quality_analyst/handlers/__init__.py\nbuild/quality_analyst/handlers/collect_data.py\nbuild/quality_analyst/models/ml/find_correlation/dataset.jsonl\nbuild/quality_analyst/models/ml/find_correlation/model_card.yaml\nbuild/quality_analyst/models/ml/find_correlation/train.py\nbuild/quality_analyst/models/slm/create_report/dataset.jsonl\nbuild/quality_analyst/models/slm/create_report/train.py\nbuild/quality_analyst/models/slm/create_report/training_candidate.yaml\nbuild/quality_analyst/models/slm/determine_root_cause/dataset.jsonl\nbuild/quality_analyst/models/slm/determine_root_cause/train.py\nbuild/quality_analyst/models/slm/determine_root_cause/training_candidate.yaml\nbuild/quality_analyst/rules/detect_anomaly.rule.yaml\nbuild/quality_analyst/schema/quality_analyst.linkml.yaml\nbuild/quality_analyst/work.yaml\nwork: quality_analyst\nversion: '4.0'\ndescription: Analyze production line quality anomaly root causes and generate remediation\n  plans\ninputs:\n  - production_data\n  - quality_inspection_data\n  - equipment_logs\noutputs:\n  - root_cause\n  - evidence\n  - confidence_score\n  - remediation_plan\nstates:\n  - initialized\n  - collect_data_completed\n  - detect_anomaly_completed\n  - find_correlation_completed\n  - determine_root_cause_completed\n  - create_report_completed\nactions:\n  - collect_data\n  - detect_anomaly\n  - find_correlation\n  - determine_root_cause\n\"\"\"collect_data — code-tier handler for work 'quality_analyst'.\n\ngenerated by OpenWorkflow build emitter (core/build) — edit freely, regenerate with care\nexecutor handler ref: services.collect_data\n\"\"\"\n\n\nEXAMPLE_INPUT = {}\nEXAMPLE_OUTPUT = {}\n\n\ndef run(**inputs):\n    \"\"\"Deterministic implementation of ``collect_data``.\n\n    TODO: replace the body below with the real logic. The recorded example\n    (EXAMPLE_INPUT -> EXAMPLE_OUTPUT) documents the contract this handler must honour.\n    Expected input keys: see work.yaml inputs\n    \"\"\"\n    raise NotImplementedError(\"handler 'collect_data' is a scaffold; implement run(**inputs)\")\n",
+          "compiled_output": "build/quality_analyst/MANIFEST.json\nbuild/quality_analyst/PARAMS.json\nbuild/quality_analyst/handlers/__init__.py\nbuild/quality_analyst/handlers/collect_data.py\nbuild/quality_analyst/models/ml/find_correlation/dataset.jsonl\nbuild/quality_analyst/models/ml/find_correlation/model_card.yaml\nbuild/quality_analyst/models/ml/find_correlation/train.py\nbuild/quality_analyst/models/slm/create_report/dataset.jsonl\nbuild/quality_analyst/models/slm/create_report/train.py\nbuild/quality_analyst/models/slm/create_report/training_candidate.yaml\nbuild/quality_analyst/models/slm/determine_root_cause/dataset.jsonl\nbuild/quality_analyst/models/slm/determine_root_cause/train.py\nbuild/quality_analyst/models/slm/determine_root_cause/training_candidate.yaml\nbuild/quality_analyst/quality_analyst.work\nbuild/quality_analyst/rules/detect_anomaly.rule.yaml\nbuild/quality_analyst/schema/quality_analyst.linkml.yaml\nbuild/quality_analyst/work.yaml\nwork: quality_analyst\nversion: '4.0'\ndescription: Analyze production line quality anomaly root causes and generate remediation\n  plans\ninputs:\n  - production_data\n  - quality_inspection_data\n  - equipment_logs\noutputs:\n  - root_cause\n  - evidence\n  - confidence_score\n  - remediation_plan\nstates:\n  - initialized\n  - collect_data_completed\n  - detect_anomaly_completed\n  - find_correlation_completed\n  - determine_root_cause_completed\n  - create_report_completed\nactions:\n  - collect_data\n  - detect_anomaly\n  - find_correlation\n  - determine_root_cause\n\"\"\"collect_data — code-tier handler for work 'quality_analyst'.\n\ngenerated by OpenWorkflow build emitter (core/build) — edit freely, regenerate with care\nexecutor handler ref: services.collect_data\n\"\"\"\n\n\nEXAMPLE_INPUT = {}\nEXAMPLE_OUTPUT = {}\n\n\ndef run(**inputs):\n    \"\"\"Deterministic implementation of ``collect_data``.\n\n    TODO: replace the body below with the real logic. The recorded example\n    (EXAMPLE_INPUT -> EXAMPLE_OUTPUT) documents the contract this handler must honour.\n    Expected input keys: see work.yaml inputs\n    \"\"\"\n    raise NotImplementedError(\"handler 'collect_data' is a scaffold; implement run(**inputs)\")\n",
           "note": ""
         }
       ]

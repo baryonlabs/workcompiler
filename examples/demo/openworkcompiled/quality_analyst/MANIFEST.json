@@ -1,7 +1,7 @@
 {
   "work": "quality_analyst",
   "build_dir": "examples/demo/openworkcompiled/quality_analyst",
-  "artifact_count": 13,
+  "artifact_count": 15,
   "by_tier": {
     "work_ir": [
       "work.yaml"
@@ -25,10 +25,18 @@
       "models/slm/create_report/dataset.jsonl",
       "models/slm/create_report/train.py"
     ],
+    "params": [
+      "PARAMS.json"
+    ],
     "schema": [
       "schema/quality_analyst.linkml.yaml"
+    ],
+    "openworklang": [
+      "quality_analyst.work"
     ]
   },
+  "params": [],
+  "synthesized_actions": [],
   "artifacts": [
     {
       "action": "*",
@@ -104,9 +112,21 @@
     },
     {
       "action": "*",
+      "tier": "params",
+      "kind": "PARAMS.json",
+      "path": "PARAMS.json"
+    },
+    {
+      "action": "*",
       "tier": "schema",
       "kind": "linkml",
       "path": "schema/quality_analyst.linkml.yaml"
+    },
+    {
+      "action": "*",
+      "tier": "openworklang",
+      "kind": "work_source",
+      "path": "quality_analyst.work"
     }
   ]
 }

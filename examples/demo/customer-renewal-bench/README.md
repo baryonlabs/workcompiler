@@ -32,6 +32,24 @@ Codex가 이 작업을 한 번 수행한 세션(8 스텝)을 프록시가 캡처
 재현됐고, 남은 20,545 토큰·11.1초는 사람에게 보여줄 최종 요약(`respond`)입니다. 이 스텝은 `models/slm/`
 학습 후보가 승격되면 SLM 비용으로, 또는 요약이 템플릿화되면 code 계층으로 내려갑니다.
 
+## 새 입력(CUST-1002): 앞단 에이전트 + 컴파일된 빌드 vs Codex 단독 ([`hybrid-CUST-1002/`](hybrid-CUST-1002/))
+
+```bash
+python3 -m core.build run build/customer_renewal_codex \
+  --request "Prepare the annual renewal proposal for customer CUST-1002." --escalate codex
+```
+
+| CUST-1002 | Codex 단독 | 하이브리드 | 차이 |
+| :-- | --: | --: | --: |
+| LLM 토큰 | 32,572 | 26,481 | −19% |
+| 벽시계 시간 | 83 s | 40.2 s | 2.1× |
+| 스텝 | 에이전트 8턴 | code 6 (0 토큰) + Codex 에스컬레이션 2 (`write_pricing_cust_1001` 16,338 · `respond` 10,143) | |
+| 결과 | 60석 · $17,100/yr · 볼륨 5% · 로열티 0% | 동일 | JSON 구조·문안은 다름(계약에 스키마 미지정) |
+
+앞단 에이전트(`bind_parameters`)가 요청에서 `customer_id=CUST-1002`를 정규식으로 바인딩했고, `PARAMS.json`에 표시된 합성 스텝(`write_pricing_cust_1001`)과 llm 계층(`respond`)만 에스컬레이션됐습니다. 에스컬레이션 프롬프트에는 컴파일 스텝이 이미 만든 상류 출력(활성 계약 JSON, 사용량·가격 계산 결과)이 그대로 들어가므로 에이전트는 탐색 없이 문서 작성만 합니다. 산출물: `hybrid-outputs/`, 베이스라인: `baseline-outputs/` + `baseline-transcript.md`, 실행 리포트: `hybrid-RUN_REPORT.md`.
+
+HOW 명세: [`build/customer_renewal_codex/customer_renewal_codex.work`](build/customer_renewal_codex/customer_renewal_codex.work) — executors(어떤 스텝이 code/llm인지)와 escalation(어떤 스텝이 `agent`로 남는지) 블록을 고쳐 재컴파일하면 분할을 바꿀 수 있습니다.
+
 ## 컴파일된 빌드가 하는 일
 
 ```text

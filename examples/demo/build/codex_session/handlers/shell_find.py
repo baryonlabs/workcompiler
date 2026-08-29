@@ -7,7 +7,16 @@ executor handler ref: services.shell_find
 import os
 import subprocess
 
+PARAMS = {}   # recorded values; override via run(**inputs)
 COMMANDS = ['find build/quality_analyst -type f | sort', "sed -n '1,25p' build/quality_analyst/work.yaml", "sed -n '1,240p' build/quality_analyst/handlers/collect_data.py"]
+
+def _render(text, inputs):
+    """Fill {param} placeholders from inputs, falling back to the recorded PARAMS."""
+    values = dict(PARAMS)
+    values.update({k: v for k, v in inputs.items() if k in PARAMS and v is not None})
+    for name, value in values.items():
+        text = text.replace("{" + name + "}", str(value))
+    return text
 
 
 def run(**inputs):
@@ -17,7 +26,7 @@ def run(**inputs):
     exposed to the commands as an environment variable (OW_<KEY>). LC_ALL defaults to "C"
     to match the agent sandbox so ordering-sensitive output (sort, ls) reproduces exactly.
     """
-    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else COMMANDS)
+    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS])
     env = dict(os.environ)
     env.setdefault("LC_ALL", "C")
     for key, value in inputs.items():
@@ -25,9 +34,11 @@ def run(**inputs):
             env[f"OW_{key.upper()}"] = str(value)
     results = []
     for command in commands:
-        completed = subprocess.run(command, shell=True, capture_output=True, text=True, env=env, timeout=600)
+        # stderr is merged into stdout: that is what the agent saw in its tool result.
+        completed = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                   text=True, env=env, timeout=600)
         results.append({"cmd": command, "exit_code": completed.returncode,
-                        "stdout": completed.stdout, "stderr": completed.stderr})
+                        "stdout": completed.stdout, "stderr": ""})
     stdout = "".join(r["stdout"] for r in results)
     return {
         "cmds": commands,

@@ -7,7 +7,16 @@ executor handler ref: services.shell_rg
 import os
 import subprocess
 
-COMMANDS = ['rg --files examples/customer-renewal && find examples/customer-renewal/behaviors -type f -maxdepth 2 -print 2>/dev/null || true && jq \'.[] | select(.customer_id == "CUST-1001" and .status == "active")\' examples/customer-renewal/data/crm/contracts.json && cat examples/customer-renewal/data/usage/usage-2026-07.csv && cat examples/customer-renewal/data/pricing/pricing_v2.yaml']
+PARAMS = {'customer_id': 'CUST-1001'}   # recorded values; override via run(**inputs)
+COMMANDS = ['rg --files examples/customer-renewal && find examples/customer-renewal/behaviors -type f -maxdepth 2 -print 2>/dev/null || true && jq \'.[] | select(.customer_id == "{customer_id}" and .status == "active")\' examples/customer-renewal/data/crm/contracts.json && cat examples/customer-renewal/data/usage/usage-2026-07.csv && cat examples/customer-renewal/data/pricing/pricing_v2.yaml']
+
+def _render(text, inputs):
+    """Fill {param} placeholders from inputs, falling back to the recorded PARAMS."""
+    values = dict(PARAMS)
+    values.update({k: v for k, v in inputs.items() if k in PARAMS and v is not None})
+    for name, value in values.items():
+        text = text.replace("{" + name + "}", str(value))
+    return text
 
 
 def run(**inputs):
@@ -17,7 +26,7 @@ def run(**inputs):
     exposed to the commands as an environment variable (OW_<KEY>). LC_ALL defaults to "C"
     to match the agent sandbox so ordering-sensitive output (sort, ls) reproduces exactly.
     """
-    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else COMMANDS)
+    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS])
     env = dict(os.environ)
     env.setdefault("LC_ALL", "C")
     for key, value in inputs.items():

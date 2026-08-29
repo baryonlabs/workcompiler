@@ -257,3 +257,112 @@ def test_benchmark_replays_steps_in_trace_order(tmp_path, monkeypatch):
     ls_steps = report.actions[0].steps
     assert [s.step_id for s in ls_steps] == ["s1", "s3"]
     assert ls_steps[1].output_match is True  # cat ran after printf wrote the file
+
+
+def _renewal_like_trace(tmp_path):
+    data = tmp_path / "data.json"
+    data.write_text(json.dumps({"rows": [{"id": "CUST-1001", "seats": 240}, {"id": "CUST-1002", "seats": 60}]}))
+    patch = ("*** Begin Patch\n*** Add File: " + str(tmp_path / "out/offer-CUST-1001.md") +
+             "\n+# Offer CUST-1001\n+Seats: 240\n+Total: 9,600.00\n*** End Patch")
+    return TraceIR.model_validate({
+        "run_id": "r", "source_agent": "codex_exec",
+        "steps": [
+            {"step_id": "s1", "actor": "agent", "action": "shell_jq", "latency_ms": 4000.0,
+             "token_usage": {"prompt_tokens": 12000, "completion_tokens": 100, "total_tokens": 12100},
+             "input": {"cmd": f"jq -c '.rows[] | select(.id == \"CUST-1001\")' {data}", "content": "renewal for CUST-1001"},
+             "output": {"tool_calls": [], "tool_result": '{"id":"CUST-1001","seats":240}\n'}},
+            {"step_id": "s2", "actor": "agent", "action": "write_offer_cust_1001", "latency_ms": 9000.0,
+             "token_usage": {"prompt_tokens": 15000, "completion_tokens": 500, "total_tokens": 15500},
+             "input": {"patch": patch, "files": [str(tmp_path / "out/offer-CUST-1001.md")]},
+             "output": {"tool_calls": [], "tool_result": "{}"}},
+        ],
+        "result": {"status": "success", "outputs": {}},
+    })
+
+
+def test_parameters_are_discovered_templated_and_synthesized_steps_flagged(tmp_path, monkeypatch):
+    from core.work_ir import WorkIR
+
+    monkeypatch.chdir(tmp_path)
+    trace = _renewal_like_trace(tmp_path)
+    work_ir = WorkIR.model_validate({
+        "work": "offer", "version": "3.0", "inputs": ["customer_id"], "outputs": ["files"],
+        "states": ["initialized", "jq_shelled", "write_offer_cust_1001_completed"],
+        "actions": ["shell_jq", "write_offer_cust_1001"], "dependencies": {"write_offer_cust_1001": ["shell_jq"]},
+        "executors": {"shell_jq": {"type": "code"}, "write_offer_cust_1001": {"type": "code"}},
+    })
+    manifest = emit_build(work_ir, tmp_path / "build", traces=[trace])
+    root = Path(manifest.build_dir)
+
+    params = json.loads((root / "PARAMS.json").read_text())
+    assert params["params"][0]["name"] == "customer_id"
+    assert params["params"][0]["recorded_value"] == "CUST-1001"
+    assert params["synthesized_actions"] == ["write_offer_cust_1001"]   # 9,600.00 was computed by the agent
+    assert '"{customer_id}"' in (root / "handlers" / "shell_jq.py").read_text()
+    assert (root / "prompts" / "write_offer_cust_1001.prompt.md").exists()
+
+
+def test_run_build_binds_new_parameters_and_escalates_only_synthesized_steps(tmp_path, monkeypatch):
+    from core.build.run import run_build
+    from core.work_ir import WorkIR
+
+    monkeypatch.chdir(tmp_path)
+    trace = _renewal_like_trace(tmp_path)
+    work_ir = WorkIR.model_validate({
+        "work": "offer", "version": "3.0", "inputs": ["customer_id"], "outputs": ["files"],
+        "states": ["initialized", "jq_shelled", "write_offer_cust_1001_completed"],
+        "actions": ["shell_jq", "write_offer_cust_1001"], "dependencies": {"write_offer_cust_1001": ["shell_jq"]},
+        "executors": {"shell_jq": {"type": "code"}, "write_offer_cust_1001": {"type": "code"}},
+    })
+    manifest = emit_build(work_ir, tmp_path / "build", traces=[trace])
+
+    seen = {}
+
+    def fake_agent(prompt, context):
+        seen["prompt"] = prompt
+        return {"output": "wrote offer for " + context["params"]["customer_id"], "tokens": 3000, "latency_ms": 2500.0, "exit_code": 0}
+
+    report = run_build(manifest.build_dir, request="Please prepare the renewal offer for CUST-1002",
+                       escalate="codex", escalator=fake_agent, out_dir=tmp_path / "runs")
+
+    assert report.params == {"customer_id": "CUST-1002"} and report.binding == {"customer_id": "regex"}
+    jq_step, write_step = report.steps
+    assert jq_step.mode == "code" and jq_step.tokens == 0 and '"seats":60' in jq_step.output   # re-rendered for CUST-1002
+    assert write_step.mode == "escalated:codex" and write_step.tokens == 3000
+    assert '"seats":60' in seen["prompt"] and "CUST-1002" in seen["prompt"]        # agent gets compiled upstream outputs
+    totals = report.totals()
+    assert totals["tokens"] == 3000 and totals["recorded_tokens"] == 27600
+    assert (tmp_path / "runs" / "RUN_REPORT.md").exists()
+
+    # without an escalation backend the synthesized step is reported, not faked
+    report2 = run_build(manifest.build_dir, params={"customer_id": "CUST-1002"}, out_dir=tmp_path / "runs2")
+    assert report2.steps[1].mode == "needs_agent" and report2.binding == {"customer_id": "override"}
+
+
+def test_build_emits_editable_openworklang_source_that_round_trips(tmp_path, monkeypatch):
+    from core.openworklang import OpenWorkLangCompiler, parse_openworklang
+    from core.work_ir import WorkIR
+
+    monkeypatch.chdir(tmp_path)
+    trace = _renewal_like_trace(tmp_path)
+    work_ir = WorkIR.model_validate({
+        "work": "offer", "version": "3.0", "inputs": ["customer_id"], "outputs": ["files"],
+        "states": ["initialized", "jq_shelled", "write_offer_cust_1001_completed"],
+        "actions": ["shell_jq", "write_offer_cust_1001"], "dependencies": {"write_offer_cust_1001": ["shell_jq"]},
+        "executors": {"shell_jq": {"type": "code"}, "write_offer_cust_1001": {"type": "code"}},
+    })
+    manifest = emit_build(work_ir, tmp_path / "build", traces=[trace])
+    src = Path(manifest.build_dir) / "offer.work"
+    text = src.read_text()
+    assert "work offer {" in text and "write_offer_cust_1001: agent" in text and "- customer_id" in text
+
+    ast = parse_openworklang(src)
+    assert ast.params == ["customer_id"]
+    assert ast.workflow == ["shell_jq", "write_offer_cust_1001"]
+    assert ast.executors == {"shell_jq": "code", "write_offer_cust_1001": "code"}
+    assert ast.escalation["write_offer_cust_1001"] == "agent"
+
+    recompiled = OpenWorkLangCompiler().compile_ast_to_work_ir(ast)
+    assert recompiled.actions == work_ir.actions
+    assert recompiled.inputs[0] == "customer_id"
+    assert recompiled.to_dict()["escalation"]["write_offer_cust_1001"] == "agent"

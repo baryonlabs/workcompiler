@@ -1,0 +1,104 @@
+{
+  "work": "customer-renewal-codex",
+  "build_dir": "build/customer_renewal_codex",
+  "request": "Prepare the annual renewal proposal for customer CUST-1002.",
+  "params": {
+    "customer_id": "CUST-1002"
+  },
+  "binding": {
+    "customer_id": "regex"
+  },
+  "totals": {
+    "tokens": 26481,
+    "latency_ms": 40179.1,
+    "code_steps": 6,
+    "escalated_steps": 2,
+    "needs_agent_steps": 0,
+    "recorded_tokens": 139437,
+    "recorded_latency_ms": 82643.9,
+    "token_savings_pct": 81.0,
+    "speedup_x": 2.1
+  },
+  "steps": [
+    {
+      "step_id": "step_1",
+      "action": "shell_sed",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 6.033584009855986,
+      "ok": true,
+      "output": "# Task: renewal proposal for customer CUST-1001\n\nYou are the sales-ops assistant. Prepare the annual renewal proposal for **CUST-1001**.\n\nRules (from `behaviors/`): verify the *active* contract in the CRM before pricing, and price with the\n*current* policy `data/pricing/pricing_v2.yaml` — never the legacy table.\n\nDo the work with auditable shell commands (jq / python3 / cat), from the repository root:\n\n1. **Lookup contract** — read `examples/customer-renewal/data/crm/contracts.json`, select the\n   contract for CUST-1001 whose `status` is `active`, and print it.\n2. **Calculate usage** — from `examples/customer-renewal/data/usage/usage-2026-07.csv`, compute for\n   CUST-1001 the peak `seats_active` over the 3 months, the growth of `seats_active` (last vs first\n   month, in %) and the average `api_calls`.\n3. **Price the offer** — apply `pricing_v2.yaml`: recommended committed seats per `seat_recommendation`,\n   list price for the plan, volume discount band, loyalty discount if the customer has >= 2 years of\n   continuous service (use the active contract's `start_date`, today is 2026-08-29), cap at\n   `max_total_discount_pct`. Compute monthly and annual totals. Write the calculation as JSON to\n   `build/renewal/pricing-CUST-1001.json`.\n4. **Draft the proposal** — write `build/renewal/proposal-CUST-1001.md` with: customer & contract\n   summary, usage summary, a pricing table (seats × list price − discounts = monthly / annual), and\n   every clause from `required_clauses` verbatim.\n5. Reply with a short summary (recommended seats, total annual price, discounts applied) and the two\n   file paths.\n",
+      "note": ""
+    },
+    {
+      "step_id": "step_2",
+      "action": "shell_rg",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 25.031416909769177,
+      "ok": true,
+      "output": "examples/customer-renewal/domain.linkml.yaml\nexamples/customer-renewal/data/pricing/pricing_v1_legacy.yaml\nexamples/customer-renewal/data/pricing/pricing_v2.yaml\nexamples/customer-renewal/data/usage/usage-2026-07.csv\nexamples/customer-renewal/data/crm/contracts.json\nexamples/customer-renewal/TASK.md\nexamples/customer-renewal/behaviors/verify-current-contract/BEHAVIOR.md\nexamples/customer-renewal/behaviors/use-current-pricing-policy/BEHAVIOR.md\nexamples/customer-renewal/work.yaml\nexamples/customer-renewal/behaviors/use-current-pricing-policy/BEHAVIOR.md\nexamples/customer-renewal/behaviors/verify-current-contract/BEHAVIOR.md\njq: error (at examples/customer-renewal/data/crm/contracts.json:50): Cannot index string with string \"customer_id\"\n",
+      "note": "exit_code=5"
+    },
+    {
+      "step_id": "step_3",
+      "action": "shell_cat",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 14.87937499769032,
+      "ok": true,
+      "output": "{\n  \"generated_at\": \"2026-08-01\",\n  \"contracts\": [\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2024-0917\",\n      \"status\": \"active\",\n      \"plan\": \"enterprise\",\n      \"seats\": 240,\n      \"price_per_seat_month_usd\": 38.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2024-09-01\",\n      \"end_date\": \"2026-09-30\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    },\n    {\n      \"customer_id\": \"CUST-1002\",\n      \"customer_name\": \"Bluebird Logistics\",\n      \"contract_id\": \"CTR-2025-0142\",\n      \"status\": \"active\",\n      \"plan\": \"professional\",\n      \"seats\": 60,\n      \"price_per_seat_month_usd\": 25.0,\n      \"pricing_policy\": \"pricing_v2\",\n      \"start_date\": \"2025-11-15\",\n      \"end_date\": \"2026-11-14\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"m.lee@example.com\",\n      \"special_terms\": [\"custom SLA 99.95%\"]\n    },\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2022-0311\",\n      \"status\": \"expired\",\n      \"plan\": \"professional\",\n      \"seats\": 120,\n      \"price_per_seat_month_usd\": 22.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2022-09-01\",\n      \"end_date\": \"2024-08-31\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    }\n  ]\n}\ncustomer_id,month,seats_active,api_calls,storage_gb,support_tickets\nCUST-1001,2026-05,238,1840000,910,4\nCUST-1001,2026-06,247,2010000,955,3\nCUST-1001,2026-07,262,2265000,1010,5\nCUST-1002,2026-05,54,310000,120,1\nCUST-1002,2026-06,57,325000,128,2\nCUST-1002,2026-07,58,331000,131,1\n# Current enterprise pricing policy (rules.pricing_v2). Effective 2026-01-01.\n# The renewal offer MUST be computed from this table (see behaviors/use-current-pricing-policy).\npolicy: pricing_v2\neffective_from: \"2026-01-01\"\ncurrency: USD\nrenewal_term_months: 12\nlist_price_per_seat_month:\n  starter: 12.0\n  professional: 25.0\n  enterprise: 40.0\nvolume_discount_bands:            # applied on list price, by committed seats\n  - min_seats: 50\n    pct: 5\n  - min_seats: 200\n    pct: 10\n  - min_seats: 500\n    pct: 15\nloyalty_discount:                 # customers with >= min_years continuous service\n  min_years: 2\n  pct: 3\nmax_total_discount_pct: 20        # hard cap; anything beyond needs sales-director approval\nseat_recommendation:\n  rule: \"commit seats = max(current contract seats, peak seats_active of last 3 months) rounded up to next 10\"\nrequired_clauses:\n  - \"12-month term with 60-day auto-renewal notice\"\n  - \"Data Processing Addendum v3 attached\"\n  - \"Price valid for 30 days from proposal date\"\n# BEHAVIOR: verify-current-contract\n\n## 1. Intent\nEnsure that any renewal offer or contract analysis looks up the active, current customer contract from the CRM before computing renewal terms.\n\n## 2. Evidence\nEvidence consists of a `crm.lookup_contract` step occurring before `services.usage.calculate` or `rules.pricing_v2` steps in the execution trajectory.\n\n## 3. Decision\n- `true`: `crm.lookup_contract` executed successfully and returned active contract data prior to pricing logic.\n- `false`: Pricing or drafting occurred without querying the active contract, or queried a cached/stale record.\n- `na`: Trajectory does not involve contract renewals.\n\n## 4. Execution\nEnforced at compile-time as a non-removable workflow transition dependency and verified by post-hoc trajectory judges.\n\n## 5. Recovery\nIf missing, halt execution and escalate to CRM lookup connector or prompt reviewer.\n\n## 6. Failure Modes\nUsing hardcoded contract terms or relying on LLM memory from previous turns.\n# BEHAVIOR: use-current-pricing-policy\n\n## 1. Intent\nGuarantees that pricing calculations apply the current active enterprise pricing table (`rules.pricing_v2`) rather than legacy discount structures.\n\n## 2. Evidence\nInvocation of `rules.pricing_v2` with live policy parameters in the trajectory.\n\n## 3. Decision\n- `true`: Active pricing policy rule engine was queried and applied.\n- `false`: Custom unverified pricing was hallucinated or legacy table was applied.\n- `na`: Trajectory does not perform pricing calculations.\n\n## 4. Execution\nEnforced as a deterministic Rule engine executor step.\n\n## 5. Recovery\nRe-derive offer using standard rule engine `rules.pricing_v2`.\n\n## 6. Failure Modes\nLLM hallucinating custom percentage discounts outside authorized bands.\n",
+      "note": ""
+    },
+    {
+      "step_id": "step_4",
+      "action": "shell_jq",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 42.02449996955693,
+      "ok": true,
+      "output": "{\n  \"customer_id\": \"CUST-1002\",\n  \"customer_name\": \"Bluebird Logistics\",\n  \"contract_id\": \"CTR-2025-0142\",\n  \"status\": \"active\",\n  \"plan\": \"professional\",\n  \"seats\": 60,\n  \"price_per_seat_month_usd\": 25.0,\n  \"pricing_policy\": \"pricing_v2\",\n  \"start_date\": \"2025-11-15\",\n  \"end_date\": \"2026-11-14\",\n  \"billing\": \"annual\",\n  \"account_owner\": \"m.lee@example.com\",\n  \"special_terms\": [\n    \"custom SLA 99.95%\"\n  ]\n}\n{\n  \"usage\": {\n    \"peak_seats_active\": 58,\n    \"seats_growth_pct\": 7.4074,\n    \"average_api_calls\": 322000.0\n  },\n  \"pricing\": {\n    \"recommended_committed_seats\": 60,\n    \"list_price_per_seat_month_usd\": 25.0,\n    \"gross_monthly_usd\": 1500.0,\n    \"volume_discount_pct\": 5,\n    \"loyalty_discount_pct\": 0,\n    \"total_discount_pct\": 5,\n    \"monthly_total_usd\": 1425.0,\n    \"annual_total_usd\": 17100.0,\n    \"loyalty_eligible_as_of\": \"False\",\n    \"two_year_anniversary\": \"2027-11-15\"\n  }\n}\n",
+      "note": ""
+    },
+    {
+      "step_id": "step_5",
+      "action": "shell_mkdir",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 5.134375067427754,
+      "ok": true,
+      "output": "",
+      "note": ""
+    },
+    {
+      "step_id": "step_6",
+      "action": "write_pricing_cust_1001",
+      "mode": "escalated:codex",
+      "tokens": 16338,
+      "latency_ms": 30439.070584019646,
+      "ok": true,
+      "output": "Created the CUST-1002 renewal proposal:\n\n- Recommended seats: **60**\n- Annual price: **$17,100.00**\n- Discount: **5% volume**, no loyalty discount\n- [Pricing JSON](/Users/hongmartin/orca/projects/open-workflow/build/renewal/pricing-CUST-1002.json)\n- [Proposal](/Users/hongmartin/orca/projects/open-workflow/build/renewal/proposal-CUST-1002.md)\ndiff --git a/build/renewal/pricing-CUST-1002.json b/build/renewal/pricing-CUST-1002.json\nnew file mode 100644\nindex 0000000000000000000000000000000000000000..344889724df979485d7ad9d4652b35a9a94d3e79\n--- /dev/null\n+++ b/build/renewal/pricing-CUST-1002.json\n@@ -0,0 +1,44 @@\n+{\n+  \"customer_id\": \"CUST-1002\",\n+  \"contract_id\": \"CTR-2025-0142\",\n+  \"contract_status\": \"active\",\n+  \"plan\": \"professional\",\n+  \"proposal_date\": \"2026-08-29\",\n+  \"policy\": \"pricing_v2\",\n+  \"policy_effective_from\": \"2026-01-01\",\n+  \"currency\": \"USD\",\n+  \"renewal_term_months\": 12,\n+  \"usage\": {\n+    \"period_first_month\": \"2026-05\",\n+    \"period_last_month\": \"2026-07\",\n+    \"first_month_seats_active\": 54,\n+    \"last_month_seats_active\": 58,\n+    \"peak_seats_active\": 58,\n+    \"seats_active_growth_pct\": 7.4074,\n+    \"average_api_calls\": 322000.0\n+  },\n+  \"seat_recommendation\": {\n+    \"current_contract_seats\": 60,\n+    \"peak_seats_active\": 58,\n+    \"base_seats\": 60,\n+    \"rounding\": \"up to next 10\",\n+    \"recommended_committed_seats\": 60\n+  },\n+  \"list_price_per_seat_month_usd\": 25.0,\n+  \"gross_monthly_usd\": 1500.0,\n+  \"discounts\": {\n+    \"volume_band_min_seats\": 50,\n+    \"volume_discount_pct\": 5,\n+    \"loyalty_min_years\": 2,\n+    \"continuous_service_start_date\": \"2025-11-15\",\n+    \"loyalty_eligibility_date\": \"2027-11-15\",\n+    \"loyalty_eligible_on_proposal_date\": false,\n+    \"loyalty_discount_pct\": 0,\n+    \"uncapped_total_discount_pct\": 5,\n+    \"max_total_discount_pct\": 20,\n+    \"total_discount_pct\": 5,\n+    \"monthly_discount_usd\": 75.0\n+  },\n+  \"monthly_total_usd\": 1425.0,\n+  \"annual_total_usd\": 17100.0\n+}\ndiff --git a/build/renewal/proposal-CUST-1002.md b/build/renewal/proposal-CUST-1002.md\nnew file mode 100644\nindex 0000000000000000000000000000000000000000..1eece3bc3f8d2ba99aaa7040d4d9893fcc8e0d4f\n--- /dev/null\n+++ b/build/renewal/proposal-CUST-1002.md\n@@ -0,0 +1,39 @@\n+# Annual Renewal Proposal — Bluebird Logistics\n+\n+Proposal date: 2026-08-29\n+\n+## Customer and contract summary\n+\n+- Customer: Bluebird Logistics (CUST-1002)\n+- Active contract: CTR-2025-0142\n+- Current plan: Professional\n+- Current committed seats: 60\n+- Contract term: 2025-11-15 through 2026-11-14\n+- Billing: Annual\n+- Account owner: m.lee@example.com\n+- Renewal pricing policy: pricing_v2 (effective 2026-01-01)\n+\n+## Usage summary\n+\n+For May through July 2026, active seats increased from 54 to 58, a 7.4074% increase. Peak active seats were 58, and average API usage was 322,000.00 calls per month. Under the current policy, the greater of the current 60-seat commitment and the 58-seat peak is rounded up to the next 10 seats, producing a recommended commitment of 60 seats.\n+\n+## Pricing\n+\n+All amounts are in USD.\n+\n+| Calculation | Monthly | Annual |\n+| --- | ---: | ---: |\n+| 60 seats × $25.00 list price | $1,500.00 | $18,000.00 |\n+| Less 5% volume discount | −$75.00 | −$900.00 |\n+| Less 0% loyalty discount | −$0.00 | −$0.00 |\n+| **Total after discounts** | **$1,425.00** | **$17,100.00** |\n+\n+The 5% volume discount applies at the 50-seat band. No loyalty discount applies on the proposal date because two years of continuous service will be reached on 2027-11-15. The combined 5% discount is below the 20% policy cap.\n+\n+## Required clauses\n+\n+12-month term with 60-day auto-renewal notice\n+\n+Data Processing Addendum v3 attached\n+\n+Price valid for 30 days from proposal date",
+      "note": "synthesized content (agent computed it)"
+    },
+    {
+      "step_id": "step_7",
+      "action": "shell_jq",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 71.03400002233684,
+      "ok": true,
+      "output": "{\n  \"customer_id\": \"CUST-1002\",\n  \"customer_name\": \"Bluebird Logistics\",\n  \"contract_id\": \"CTR-2025-0142\",\n  \"status\": \"active\",\n  \"plan\": \"professional\",\n  \"seats\": 60,\n  \"price_per_seat_month_usd\": 25.0,\n  \"pricing_policy\": \"pricing_v2\",\n  \"start_date\": \"2025-11-15\",\n  \"end_date\": \"2026-11-14\",\n  \"billing\": \"annual\",\n  \"account_owner\": \"m.lee@example.com\",\n  \"special_terms\": [\n    \"custom SLA 99.95%\"\n  ]\n}\n{\n  \"usage\": {\n    \"peak_seats_active\": 58,\n    \"seats_growth_pct\": 7.4074,\n    \"average_api_calls\": 322000.0\n  },\n  \"pricing\": {\n    \"recommended_committed_seats\": 60,\n    \"list_price_per_seat_month_usd\": 25.0,\n    \"gross_monthly_usd\": 1500.0,\n    \"volume_discount_pct\": 5,\n    \"loyalty_discount_pct\": 0,\n    \"total_discount_pct\": 5,\n    \"monthly_total_usd\": 1425.0,\n    \"annual_total_usd\": 17100.0,\n    \"loyalty_eligible_as_of\": \"False\",\n    \"two_year_anniversary\": \"2027-11-15\"\n  }\n}\n",
+      "note": ""
+    },
+    {
+      "step_id": "step_8",
+      "action": "respond",
+      "mode": "escalated:codex",
+      "tokens": 10143,
+      "latency_ms": 9575.908874860033,
+      "ok": true,
+      "output": "{\n  \"content\": \"Renewal proposal completed.\\n\\n- Recommended seats: **60**\\n- Annual price: **$17,100.00**\\n- Discounts: **5% volume**, **0% loyalty**\\n\\nFiles:\\n\\n- [Pricing calculation](/Users/hongmartin/orca/projects/open-workflow/build/renewal/pricing-CUST-1002.json)\\n- [Renewal proposal](/Users/hongmartin/orca/projects/open-workflow/build/renewal/proposal-CUST-1002.md)\",\n  \"tool_calls\": [],\n  \"role\": \"assistant\",\n  \"response_id\": null,\n  \"status\": \"completed\"\n}",
+      "note": "frontier_llm tier"
+    }
+  ]
+}

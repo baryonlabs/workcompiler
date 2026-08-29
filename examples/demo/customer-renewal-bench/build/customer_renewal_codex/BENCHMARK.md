@@ -1,11 +1,11 @@
 # Benchmark — `customer-renewal-codex`
 
-Recorded agent session `01a04b0b-3a8a-72b2-8905-cb600a9ad15a` (`codex_exec`) vs. compiled build `build/customer_renewal_codex`.
+Recorded agent session `01a04b0b-3a8a-72b2-8905-cb600a9ad15a` (`codex_exec`) vs. compiled build `examples/demo/customer-renewal-bench/build/customer_renewal_codex`.
 
 | | recorded (agent) | compiled (build) | delta |
 | :-- | --: | --: | --: |
 | LLM tokens | 139,437 | 20,545 | −85.3% |
-| wall time | 82.6 s | 11.22 s | 7.4× faster |
+| wall time | 82.6 s | 11.23 s | 7.4× faster |
 | outputs reproduced | — | 7/7 | |
 | actions compiled / escalated | — | 6 / 1 | |
 
@@ -14,9 +14,9 @@ Recorded agent session `01a04b0b-3a8a-72b2-8905-cb600a9ad15a` (`codex_exec`) vs.
 | action | tier | executor used | tokens rec → comp | latency rec → comp | output match |
 | :-- | :-- | :-- | --: | --: | :-- |
 | `shell_sed` | code | code:customer_renewal_codex/handlers | 14,031 → 0 | 3.2 s → 0.01 s | 1/1 |
-| `shell_rg` | code | code:customer_renewal_codex/handlers | 14,921 → 0 | 6.7 s → 0.02 s | 1/1 |
+| `shell_rg` | code | code:customer_renewal_codex/handlers | 14,921 → 0 | 6.7 s → 0.03 s | 1/1 |
 | `shell_cat` | code | code:customer_renewal_codex/handlers | 15,345 → 0 | 5.8 s → 0.01 s | 1/1 |
-| `shell_jq` | code | code:customer_renewal_codex/handlers | 37,171 → 0 | 26.3 s → 0.07 s | 2/2 |
+| `shell_jq` | code | code:customer_renewal_codex/handlers | 37,171 → 0 | 26.3 s → 0.08 s | 2/2 |
 | `shell_mkdir` | code | code:customer_renewal_codex/handlers | 18,151 → 0 | 5.3 s → 0.00 s | 1/1 |
 | `write_pricing_cust_1001` | code | code:customer_renewal_codex/handlers | 19,273 → 0 | 24.2 s → 0.00 s | 1/1 |
 | `respond` | frontier_llm | escalated:frontier_llm | 20,545 → 20,545 | 11.1 s → 11.11 s | n/a |

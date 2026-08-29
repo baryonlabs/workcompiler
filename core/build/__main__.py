@@ -4,6 +4,7 @@
     python3 -m core.build from-trace trace.json --target NAME     [--build-dir build] [--behaviors DIR]
     python3 -m core.build show       build/<work>
     python3 -m core.build bench      build/<work> [--trace trace.json] [--no-replay]
+    python3 -m core.build run        build/<work> --request "..." [--param k=v] [--escalate codex] [--binder regex|codex]
 """
 
 from __future__ import annotations
@@ -74,6 +75,22 @@ def cmd_bench(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_run(args: argparse.Namespace) -> int:
+    from core.build.run import run_build
+
+    params = dict(kv.split("=", 1) for kv in (args.param or []))
+    report = run_build(args.build_dir, request=args.request, params=params or None,
+                       escalate=args.escalate, binder=args.binder, out_dir=args.out)
+    t = report.totals()
+    print(f"[run] {report.work}: params={json.dumps(report.params, ensure_ascii=False)} ({', '.join(f'{k}:{v}' for k, v in report.binding.items())})")
+    print(f"  tokens {t['tokens']:,} (recorded session {t['recorded_tokens']:,}), wall {t['latency_ms']/1000:.1f}s "
+          f"(recorded {t['recorded_latency_ms']/1000:.1f}s), steps code/escalated/needs-agent {t['code_steps']}/{t['escalated_steps']}/{t['needs_agent_steps']}")
+    for s in report.steps:
+        print(f"  {s.step_id:8s} {s.action:26s} {s.mode:18s} tokens {s.tokens:>7,} latency {s.latency_ms/1000:6.2f}s {'ok' if s.ok else 'FAIL'} {s.note}")
+    print(f"  report: {Path(args.out or Path(args.build_dir) / 'runs') / 'RUN_REPORT.md'}")
+    return 0
+
+
 def cmd_show(args: argparse.Namespace) -> int:
     manifest = json.loads((Path(args.build_dir) / "MANIFEST.json").read_text(encoding="utf-8"))
     print(json.dumps(manifest["by_tier"], indent=2, ensure_ascii=False))
@@ -106,6 +123,15 @@ def main(argv=None) -> int:
     d.add_argument("--no-replay", action="store_true", help="Only account costs; do not execute handlers")
     d.add_argument("--out", help="Directory for BENCHMARK.md / benchmark.json (default: build dir)")
     d.set_defaults(func=cmd_bench)
+
+    e = sub.add_parser("run", help="Run the build for new inputs: front agent binds params, code runs free, rest escalates")
+    e.add_argument("build_dir")
+    e.add_argument("--request", help="Natural-language request the front agent binds parameters from")
+    e.add_argument("--param", action="append", help="Explicit parameter, name=value (repeatable)")
+    e.add_argument("--escalate", choices=["none", "codex"], default="none", help="Backend for steps that need an agent")
+    e.add_argument("--binder", choices=["regex", "codex"], default="regex", help="How the front agent extracts parameters")
+    e.add_argument("--out", help="Directory for run reports (default: <build_dir>/runs)")
+    e.set_defaults(func=cmd_run)
 
     args = parser.parse_args(argv)
     return args.func(args)

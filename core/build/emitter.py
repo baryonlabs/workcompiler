@@ -32,6 +32,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 import yaml
 
+from core.build.params import Parameter, discover_parameters, synthesized_literals, templatize
 from core.optimizer.optimizer import TrainingCandidate
 from core.work_ir import ExecutorType, TraceIR, TraceStep, WorkIR, save_work_ir
 
@@ -44,9 +45,15 @@ class BuildArtifact:
     tier: str
     kind: str
     path: str
+    synthesized: bool = False       # content the agent computed itself; must escalate when inputs change
+    synthesized_literals: List[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, str]:
-        return {"action": self.action, "tier": self.tier, "kind": self.kind, "path": self.path}
+    def to_dict(self) -> Dict[str, Any]:
+        d: Dict[str, Any] = {"action": self.action, "tier": self.tier, "kind": self.kind, "path": self.path}
+        if self.synthesized:
+            d["synthesized"] = True
+            d["synthesized_literals"] = self.synthesized_literals
+        return d
 
 
 @dataclass
@@ -55,8 +62,11 @@ class BuildManifest:
     build_dir: str
     artifacts: List[BuildArtifact] = field(default_factory=list)
 
-    def add(self, action: str, tier: str, kind: str, path: Path, root: Path) -> None:
-        self.artifacts.append(BuildArtifact(action, tier, kind, str(path.relative_to(root))))
+    params: List[Parameter] = field(default_factory=list)
+
+    def add(self, action: str, tier: str, kind: str, path: Path, root: Path,
+            synthesized: bool = False, literals: Optional[List[str]] = None) -> None:
+        self.artifacts.append(BuildArtifact(action, tier, kind, str(path.relative_to(root)), synthesized, literals or []))
 
     def by_tier(self) -> Dict[str, List[str]]:
         out: Dict[str, List[str]] = {}
@@ -70,6 +80,8 @@ class BuildManifest:
             "build_dir": self.build_dir,
             "artifact_count": len(self.artifacts),
             "by_tier": self.by_tier(),
+            "params": [p.to_dict() for p in self.params],
+            "synthesized_actions": sorted({a.action for a in self.artifacts if a.synthesized}),
             "artifacts": [a.to_dict() for a in self.artifacts],
         }
 
@@ -140,16 +152,31 @@ def _jsonl(path: Path, rows: Iterable[Dict[str, Any]]) -> int:
 
 # --------------------------------------------------------------------------- per-tier emitters
 
-def _emit_code_handler(root: Path, action: str, executor: Dict[str, Any], steps: Sequence[TraceStep], work: str) -> Path:
+_RENDER_HELPER = '''
+def _render(text, inputs):
+    """Fill {param} placeholders from inputs, falling back to the recorded PARAMS."""
+    values = dict(PARAMS)
+    values.update({k: v for k, v in inputs.items() if k in PARAMS and v is not None})
+    for name, value in values.items():
+        text = text.replace("{" + name + "}", str(value))
+    return text
+'''
+
+
+def _emit_code_handler(root: Path, action: str, executor: Dict[str, Any], steps: Sequence[TraceStep], work: str,
+                       params: Sequence[Parameter] = ()) -> Path:
     example_in, example_out = _example_io(steps)
-    cmds = _shell_commands(example_in)
+    cmds = [templatize(c, params) for c in _shell_commands(example_in)]
     input_keys = [k for k in example_in.keys() if not k.startswith("__")]
     handler_ref = executor.get("handler") or f"handlers.{action}"
     patch = example_in.get("patch") if isinstance(example_in.get("patch"), str) else None
+    defaults = {p.name: p.recorded_value for p in params}
 
     if patch:
-        patch = _relativize_patch(patch)
-        body = f'''PATCH = {patch!r}
+        patch = templatize(_relativize_patch(patch), params)
+        body = f'''PARAMS = {defaults!r}   # recorded values; override via run(**inputs)
+PATCH = {patch!r}
+{_RENDER_HELPER}
 
 
 def _parse(patch_text):
@@ -169,7 +196,7 @@ def _parse(patch_text):
 
 def run(**inputs):
     """Re-apply the file changes captured from the approved agent trace (Add/Delete File)."""
-    patch_text = inputs.get("patch") or PATCH
+    patch_text = inputs.get("patch") or _render(PATCH, inputs)
     written, deleted = [], []
     for op, path, lines in _parse(patch_text):
         target = pathlib.Path(path)
@@ -187,8 +214,9 @@ def run(**inputs):
 '''
         imports = "import pathlib\n"
     elif cmds:
-        body = f'''COMMANDS = {cmds!r}
-
+        body = f'''PARAMS = {defaults!r}   # recorded values; override via run(**inputs)
+COMMANDS = {cmds!r}
+{_RENDER_HELPER}
 
 def run(**inputs):
     """Re-run the shell command(s) captured from the approved agent trace, in order.
@@ -197,7 +225,7 @@ def run(**inputs):
     exposed to the commands as an environment variable (OW_<KEY>). LC_ALL defaults to "C"
     to match the agent sandbox so ordering-sensitive output (sort, ls) reproduces exactly.
     """
-    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else COMMANDS)
+    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS])
     env = dict(os.environ)
     env.setdefault("LC_ALL", "C")
     for key, value in inputs.items():
@@ -474,6 +502,87 @@ Reviewer confirms before the workflow may continue:
     return path
 
 
+def _emit_work_source(root: Path, work_ir: WorkIR, manifest: "BuildManifest", run_id: Optional[str]) -> Path:
+    """Write the HOW as an editable OpenWorkLang (.work) source.
+
+    The file states, per action, what runs as deterministic code / rule / ml / slm and what
+    stays with an agent, plus the run-time parameters and escalation limits. Edit it and
+    recompile with ``python3 -m core.openworklang compile <file>`` to change the split.
+    """
+    work_dict = work_ir.to_dict()
+    executors = work_dict.get("executors", {})
+    synthesized = {a.action for a in manifest.artifacts if a.synthesized}
+    name = _slug(work_ir.work)
+
+    def bullets(items: Sequence[str]) -> str:
+        return "\n".join(f"    - {i}" for i in items) if items else "    - none"
+
+    tier_lines = []
+    for action in work_ir.actions:
+        tier = str(executors.get(action, {}).get("type", "frontier_llm"))
+        tier_lines.append(f"    {action}: {'llm' if tier == 'frontier_llm' else tier}")
+    esc_lines = []
+    for action in work_ir.actions:
+        tier = str(executors.get(action, {}).get("type", "frontier_llm"))
+        if action in synthesized:
+            esc_lines.append(f"    {action}: agent")          # regenerate content when params change
+        elif tier in ("ml", "slm"):
+            esc_lines.append(f"    {action}: {tier}_until_promoted")
+        elif tier in ("frontier_llm", "human"):
+            esc_lines.append(f"    {action}: {tier}")
+    esc = work_dict.get("escalation") or {}
+    for key in ("on_error", "on_quality_drop", "on_timeout"):
+        if esc.get(key):
+            esc_lines.append(f"    {key}: {esc[key]}")
+
+    notes = []
+    for a in manifest.artifacts:
+        if a.synthesized and a.kind == "handler":
+            notes.append(f"#   {a.action}: content synthesized by the agent (e.g. {', '.join(a.synthesized_literals[:4])}) — a front agent regenerates it for new params via prompts/{a.action}.prompt.md")
+    for p in manifest.params:
+        notes.append(f"#   {p.name}: recorded value {p.recorded_value}; bound from the request at run time (see PARAMS.json)")
+
+    text = f"""# HOW — OpenWorkLang source generated by the OpenWorkflow build emitter{f' from session {run_id}' if run_id else ''}.
+# WHAT lives in the task/behavior contracts; this file decides how each action executes and where
+# an agent must stay in the loop. Edit and recompile:  python3 -m core.openworklang compile {root / (name + '.work')}
+#
+# executors: code = replay deterministic handler (0 tokens) · rule = RuleExecutor · ml/slm = trained model once
+#            promoted (fallback: llm) · llm = frontier model (prompts/<action>.prompt.md) · human = review gate
+# escalation: agent = the step's output was synthesized by the agent; must be regenerated when params change
+{chr(10).join(notes)}
+
+work {name} {{
+  goal: "{(work_ir.description or work_ir.work).replace('"', "'")}"
+
+  params:
+{bullets([p.name for p in manifest.params])}
+
+  inputs:
+{bullets([i for i in work_ir.inputs if i not in {p.name for p in manifest.params}])}
+
+  outputs:
+{bullets(list(work_ir.outputs))}
+
+  invariants:
+{bullets(list(work_ir.invariants or []))}
+
+  workflow:
+{bullets(list(work_ir.actions))}
+
+  executors: {{
+{chr(10).join(l + ',' for l in tier_lines)}
+  }}
+
+  escalation: {{
+{chr(10).join(l + ',' for l in esc_lines) if esc_lines else '    none: none,'}
+  }}
+}}
+"""
+    path = root / f"{name}.work"
+    _write(path, text)
+    return path
+
+
 # --------------------------------------------------------------------------- public API
 
 def emit_build(
@@ -482,13 +591,22 @@ def emit_build(
     traces: Optional[Iterable[TraceIR]] = None,
     training_candidates: Optional[Dict[str, TrainingCandidate]] = None,
     linkml_yaml: Optional[str] = None,
+    params: Optional[Dict[str, str]] = None,
 ) -> BuildManifest:
-    """Lower ``work_ir`` into ``<build_root>/<work>/`` and return the manifest."""
+    """Lower ``work_ir`` into ``<build_root>/<work>/`` and return the manifest.
+
+    ``params`` pins known input parameters ({name: recorded value}); further input-like
+    literals are discovered from the recorded commands and templated as ``{name}``.
+    """
     root = Path(build_root) / _slug(work_ir.work)
     root.mkdir(parents=True, exist_ok=True)
     manifest = BuildManifest(work=work_ir.work, build_dir=str(root))
     traces = list(traces or [])
     examples = _examples_by_action(traces)
+    discovered: List[Parameter] = discover_parameters(traces[0], params) if traces else [
+        Parameter(name=k, recorded_value=str(v), kind="explicit", source="explicit") for k, v in (params or {}).items()
+    ]
+    manifest.params = discovered
     invariants = list(work_ir.invariants or [])
     candidates = training_candidates or {}
     work_dict = work_ir.to_dict()
@@ -505,7 +623,19 @@ def emit_build(
         steps = examples.get(action, [])
 
         if tier == ExecutorType.CODE.value:
-            manifest.add(action, tier, "handler", _emit_code_handler(root, action, executor, steps, work_ir.work), root)
+            literals: List[str] = []
+            first = steps[0] if steps else None
+            first_in = _as_dict(first.input) if first is not None else {}
+            if traces and isinstance(first_in.get("patch"), str):
+                idx = traces[0].steps.index(first) if first in traces[0].steps else 0
+                literals = synthesized_literals(first_in["patch"], traces[0], idx, discovered)
+            handler_path = _emit_code_handler(root, action, executor, steps, work_ir.work, discovered)
+            manifest.add(action, tier, "handler", handler_path, root, synthesized=bool(literals), literals=literals)
+            if literals:
+                # The agent computed these values itself: keep a prompt contract so a front agent can
+                # regenerate the content when inputs change instead of replaying stale numbers.
+                manifest.add(action, tier, "prompt", _emit_prompt(root, action, executor, steps, work_ir.work, invariants), root,
+                             synthesized=True, literals=literals)
         elif tier == ExecutorType.RULE.value:
             manifest.add(action, tier, "rule", _emit_rule(root, action, executor, steps, work_ir.work, work_ir.inputs), root)
         elif tier == ExecutorType.HTTP.value:
@@ -521,6 +651,12 @@ def emit_build(
         else:  # frontier_llm and anything unknown
             manifest.add(action, tier, "prompt", _emit_prompt(root, action, executor, steps, work_ir.work, invariants), root)
 
+    _write(root / "PARAMS.json", json.dumps(
+        {"params": [p.to_dict() for p in discovered],
+         "synthesized_actions": sorted({a.action for a in manifest.artifacts if a.synthesized})},
+        indent=2, ensure_ascii=False) + "\n")
+    manifest.add("*", "params", "PARAMS.json", root / "PARAMS.json", root)
+
     if traces:
         trace_path = root / "trace.json"
         payload = {"traces": [t.model_dump(mode="json") for t in traces]}
@@ -531,6 +667,9 @@ def emit_build(
         p = root / "schema" / f"{_slug(work_ir.work)}.linkml.yaml"
         _write(p, linkml_yaml)
         manifest.add("*", "schema", "linkml", p, root)
+
+    run_id = traces[0].run_id if traces else None
+    manifest.add("*", "openworklang", "work_source", _emit_work_source(root, work_ir, manifest, run_id), root)
 
     _write(root / "MANIFEST.json", json.dumps(manifest.to_dict(), indent=2, ensure_ascii=False) + "\n")
     return manifest

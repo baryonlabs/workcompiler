@@ -39,6 +39,8 @@ def parse_openworklang(source: Union[str, Path]) -> OpenWorkLangAST:
                 workflow=data.get("workflow", []),
                 dependencies=data.get("dependencies", {}),
                 executors=data.get("executors", {}),
+                params=data.get("params", []),
+                escalation={k: str(v) for k, v in (data.get("escalation") or {}).items()},
             )
     except Exception:
         pass
@@ -113,6 +115,8 @@ def parse_openworklang(source: Union[str, Path]) -> OpenWorkLangAST:
     invariants = extract_list("invariants")
     workflow = extract_list("workflow")
     executors = extract_dict("executors")
+    params = extract_list("params")
+    escalation = extract_dict("escalation")
 
     dependencies = {}
     if len(workflow) > 1:
@@ -131,4 +135,6 @@ def parse_openworklang(source: Union[str, Path]) -> OpenWorkLangAST:
         workflow=workflow,
         dependencies=dependencies,
         executors=executors,
+        params=params,
+        escalation=escalation,
     )

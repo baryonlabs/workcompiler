@@ -45,6 +45,46 @@ AI가 한 번 작업하게 하세요. OpenWorkflow는 이후 작업을 안정적
 | 최종 산출물 `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **바이트 단위 동일** | |
 
 계약 조회(`jq`)·데이터 읽기·가격 산정·제안서 작성(`apply_patch`)까지 업무 자체는 전부 code 계층으로 컴파일돼 토큰 0으로 재현됐고, 남은 비용은 사람에게 보여줄 최종 요약 한 스텝입니다.
+### 앞단 에이전트 + 컴파일된 빌드: 새 입력(CUST-1002)에 대한 하이브리드 실행
+
+컴파일된 빌드는 기록된 세션의 입력(CUST-1001)을 재현할 뿐이므로, **앞단 에이전트**가 새 요청에서 파라미터를 바인딩하고(`PARAMS.json`의 `customer_id`), code 계층은 그 값으로 재실행하며, 에이전트가 합성했던 스텝(가격 JSON·제안서 작성, 최종 요약)만 Codex로 에스컬레이션합니다 — 유연성은 앞단 에이전트가, 효율성은 결정론적 코드가 맡는 구조입니다 ([`hybrid-CUST-1002/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002/)):
+
+```bash
+python3 -m core.build run build/customer_renewal_codex \
+  --request "Prepare the annual renewal proposal for customer CUST-1002." --escalate codex
+```
+
+| CUST-1002 | Codex 단독 (전체 수행) | 하이브리드 (빌드 + 앞단 에이전트) | 차이 |
+| :-- | --: | --: | --: |
+| LLM 토큰 | 32,572 | 26,481 (에스컬레이션 2회) | −19% |
+| 벽시계 시간 | 83 s | 40.2 s | **2.1×** |
+| 스텝 | 에이전트 8턴 | code 6 (토큰 0) + 에스컬레이션 2 | |
+| 산정 결과 | 60석 · 연 $17,100 · 볼륨 5% | 60석 · 연 $17,100 · 볼륨 5% | 동일 |
+
+토큰 절감이 첫 벤치보다 작은 이유는 명확합니다: 남은 두 에스컬레이션이 각각 새 Codex 세션(시스템 프롬프트 포함 10–16k 토큰)이기 때문입니다. 이 두 스텝이 `models/slm/` 후보로 승격되거나 제안서 문안이 템플릿(code)으로 내려가면 그때 토큰이 0에 가까워집니다 — 어디까지 내려갈 수 있는지가 `.work` 파일의 `escalation` 블록에 명시됩니다.
+
+### WHAT → HOW: 이 파이프라인이 만드는 두 산출물
+
+| | 무엇 | 어디에 |
+| :-- | :-- | :-- |
+| **WHAT** — 목표·수용 기준·행위 규약 | 정제되지 않은 요구사항을 사람이 문장으로 확정한 것. 초반에는 [grill-me](https://github.com/mattpocock/skills) 같은 심문형 스킬로 목표를 다듬고, 에이전트가 한 번 수행한 결과를 사람이 검증하면서 규칙이 굳어집니다 | `TASK.md`, `behaviors/*/BEHAVIOR.md` |
+| **HOW** — 실행 분할과 한계 | 검증된 세션을 컴파일해 얻은 **OpenWorkLang(`.work`)**: 액션별로 code / rule / ml / slm / llm 중 무엇이 실행하는지, 어떤 파라미터를 앞단 에이전트가 바인딩하는지, 어떤 스텝이 `agent`로 남는지(한계)를 사람이 읽고 고쳐 재컴파일할 수 있는 명세 | `build/<work>/<work>.work` (+ `PARAMS.json`, `prompts/`) |
+
+컴파일된 `.work`의 예 — `build/customer_renewal_codex/customer_renewal_codex.work`:
+
+```text
+work customer_renewal_codex {
+  params:
+    - customer_id            # 기록값 CUST-1001, 실행 시 앞단 에이전트가 요청에서 바인딩
+  workflow: [shell_sed, shell_rg, shell_cat, shell_jq, shell_mkdir, write_pricing_cust_1001, respond]
+  executors: { shell_sed: code, shell_rg: code, shell_cat: code, shell_jq: code, shell_mkdir: code,
+               write_pricing_cust_1001: code, respond: llm }
+  escalation: { write_pricing_cust_1001: agent,     # 합성 콘텐츠 — 파라미터가 바뀌면 에이전트가 재생성
+                respond: frontier_llm,               # 최종 요약 — SLM 후보 승격 전까지 프론티어
+                on_error: fallback_to_frontier_llm, on_quality_drop: require_human_review }
+}
+```
+
 
 설정 방법과 각 단계가 실행하는 명령은 [Zero-Code 에이전트 프록시](#zero-code-에이전트-프록시-adaptersproxy) 섹션을, 입력 프롬프트·Codex 출력·컴파일 산출물·벤치마크 원본은 [`examples/demo/`](examples/demo/)를 참조하세요.
 
@@ -215,6 +255,7 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
      -d '{"run_id":"<run_id>","target_name":"codex-session","build_dir":"build"}'   # -> build/codex_session/
    python3 -m core.build from-trace trace.json --target codex-session   # 프록시 없이 TraceIR JSON에서 빌드
    python3 -m core.build bench build/codex_session                       # 에이전트 vs 빌드: 결과 · 토큰 · 속도
+   python3 -m core.build run build/<work> --request "..." --escalate codex  # 앞단 에이전트: 파라미터 바인딩 → code 무료 실행 → 합성 스텝만 에스컬레이션
    ```
 
    API 키 기반 클라이언트(OpenAI SDK, Agents SDK 등)는 `OPENAI_BASE_URL=http://127.0.0.1:8787/v1`만 지정하면 `/v1/responses`가 같은 방식으로 캡처됩니다.
@@ -359,6 +400,8 @@ python3 -m core.openworklang compile examples/quality_analysis.work
 ```text
 build/quality_analyst/
 ├── work.yaml                                  # Work IR (런타임의 진실 원천)
+├── quality_analyst.work                       # HOW — 편집·재컴파일 가능한 OpenWorkLang 소스 (executors · params · escalation)
+├── PARAMS.json                                # 앞단 에이전트가 바인딩하는 파라미터 + 합성 스텝 목록
 ├── MANIFEST.json                              # action → tier → artifact 색인
 ├── handlers/collect_data.py                   # code   : def run(**inputs) — 트레이스에 셸 명령이 있으면 재실행 코드, 없으면 계약이 담긴 스캐폴드
 ├── rules/detect_anomaly.rule.yaml             # rule   : RuleExecutor가 그대로 평가하는 선언적 분기 목록
@@ -491,7 +534,7 @@ openworkflow/
 ├── docs/                        # 명세서, 아키텍처, 사용 가이드, 다이어그램
 ├── .agents/skills/              # Codex 스킬: $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench
 ├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + 런타임 로더 + 벤치마크
-├── tests/                       # pytest 테스트 수트 (148개 테스트 전원 통과)
+├── tests/                       # pytest 테스트 수트 (151개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트
 ```
 

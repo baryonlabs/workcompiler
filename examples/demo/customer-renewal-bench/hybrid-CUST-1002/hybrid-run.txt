@@ -1,0 +1,11 @@
+[run] customer-renewal-codex: params={"customer_id": "CUST-1002"} (customer_id:regex)
+  tokens 26,481 (recorded session 139,437), wall 40.2s (recorded 82.6s), steps code/escalated/needs-agent 6/2/0
+  step_1   shell_sed                  code               tokens       0 latency   0.01s ok 
+  step_2   shell_rg                   code               tokens       0 latency   0.03s ok exit_code=5
+  step_3   shell_cat                  code               tokens       0 latency   0.01s ok 
+  step_4   shell_jq                   code               tokens       0 latency   0.04s ok 
+  step_5   shell_mkdir                code               tokens       0 latency   0.01s ok 
+  step_6   write_pricing_cust_1001    escalated:codex    tokens  16,338 latency  30.44s ok synthesized content (agent computed it)
+  step_7   shell_jq                   code               tokens       0 latency   0.07s ok 
+  step_8   respond                    escalated:codex    tokens  10,143 latency   9.58s ok frontier_llm tier
+  report: build/customer_renewal_codex/runs/RUN_REPORT.md

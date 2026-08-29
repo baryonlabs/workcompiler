@@ -23,6 +23,8 @@ class OpenWorkLangAST(BaseModel):
     workflow: List[str] = Field(default_factory=list, description="Ordered action DAG steps")
     dependencies: Dict[str, List[str]] = Field(default_factory=dict, description="Action dependency DAG")
     executors: Dict[str, str] = Field(default_factory=dict, description="Executor routing mapping (code, rule, ml, slm, llm, human)")
+    params: List[str] = Field(default_factory=list, description="Run-time parameters a front agent binds from the request (e.g. customer_id)")
+    escalation: Dict[str, str] = Field(default_factory=dict, description="Explicit limits: which actions stay with an agent/model and the global on_error / on_quality_drop / on_timeout policies")
 
     def to_dict(self) -> Dict[str, Any]:
         """Dump AST to dictionary."""

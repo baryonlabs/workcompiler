@@ -7,7 +7,16 @@ executor handler ref: services.shell_cat
 import os
 import subprocess
 
+PARAMS = {'customer_id': 'CUST-1001'}   # recorded values; override via run(**inputs)
 COMMANDS = ['cat examples/customer-renewal/data/crm/contracts.json\ncat examples/customer-renewal/data/usage/usage-2026-07.csv\ncat examples/customer-renewal/data/pricing/pricing_v2.yaml\ncat examples/customer-renewal/behaviors/verify-current-contract/BEHAVIOR.md\ncat examples/customer-renewal/behaviors/use-current-pricing-policy/BEHAVIOR.md']
+
+def _render(text, inputs):
+    """Fill {param} placeholders from inputs, falling back to the recorded PARAMS."""
+    values = dict(PARAMS)
+    values.update({k: v for k, v in inputs.items() if k in PARAMS and v is not None})
+    for name, value in values.items():
+        text = text.replace("{" + name + "}", str(value))
+    return text
 
 
 def run(**inputs):
@@ -17,7 +26,7 @@ def run(**inputs):
     exposed to the commands as an environment variable (OW_<KEY>). LC_ALL defaults to "C"
     to match the agent sandbox so ordering-sensitive output (sort, ls) reproduces exactly.
     """
-    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else COMMANDS)
+    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS])
     env = dict(os.environ)
     env.setdefault("LC_ALL", "C")
     for key, value in inputs.items():

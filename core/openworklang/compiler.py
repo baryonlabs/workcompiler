@@ -51,17 +51,22 @@ class OpenWorkLangCompiler:
             )
 
         # Build WorkIR instance
+        inputs = list(ast.params) + [i for i in ast.inputs if i not in ast.params]
+        kwargs: Dict[str, Any] = {}
+        if ast.escalation:
+            kwargs["escalation"] = dict(ast.escalation)
         work_ir = WorkIR(
             work=ast.name,
             version=ast.version,
             description=ast.goal or f"Compiled OpenWorkLang agent work definition for '{ast.name}'",
-            inputs=ast.inputs or ["request_data"],
+            inputs=inputs or ["request_data"],
             outputs=ast.outputs or ["result"],
             states=states,
             actions=actions,
             dependencies=ast.dependencies,
             invariants=ast.invariants,
             executors=executors_def,
+            **kwargs,
         )
 
         return work_ir

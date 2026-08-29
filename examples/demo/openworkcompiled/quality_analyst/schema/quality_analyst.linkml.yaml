@@ -16,13 +16,7 @@ classes:
       - confidence_score
       - remediation_plan
 slots:
-  production_data:
-    range: string
-    required: false
   confidence_score:
-    range: string
-    required: false
-  quality_inspection_data:
     range: string
     required: false
   equipment_logs:
@@ -31,9 +25,15 @@ slots:
   root_cause:
     range: string
     required: false
-  remediation_plan:
+  production_data:
     range: string
     required: false
   evidence:
+    range: string
+    required: false
+  remediation_plan:
+    range: string
+    required: false
+  quality_inspection_data:
     range: string
     required: false

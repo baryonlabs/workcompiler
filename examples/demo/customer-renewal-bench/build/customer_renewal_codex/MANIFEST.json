@@ -1,7 +1,7 @@
 {
   "work": "customer-renewal-codex",
   "build_dir": "build/customer_renewal_codex",
-  "artifact_count": 9,
+  "artifact_count": 12,
   "by_tier": {
     "work_ir": [
       "work.yaml"
@@ -12,15 +12,39 @@
       "handlers/shell_cat.py",
       "handlers/shell_jq.py",
       "handlers/shell_mkdir.py",
-      "handlers/write_pricing_cust_1001.py"
+      "handlers/write_pricing_cust_1001.py",
+      "prompts/write_pricing_cust_1001.prompt.md"
     ],
     "frontier_llm": [
       "prompts/respond.prompt.md"
     ],
+    "params": [
+      "PARAMS.json"
+    ],
     "trace": [
       "trace.json"
+    ],
+    "openworklang": [
+      "customer_renewal_codex.work"
     ]
   },
+  "params": [
+    {
+      "name": "customer_id",
+      "recorded_value": "CUST-1001",
+      "kind": "id",
+      "steps": [
+        "step_2",
+        "step_4",
+        "step_6",
+        "step_7"
+      ],
+      "source": "command"
+    }
+  ],
+  "synthesized_actions": [
+    "write_pricing_cust_1001"
+  ],
   "artifacts": [
     {
       "action": "*",
@@ -62,7 +86,37 @@
       "action": "write_pricing_cust_1001",
       "tier": "code",
       "kind": "handler",
-      "path": "handlers/write_pricing_cust_1001.py"
+      "path": "handlers/write_pricing_cust_1001.py",
+      "synthesized": true,
+      "synthesized_literals": [
+        "1080.0",
+        "40.00",
+        "10,800.00",
+        "129,600.00",
+        "1,080.00",
+        "12,960.00",
+        "0.00",
+        "9,720.00",
+        "116,640.00"
+      ]
+    },
+    {
+      "action": "write_pricing_cust_1001",
+      "tier": "code",
+      "kind": "prompt",
+      "path": "prompts/write_pricing_cust_1001.prompt.md",
+      "synthesized": true,
+      "synthesized_literals": [
+        "1080.0",
+        "40.00",
+        "10,800.00",
+        "129,600.00",
+        "1,080.00",
+        "12,960.00",
+        "0.00",
+        "9,720.00",
+        "116,640.00"
+      ]
     },
     {
       "action": "respond",
@@ -72,9 +126,21 @@
     },
     {
       "action": "*",
+      "tier": "params",
+      "kind": "PARAMS.json",
+      "path": "PARAMS.json"
+    },
+    {
+      "action": "*",
       "tier": "trace",
       "kind": "trace.json",
       "path": "trace.json"
+    },
+    {
+      "action": "*",
+      "tier": "openworklang",
+      "kind": "work_source",
+      "path": "customer_renewal_codex.work"
     }
   ]
 }

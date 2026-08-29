@@ -1,7 +1,7 @@
 {
   "work": "codex-session",
-  "build_dir": "/Users/hongmartin/orca/projects/open-workflow/build/codex_session",
-  "artifact_count": 5,
+  "build_dir": "examples/demo/build/codex_session",
+  "artifact_count": 7,
   "by_tier": {
     "work_ir": [
       "work.yaml"
@@ -13,10 +13,18 @@
     "frontier_llm": [
       "prompts/respond.prompt.md"
     ],
+    "params": [
+      "PARAMS.json"
+    ],
     "trace": [
       "trace.json"
+    ],
+    "openworklang": [
+      "codex_session.work"
     ]
   },
+  "params": [],
+  "synthesized_actions": [],
   "artifacts": [
     {
       "action": "*",
@@ -44,9 +52,21 @@
     },
     {
       "action": "*",
+      "tier": "params",
+      "kind": "PARAMS.json",
+      "path": "PARAMS.json"
+    },
+    {
+      "action": "*",
       "tier": "trace",
       "kind": "trace.json",
       "path": "trace.json"
+    },
+    {
+      "action": "*",
+      "tier": "openworklang",
+      "kind": "work_source",
+      "path": "codex_session.work"
     }
   ]
 }
