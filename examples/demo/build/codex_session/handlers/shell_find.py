@@ -8,7 +8,7 @@ import os
 import subprocess
 
 PARAMS = {}   # recorded values; override via run(**inputs)
-COMMANDS = ['find build/quality_analyst -type f | sort', "sed -n '1,25p' build/quality_analyst/work.yaml", "sed -n '1,240p' build/quality_analyst/handlers/collect_data.py"]
+COMMANDS = ["find build/quality_analyst -type f | sort\nsed -n '1,25p' build/quality_analyst/work.yaml\nsed -n '1,240p' build/quality_analyst/handlers/collect_data.py"]
 
 def _render(text, inputs):
     """Fill {param} placeholders from inputs, falling back to the recorded PARAMS."""

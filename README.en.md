@@ -29,8 +29,8 @@ A **real interactive Codex session**, not a mock-up. Point Codex at the OpenWork
 
 | | recorded agent (Codex) | compiled build | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 46,680 | 16,782 | **−64%** |
-| wall time | 29.9 s | 17.4 s | **1.7×** |
+| LLM tokens | 46,460 | 16,843 | **−64%** |
+| wall time | 33.8 s | 23.1 s | **1.5×** |
 | outputs reproduced (code-tier steps) | — | **2/2 exact** | |
 
 The two shell steps (`shell_python3`, `shell_find`) lowered to the code tier and reproduced the same output with zero tokens in tens of milliseconds; the remaining cost is the final summary (`respond`), still escalated to a frontier LLM — that is what the `models/slm/` training candidate takes over once promoted.

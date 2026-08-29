@@ -1,6 +1,6 @@
 {
   "work": "codex-session",
-  "build_dir": "examples/demo/build/codex_session",
+  "build_dir": "/Users/hongmartin/orca/projects/open-workflow/build/codex_session",
   "artifact_count": 7,
   "by_tier": {
     "work_ir": [
