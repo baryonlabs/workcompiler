@@ -67,8 +67,18 @@ python3 -m core.build run build/customer_renewal_codex \
 
 | | 무엇 | 어디에 |
 | :-- | :-- | :-- |
-| **WHAT** — 목표·수용 기준·행위 규약 | 정제되지 않은 요구사항을 사람이 문장으로 확정한 것. 초반에는 [grill-me](https://github.com/mattpocock/skills) 같은 심문형 스킬로 목표를 다듬고, 에이전트가 한 번 수행한 결과를 사람이 검증하면서 규칙이 굳어집니다 | `TASK.md`, `behaviors/*/BEHAVIOR.md` |
+| **WHAT** — 목표·수용 기준·행위 규약 | 정제되지 않은 요구사항을 사람이 문장으로 확정한 것. Codex에서 **`$ow-define <업무>`** 를 호출하면 [grill-me / grilling](https://github.com/mattpocock/skills)(저장소에 설치됨, `.agents/skills/`) 인터뷰로 목표·입력·규칙·수용 기준을 끝까지 캐묻고 `TASK.md`와 `BEHAVIOR.md`를 써 줍니다. 그 뒤 에이전트가 한 번 수행한 결과를 사람이 검증하면서 규칙이 굳어집니다 | `TASK.md`, `behaviors/*/BEHAVIOR.md` |
 | **HOW** — 실행 분할과 한계 | 검증된 세션을 컴파일해 얻은 **OpenWorkLang(`.work`)**: 액션별로 code / rule / ml / slm / llm 중 무엇이 실행하는지, 어떤 파라미터를 앞단 에이전트가 바인딩하는지, 어떤 스텝이 `agent`로 남는지(한계)를 사람이 읽고 고쳐 재컴파일할 수 있는 명세 | `build/<work>/<work>.work` (+ `PARAMS.json`, `prompts/`) |
+
+전체 루프를 Codex 스킬로 보면 다음과 같습니다:
+
+```text
+$ow-define <업무>            # WHAT: grilling 인터뷰 → examples/<work>/TASK.md + behaviors/*/BEHAVIOR.md (+ 픽스처 데이터)
+codex exec 'Read examples/<work>/TASK.md …'   # 에이전트가 한 번 수행 (프록시가 캡처) → 사람이 결과 검증
+$ow-traces · $ow-compile-trace <work>         # 검증된 세션 → build/<work>/ (handlers · prompts · PARAMS.json · <work>.work = HOW)
+$ow-bench <work>                              # 에이전트 vs 빌드: 결과 · 토큰 · 속도
+python3 -m core.build run build/<work> --request "…" --escalate codex   # 새 입력: 앞단 에이전트 + 빌드
+```
 
 컴파일된 `.work`의 예 — `build/customer_renewal_codex/customer_renewal_codex.work`:
 
@@ -243,7 +253,7 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
    codex
    ```
 
-3. Codex 안에서 스킬을 호출합니다 — `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`.
+3. Codex 안에서 스킬을 호출합니다 — `$ow-define <업무>`(WHAT 정의), `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`. 외부 스킬(grill-me/grilling)은 `npx skills add https://github.com/mattpocock/skills --skill grilling --skill grill-me --agent codex --copy -y`로 재설치할 수 있습니다(`skills-lock.json`).
 
    스킬이 실행하는 명령은 셸에서 직접 써도 동일합니다:
 
@@ -532,7 +542,7 @@ openworkflow/
 │
 ├── agents/                      # 가이드 및 측정 에이전트 규격
 ├── docs/                        # 명세서, 아키텍처, 사용 가이드, 다이어그램
-├── .agents/skills/              # Codex 스킬: $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench
+├── .agents/skills/              # Codex 스킬: $ow-define(WHAT, grilling 인터뷰) · $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench · grill-me/grilling(mattpocock/skills, skills-lock.json)
 ├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + 런타임 로더 + 벤치마크
 ├── tests/                       # pytest 테스트 수트 (151개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트

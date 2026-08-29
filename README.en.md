@@ -67,8 +67,18 @@ The token saving is smaller than in the first benchmark for an obvious reason: e
 
 | | what | where |
 | :-- | :-- | :-- |
-| **WHAT** — goal, acceptance criteria, behavior contracts | Raw requirements turned into sentences a human signs off on. Early on, an interrogation skill such as [grill-me](https://github.com/mattpocock/skills) sharpens the goal; the rules harden while a human verifies the agent's first run | `TASK.md`, `behaviors/*/BEHAVIOR.md` |
+| **WHAT** — goal, acceptance criteria, behavior contracts | Raw requirements turned into sentences a human signs off on. In Codex, **`$ow-define <work>`** runs the [grill-me / grilling](https://github.com/mattpocock/skills) interview (installed in `.agents/skills/`) until goal, inputs, rules and acceptance criteria are pinned down, then writes `TASK.md` and `BEHAVIOR.md`. The rules harden while a human verifies the agent's first run | `TASK.md`, `behaviors/*/BEHAVIOR.md` |
 | **HOW** — execution split and limits | The **OpenWorkLang (`.work`)** compiled from the verified session: per action, whether code / rule / ml / slm / llm executes it, which parameters the front agent binds, and which steps remain `agent` (the limits) — readable, editable, recompilable | `build/<work>/<work>.work` (+ `PARAMS.json`, `prompts/`) |
+
+The whole loop, as Codex skills:
+
+```text
+$ow-define <work>            # WHAT: grilling interview → examples/<work>/TASK.md + behaviors/*/BEHAVIOR.md (+ fixture data)
+codex exec 'Read examples/<work>/TASK.md …'   # the agent's first run (captured by the proxy) → a human verifies the result
+$ow-traces · $ow-compile-trace <work>         # verified session → build/<work>/ (handlers · prompts · PARAMS.json · <work>.work = HOW)
+$ow-bench <work>                              # agent vs. build: outputs · tokens · speed
+python3 -m core.build run build/<work> --request "…" --escalate codex   # new inputs: front agent + build
+```
 
 Example of a compiled `.work` — `build/customer_renewal_codex/customer_renewal_codex.work`:
 
@@ -217,7 +227,7 @@ The recording script is [`docs/demo/openworkflow-codex-demo.tape`](docs/demo/ope
    codex
    ```
 
-3. Inside Codex, invoke the skills — `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`.
+3. Inside Codex, invoke the skills — `$ow-define <work>` (define the WHAT), `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`. The external skills (grill-me/grilling) can be reinstalled with `npx skills add https://github.com/mattpocock/skills --skill grilling --skill grill-me --agent codex --copy -y` (`skills-lock.json`).
 
    The commands the skills run work from a plain shell too:
 
@@ -506,7 +516,7 @@ openworkflow/
 │
 ├── agents/                      # Guide and measurement fleet specs
 ├── docs/                        # Specifications, architecture, usage guides, and diagrams
-├── .agents/skills/              # Codex skills: $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench
+├── .agents/skills/              # Codex skills: $ow-define (WHAT, grilling interview) · $ow-compile-work · $ow-traces · $ow-compile-trace · $ow-bench · grill-me/grilling (mattpocock/skills, skills-lock.json)
 ├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts) + runtime loader + benchmark
 ├── tests/                       # Complete pytest suite (151 tests)
 └── examples/                    # Sample workflows, LinkML schemas, and runnable demo scripts
