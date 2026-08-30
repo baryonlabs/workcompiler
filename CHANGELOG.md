@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.4.1 — 2026-08-30
 
 - `ow-promote` skill (`$ow-promote <target> <action> [model]` in Codex, `/ow-promote` in Claude Code) and the README demo re-recorded with the pipx 0.4.0 install: `$ow-bench` → `$ow-promote codex-session respond qwen2.5:7b` (gate PASS 2/2, PROMOTED) → `$ow-bench` again with `respond` on the local SLM — 147,288 → 6,551 tokens (−95.6%), 3.4×, zero frontier escalations. `ow-bench` now points at `$ow-promote` for steps still on the frontier LLM.
 
