@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.4.0 — 2026-08-30
+
+The last tier, measured — a frontier-LLM step promoted to a local small model under a deterministic quality gate.
 
 - **SLM tier is real** (`core/build/slm.py`): `owc build promote <build> <action> [--model qwen2.5:7b]` runs a small local model (any OpenAI-compatible endpoint; Ollama by default, `OPENWORKCOMPILER_SLM_BASE_URL` / `OPENWORKCOMPILER_SLM_MODEL`) on the action's recorded examples with the compiled upstream outputs as context and a *masked* recorded example for style, gates the output deterministically (anchor-fact recall, grounding precision — no numbers/ids/paths that exist nowhere in the inputs —, length, placeholder, fact density), folds each evaluation into a `QualityRecord` and lets `ExecutorOptimizer.evaluate_promotion` decide. On pass it flips the executor in `work.yaml` and the `.work` source (`respond: slm`), writes `models/slm/<action>/{runtime.json, promotion.json, PROMOTION.md, quality_records.jsonl}`; `owc build demote` rolls back.
 - `owc build bench` executes promoted SLM steps for real (server-reported tokens, latency, gate verdict as the match; per-model ledger separates the SLM from the frontier model); `owc build run` runs them before any agent escalation and falls back to the agent when the gate fails; the runtime loader gives `SLMExecutor` a real inference handler.
