@@ -61,7 +61,7 @@ work codex_session {
   executors: {
     shell_python3: code,
     shell_find: code,
-    respond: llm,
+    respond: slm,
     shell_curl: code,
   }
 

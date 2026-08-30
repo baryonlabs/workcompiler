@@ -1,0 +1,11 @@
+[run] customer-renewal-codex: params={"customer_id": "CUST-1002"} (customer_id:regex)
+  tokens 271,731 (recorded session 139,437), wall 47.2s (recorded 82.6s), steps code/escalated/needs-agent 6/1/0
+  step_1   shell_sed                  code               tokens       0 latency   0.01s ok 
+  step_2   shell_rg                   code               tokens       0 latency   0.03s ok exit_code=5
+  step_3   shell_cat                  code               tokens       0 latency   0.01s ok 
+  step_4   shell_jq                   code               tokens       0 latency   0.04s ok 
+  step_5   shell_mkdir                code               tokens       0 latency   0.00s ok 
+  step_6   write_pricing_cust_1001    escalated:claude   tokens 267,526 latency  32.76s ok synthesized content (agent computed it)
+  step_7   shell_jq                   code               tokens       0 latency   0.06s ok 
+  step_8   respond                    slm:qwen2.5:7b     tokens   4,205 latency  14.32s ok gate PASS (recall 1.00; grounded 1.00; len ×1.0)
+  report: examples/demo/customer-renewal-bench/hybrid-CUST-1002-slm/RUN_REPORT.md

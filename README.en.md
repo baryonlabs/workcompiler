@@ -61,7 +61,7 @@ flowchart LR
 | Codify | review / edit the split and limits in `.work` | **LLM compile** — the verified session becomes the **HOW** (OpenWorkLang): code / rule / ml / slm / agent |
 | Execute | handle only escalated exceptions | **efficiency** (deterministic · SLM, zero-to-few tokens) + **flexibility** (a front agent binds parameters and judges exceptions) |
 
-Measured: on the same renewal-proposal task the compiled build produced identical deliverables with **−85%** tokens, **7.4×** faster than the agent, and the hybrid run for a new customer (CUST-1002) was **2.1×** faster than Codex alone with the agent's share reduced to two synthesized steps ([benchmarks](#30-second-demo-use-it-from-inside-codex)).
+Measured: on the same renewal-proposal task the compiled build produced identical deliverables with **−85%** tokens, **7.4×** faster than the agent — **−97%** with zero frontier escalations once the last summary step was promoted to a local SLM — and the hybrid run for a new customer (CUST-1002) was **2.1×** faster than Codex alone with the agent's share reduced to one synthesized step ([benchmarks](#30-second-demo-use-it-from-inside-codex)).
 
 ---
 
@@ -82,19 +82,19 @@ A **real interactive Codex session**, not a mock-up. Install `owc` with one line
 
 | | recorded agent (Codex) | compiled build | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 119,974 | 35,510 | **−70%** |
-| wall time | 65.0 s | 29.7 s | **2.2×** |
-| outputs reproduced (code-tier steps) | — | **2/4** (the two `shell_curl` steps query the proxy's trace list, which differs per session) | |
+| LLM tokens | 119,974 | 6,292 | **−95%** |
+| wall time | 65.0 s | 14.8 s | **4.4×** |
+| outputs reproduced | — | **4/6** (`respond` 2/2 = SLM gate PASS; the two `shell_curl` steps query the proxy's trace list, which differs per session) | |
 
-The shell steps (`shell_python3`, `shell_find`, `shell_curl`) lowered to the code tier and replayed with zero tokens in tens of milliseconds (compile and search output identical; the proxy trace-list `curl` differs per session and is reported as a mismatch); the remaining cost is the final summary (`respond`), still escalated to a frontier LLM — that is what the `models/slm/` training candidate takes over once promoted.
+The shell steps (`shell_python3`, `shell_find`, `shell_curl`) lowered to the code tier and replayed with zero tokens in tens of milliseconds (compile and search output identical; the proxy trace-list `curl` differs per session and is reported as a mismatch); the remaining cost is the final summary (`respond`), which the **SLM promotion** below runs on a local `qwen2.5:3b` (6,292 tokens, $0).
 
 **A real business task — customer contract renewal proposal** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): verify the active CRM contract → aggregate 3 months of usage → price with the current policy → write the proposal and pricing JSON; artifacts in [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
 
 | | recorded agent (Codex, 8 steps) | compiled build (replayed from a clean state) | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 139,437 | 20,545 | **−85%** |
+| LLM tokens | 139,437 | 20,545 → **4,208** after promotion | **−85% → −97%** |
 | wall time | 82.6 s | 11.2 s | **7.4×** |
-| outputs reproduced | — | **7/7** | |
+| outputs reproduced | — | **7/7** (8/8 after promotion) | |
 | deliverables `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **byte-identical** | |
 
 Contract lookup (`jq`), data reads, pricing and writing the proposal (`apply_patch`) — the work itself — all compiled to the code tier and replayed with zero tokens; the only remaining cost is the one final summary step shown to a human.
@@ -150,6 +150,32 @@ python3 -m core.build run build/customer_renewal_codex \
 Escalating the same build with **Claude Code** instead (`--escalate claude`, no code or build changes) yields an identical `pricing-CUST-1002.json` — 60.7 s, 517,720 tokens (363,523 of them cache reads: `claude -p` loads the global `CLAUDE.md` and tool schemas on every call), see [`hybrid-CUST-1002-claude/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002-claude/).
 
 The token saving is smaller than in the first benchmark for an obvious reason: each remaining escalation is a fresh Codex session (10–16k tokens with its system prompt). Once those two steps are promoted to `models/slm/` candidates or the proposal wording is lowered to a template (code), tokens approach zero — and how far that lowering may go is stated explicitly in the `.work` file's `escalation` block.
+
+
+### The last tier: promoting `respond` from the frontier LLM to a local SLM
+
+The only cost left in the two benchmarks above was the final summary shown to a person (`respond`). That step now moves down too — to a **small local model under a quality gate**: not fine-tuning (one or two examples train nothing), but gated routing; `models/slm/<action>/train.py` is the next stage once a dataset accumulates ([`PROMOTION.md`](examples/demo/customer-renewal-bench/build/customer_renewal_codex/models/slm/respond/PROMOTION.md)):
+
+```bash
+ollama pull qwen2.5:7b                                                     # any OpenAI-compatible local endpoint works (OPENWORKCOMPILER_SLM_BASE_URL)
+owc build promote build/customer_renewal_codex respond --model qwen2.5:7b  # gate on the recorded examples → on pass, respond: slm in work.yaml/.work
+owc build bench   build/customer_renewal_codex                              # the SLM really runs; the token ledger splits it from the frontier model
+owc build demote  build/customer_renewal_codex respond                      # roll back
+```
+
+| candidate | gate | evidence |
+| :-- | :-- | :-- |
+| `qwen2.5:3b` | **FAIL** | left the file-path placeholders unfilled → anchor recall 0.50 |
+| `qwen2.5:7b` | **PASS** (recall 1.00 · grounding 1.00 · length ×1.0) | all 6 facts of the recorded answer (270 seats · $116,640 · 10% · CUST-1001 · two files) restated from the upstream outputs, zero hallucinated values |
+
+| customer-renewal after promotion | recorded agent (Codex) | compiled build (code 6 + SLM 1) | delta |
+| :-- | --: | --: | --: |
+| LLM tokens | 139,437 | **4,208** (all on the local SLM, $0) | **−97.0%** |
+| wall time | 82.6 s | 17.2 s | **4.8×** |
+| outputs reproduced | — | **8/8** | |
+| frontier-LLM escalations | 1 step | **0** | |
+
+The gate is deterministic: it extracts numbers, ids and file paths from the SLM's answer and checks (1) that every fact the frontier answer stated *and* that exists in the upstream data is restated (recall), (2) that no value appears that exists nowhere in the inputs (grounding), (3) length, placeholders and fact density; every evaluation becomes a `QualityRecord` that must pass the existing `ExecutorOptimizer.evaluate_promotion`. The recorded answer is shown to the SLM only with its **values masked**, so copying is impossible. codex-session's `respond` passed 2/2 even on `qwen2.5:3b` and was promoted (−94.8%, 4.4×); in the CUST-1002 hybrid run `respond` executed on the SLM (4,205 tokens, $0, PASS) and only the one synthesized step went to Claude Code — identical pricing JSON ([`hybrid-CUST-1002-slm/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002-slm/)). When the gate fails, the step falls through to the agent escalation and `RUN_REPORT.md` keeps the SLM's attempt and the reason.
 
 ### Does it work for someone who has never written a prompt? — four business cases, chat only
 
@@ -637,7 +663,7 @@ openworkcompiler/
 ├── .agents/skills/              # canonical agent skills (synced into .claude/skills etc. by owc skills install): ow-define (WHAT, grilling interview) · ow-compile-work · ow-traces · ow-compile-trace · ow-bench · grill-me/grilling (mattpocock/skills, skills-lock.json)
 ├── core/agents/                 # agent backend registry: claude · codex · gemini · opencode · aider (`--escalate auto`, `owc agent …`) · core/skills.py (skills sync)
 ├── vendor/openworklang/         # submodule: the OpenWorkLang language (baryonlabs/openworklang)
-├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + loader + benchmark (token ledger) + front-agent runner
+├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + loader + benchmark (token ledger) + front-agent runner + slm.py (local SLM inference · quality gate · promote/demote)
 ├── examples/cases/              # four business cases: beginner materials → $ow-define → agent run → compile → bench (transcripts · traces · builds)
 ├── tests/                       # Complete pytest suite (192 tests)
 └── examples/                    # Sample workflows, LinkML schemas, and runnable demo scripts
@@ -663,6 +689,7 @@ owc compile examples/quality_analysis.work              # .work → build/qualit
 owc build from-trace trace.json --target my-work        # captured session → build tree
 owc build bench build/my_work                           # agent vs. build: outputs · tokens · speed
 owc build run build/my_work --request "…" --escalate auto    # front agent + build (auto|claude|codex|gemini|opencode|aider)
+owc build promote build/my_work respond --model qwen2.5:7b  # frontier LLM → local SLM under the quality gate (owc build demote to roll back)
 owc agent list · owc agent setup claude · owc skills install --agent claude   # detect agents · proxy wiring · skills sync
 ```
 

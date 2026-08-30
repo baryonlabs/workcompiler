@@ -1,0 +1,91 @@
+{
+  "work": "codex-session",
+  "action": "respond",
+  "build_dir": "build/codex_session",
+  "runtime": {
+    "model": "qwen2.5:3b",
+    "base_url": "http://127.0.0.1:11434/v1",
+    "max_tokens": 700,
+    "temperature": 0.0,
+    "timeout_s": 240,
+    "min_quality": 0.9,
+    "min_recall": 0.9,
+    "min_precision": 0.9,
+    "max_length_ratio": 3.0
+  },
+  "totals": {
+    "evaluations": 2,
+    "pass_rate": 1.0,
+    "recorded_tokens": 35510,
+    "slm_tokens": 6124,
+    "token_savings_pct": 82.8,
+    "recorded_latency_ms": 29493.8,
+    "slm_latency_ms": 18256.4,
+    "speedup_x": 1.62,
+    "promoted": true
+  },
+  "evaluations": [
+    {
+      "step_id": "step_3",
+      "model": "qwen2.5:3b",
+      "output": "Compiled successfully to [build/quality_analyst](/Users/hongmartin/orca/projects/open-workflow/build/quality_analyst).\n\n```text\nwork:       quality_analyst (v4.0)\ninputs:     production_data, quality_inspection_data, equipment_logs\noutputs:    root_cause, evidence, confidence_score, remediation_plan\nactions:    collect_data, detect_anomaly, find_correlation,\n            determine_root_cause, create_report\ninvariants: verify_sensor_calibration,\n            require_human_approval_for_remediation\nexecutors:  collect_data=code\n            detect_anomaly=rule\n            find_correlation=ml\n            determine_root_cause=slm\n            create_report=slm\nlinkml:     build/quality_analyst/schema/quality_analyst.linkml.yaml\nartifacts:\n  work_ir       work.yaml\n  code          handlers/collect_data.py\n  rule          rules/detect_anomaly.rule.yaml\n  ml            models/ml/find_correlation/model_card.yaml, models/ml/find_correlation/dataset.jsonl, models/ml/find_correlation/train.py\n  slm           models/slm/determine_root_cause/training_candidate.yaml, models/slm/determine_root_cause/dataset.jsonl, models/slm/determine_root_cause/train.py, models/slm/create_report/training_candidate.yaml, models/slm/create_report/dataset.jsonl, models/slm/create_report/train.py\n  params        PARAMS.json\n  schema        build/quality_analyst/schema/quality_analyst.linkml.yaml\n  openworklang  quality_analyst.work\n```\n\nGenerated tree:\n\n```text\nbuild/quality_analyst/MANIFEST.json\nbuild/quality_analyst/PARAMS.json\nbuild/quality_analyst/handlers/__init__.py\nbuild/quality_analyst/handlers/collect_data.py\nbuild/quality_analyst/models/ml/find_correlation/dataset.jsonl\nbuild/quality_analyst/models/ml/find_correlation/model_card.yaml\nbuild/quality_analyst/models/ml/find_correlation/train.py\nbuild/quality_analyst/models/slm/create_report/dataset.jsonl\nbuild/quality_analyst/models/slm/create_report/train.py\nbuild/quality_analyst/models/slm/create_report/training_candidate.yaml\nbuild/quality_analyst/models/slm/determine_root_cause/dataset.jsonl\nbuild/quality_analyst/models/slm/determine_root_cause/train.py\nbuild/quality_analyst/models/slm/determine_root_cause/training_candidate.yaml\nbuild/quality_analyst/quality_analyst.work\nbuild/quality_analyst/rules/detect_anomaly.rule.yaml\nbuild/quality_analyst/schema/quality_analyst.linkml.yaml\nbuild/quality_analyst/work.yaml\n```\n\nFirst 25 lines of [work.yaml](/Users/hongmartin/orca/projects/open-workflow/build/quality_analyst/work.yaml):\n\n```yaml\nwork: quality_analyst\nversion: '4.0'\ndescription: Analyze production line quality anomaly root causes and generate remediation\n  plans\ninputs:\n  - production_data\n  - quality_inspection_data\n  - equipment_logs\noutputs:\n  - root_cause\n  - evidence\n  - confidence_score",
+      "prompt_tokens": 2574,
+      "completion_tokens": 700,
+      "tokens": 3274,
+      "latency_ms": 13448.9,
+      "error": "",
+      "gate": "PASS (recall 0.94; grounded 1.00; len ×0.7; missing schema/quality_analyst.linkml.yaml)",
+      "score": 0.941,
+      "checks": {
+        "non_empty": true,
+        "anchor_recall": true,
+        "grounded": true,
+        "length": true,
+        "no_placeholder": true,
+        "fact_density": true
+      },
+      "missing": [
+        "schema/quality_analyst.linkml.yaml"
+      ],
+      "ungrounded": [],
+      "recorded_model": "gpt-5.6-sol",
+      "recorded_tokens": 17344,
+      "recorded_latency_ms": 20458.7
+    },
+    {
+      "step_id": "step_5",
+      "model": "qwen2.5:3b",
+      "output": "Captured sessions:\n\n- `01a04c51-c1ca-7512-8b81-20d832a84b85` — `codex-cli` — 4 steps — `shell_python3`, `shell_find`, `respond`, `shell_curl`\n- `01a04c51-f7d2-7de0-9ae2-8ec624f02dfd` — `codex-cli` — 1 step — `respond`\n\nThis current Codex session is itself being captured through the proxy, so its shell calls—including this trace query—appear as steps. 📡",
+      "prompt_tokens": 2704,
+      "completion_tokens": 146,
+      "tokens": 2850,
+      "latency_ms": 4807.5,
+      "error": "",
+      "gate": "PASS (recall 1.00; grounded 1.00; len ×1.0)",
+      "score": 1.0,
+      "checks": {
+        "non_empty": true,
+        "anchor_recall": true,
+        "grounded": true,
+        "length": true,
+        "no_placeholder": true,
+        "fact_density": true
+      },
+      "missing": [],
+      "ungrounded": [],
+      "recorded_model": "gpt-5.6-sol",
+      "recorded_tokens": 18166,
+      "recorded_latency_ms": 9035.1
+    }
+  ],
+  "previous_executor": {
+    "type": "frontier_llm",
+    "handler": null,
+    "preferred": "claude-3-5-sonnet",
+    "fallback": [
+      "human"
+    ]
+  },
+  "dry_run": false,
+  "at": "2026-08-30T20:10:17"
+}

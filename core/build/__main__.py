@@ -5,6 +5,8 @@
     python3 -m core.build show       build/<work>
     python3 -m core.build bench      build/<work> [--trace trace.json] [--no-replay]
     python3 -m core.build run        build/<work> --request "..." [--param k=v] [--escalate auto|claude|codex|…] [--binder regex|agent]
+    python3 -m core.build promote    build/<work> <action> [--model qwen2.5:7b] [--dry-run]   # frontier → local SLM under the quality gate
+    python3 -m core.build demote     build/<work> <action>
 """
 
 from __future__ import annotations
@@ -97,6 +99,35 @@ def cmd_show(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_promote(args) -> int:
+    from core.build.slm import SLMRuntime, promote
+
+    rt = SLMRuntime.defaults(model=args.model, base_url=args.base_url)
+    if args.min_quality is not None:
+        rt.min_quality = args.min_quality
+    if args.min_recall is not None:
+        rt.min_recall = args.min_recall
+    report = promote(args.build_dir, args.action, rt, dry_run=args.dry_run)
+    t = report.totals()
+    verdict = "PROMOTED" if report.promoted else ("would promote (dry run)" if args.dry_run and t["pass_rate"] >= rt.min_quality else "NOT promoted")
+    print(f"[promote] {report.work}.{args.action} → slm ({rt.model} @ {rt.base_url}): {verdict}")
+    print(f"  pass rate {t['pass_rate']:.0%} over {t['evaluations']} recorded example(s); tokens {t['recorded_tokens']:,} -> {t['slm_tokens']:,}"
+          + (f" ({-t['token_savings_pct']:+.1f}%)" if t["token_savings_pct"] is not None else "")
+          + f"; latency {t['recorded_latency_ms']/1000:.1f}s -> {t['slm_latency_ms']/1000:.1f}s")
+    for e in report.evaluations:
+        print(f"  {e.step_id:8s} {e.verdict.summary()}  tokens {e.result.tokens:,} latency {e.result.latency_ms/1000:.1f}s")
+    print(f"  report: {Path(args.build_dir) / 'models' / 'slm' / args.action / 'PROMOTION.md'}")
+    return 0 if (report.promoted or args.dry_run) else 1
+
+
+def cmd_demote(args) -> int:
+    from core.build.slm import demote
+
+    info = demote(args.build_dir, args.action)
+    print(f"[demote] {args.action} restored to {info['restored'].get('type', 'frontier_llm')}")
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="python3 -m core.build", description="OpenWorkCompiler build backend")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -135,6 +166,22 @@ def main(argv=None) -> int:
     e.add_argument("--model", help="Model for the escalation backend")
     e.add_argument("--out", help="Directory for run reports (default: <build_dir>/runs)")
     e.set_defaults(func=cmd_run)
+
+    f = sub.add_parser("promote", help="Evaluate a small local model on an action's recorded examples and, if the gate passes, switch the action to the SLM tier")
+    f.add_argument("build_dir")
+    f.add_argument("action")
+    f.add_argument("--to", choices=["slm"], default="slm")
+    f.add_argument("--model", help="Model served by the OpenAI-compatible endpoint (default: $OPENWORKCOMPILER_SLM_MODEL or qwen2.5:3b)")
+    f.add_argument("--base-url", help="Endpoint (default: $OPENWORKCOMPILER_SLM_BASE_URL or http://127.0.0.1:11434/v1 — Ollama)")
+    f.add_argument("--min-quality", type=float, help="Fraction of recorded examples that must pass the gate (default 0.9)")
+    f.add_argument("--min-recall", type=float, help="Anchor-fact recall each example must reach (default 0.9)")
+    f.add_argument("--dry-run", action="store_true", help="Evaluate and write PROMOTION.md without changing the build")
+    f.set_defaults(func=cmd_promote)
+
+    g = sub.add_parser("demote", help="Roll a promoted action back to its previous executor")
+    g.add_argument("build_dir")
+    g.add_argument("action")
+    g.set_defaults(func=cmd_demote)
 
     args = parser.parse_args(argv)
     from core import telemetry

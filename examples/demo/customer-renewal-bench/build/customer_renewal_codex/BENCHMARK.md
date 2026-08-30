@@ -1,25 +1,55 @@
 # Benchmark — `customer-renewal-codex`
 
-Recorded agent session `01a04b0b-3a8a-72b2-8905-cb600a9ad15a` (`codex_exec`) vs. compiled build `examples/demo/customer-renewal-bench/build/customer_renewal_codex`.
+Recorded agent session `01a04b0b-3a8a-72b2-8905-cb600a9ad15a` (`codex_exec`) vs. compiled build `build/customer_renewal_codex`.
 
 | | recorded (agent) | compiled (build) | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 139,437 | 20,545 | −85.3% |
-| wall time | 82.6 s | 11.23 s | 7.4× faster |
-| outputs reproduced | — | 7/7 | |
-| actions compiled / escalated | — | 6 / 1 | |
+| LLM tokens | 139,437 | 4,208 | −97.0% |
+| wall time | 82.6 s | 17.17 s | 4.8× faster |
+| outputs reproduced | — | 8/8 | |
+| actions compiled / escalated | — | 7 / 0 | |
 
 ## Per action
 
 | action | tier | executor used | tokens rec → comp | latency rec → comp | output match |
 | :-- | :-- | :-- | --: | --: | :-- |
 | `shell_sed` | code | code:customer_renewal_codex/handlers | 14,031 → 0 | 3.2 s → 0.01 s | 1/1 |
-| `shell_rg` | code | code:customer_renewal_codex/handlers | 14,921 → 0 | 6.7 s → 0.03 s | 1/1 |
+| `shell_rg` | code | code:customer_renewal_codex/handlers | 14,921 → 0 | 6.7 s → 0.02 s | 1/1 |
 | `shell_cat` | code | code:customer_renewal_codex/handlers | 15,345 → 0 | 5.8 s → 0.01 s | 1/1 |
-| `shell_jq` | code | code:customer_renewal_codex/handlers | 37,171 → 0 | 26.3 s → 0.08 s | 2/2 |
+| `shell_jq` | code | code:customer_renewal_codex/handlers | 37,171 → 0 | 26.3 s → 0.07 s | 2/2 |
 | `shell_mkdir` | code | code:customer_renewal_codex/handlers | 18,151 → 0 | 5.3 s → 0.00 s | 1/1 |
 | `write_pricing_cust_1001` | code | code:customer_renewal_codex/handlers | 19,273 → 0 | 24.2 s → 0.00 s | 1/1 |
-| `respond` | frontier_llm | escalated:frontier_llm | 20,545 → 20,545 | 11.1 s → 11.11 s | n/a |
+| `respond` | slm | slm:qwen2.5:7b | 20,545 → 4,208 | 11.1 s → 17.05 s | 1/1 |
+
+## SLM tier — small local model instead of the frontier LLM
+
+| step | action | model | tokens (frontier → SLM) | latency | gate |
+| :-- | :-- | :-- | --: | --: | :-- |
+| step_8 | `respond` | qwen2.5:7b | 20,545 → 4,208 | 11.1 s → 17.1 s | gate PASS (recall 1.00; grounded 1.00; len ×1.0) |
+
+## Token ledger — who spent what
+
+Every recorded step, the model that produced it, and what runs it in the compiled build.
+
+| step | action | recorded model | prompt (cached) + completion = total | compiled executor | compiled tokens |
+| :-- | :-- | :-- | --: | :-- | --: |
+| step_1 | `shell_sed` | ? | 13,938 (0) + 93 = 14,031 | code | 0 |
+| step_2 | `shell_rg` | ? | 14,686 (0) + 235 = 14,921 | code | 0 |
+| step_3 | `shell_cat` | ? | 15,130 (0) + 215 = 15,345 | code | 0 |
+| step_4 | `shell_jq` | ? | 16,630 (0) + 1,001 = 17,631 | code | 0 |
+| step_7 | `shell_jq` | ? | 19,297 (0) + 243 = 19,540 | code | 0 |
+| step_5 | `shell_mkdir` | ? | 17,968 (0) + 183 = 18,151 | code | 0 |
+| step_6 | `write_pricing_cust_1001` | ? | 18,174 (0) + 1,099 = 19,273 | code | 0 |
+| step_8 | `respond` | ? | 20,443 (0) + 102 = 20,545 | qwen2.5:7b | 4,208 |
+
+| model / executor | recorded tokens | compiled tokens |
+| :-- | --: | --: |
+| ? | 139,437 | 0 |
+| code | 0 | 0 |
+| qwen2.5:7b | 0 | 4,208 |
+
+Recorded prompt tokens served from the provider cache: 0 (counted in the totals above; billed at the cached rate).
+Totals are the sum of every request's usage as reported by the provider — each agent turn re-sends its whole context, which is why they exceed the agent CLI's own 'tokens used' figure.
 
 ## Outputs
 
@@ -303,7 +333,7 @@ A /Users/hongmartin/orca/projects/open-workflow/build/renewal/proposal-CUST-1001
 
 ```
 
-### `respond` · step_8 — escalated:frontier_llm (kept recorded cost (frontier/human tier))
+### `respond` · step_8 — slm:qwen2.5:7b (gate PASS (recall 1.00; grounded 1.00; len ×1.0))
 
 recorded:
 

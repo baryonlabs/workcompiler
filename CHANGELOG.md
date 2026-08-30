@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **SLM tier is real** (`core/build/slm.py`): `owc build promote <build> <action> [--model qwen2.5:7b]` runs a small local model (any OpenAI-compatible endpoint; Ollama by default, `OPENWORKCOMPILER_SLM_BASE_URL` / `OPENWORKCOMPILER_SLM_MODEL`) on the action's recorded examples with the compiled upstream outputs as context and a *masked* recorded example for style, gates the output deterministically (anchor-fact recall, grounding precision — no numbers/ids/paths that exist nowhere in the inputs —, length, placeholder, fact density), folds each evaluation into a `QualityRecord` and lets `ExecutorOptimizer.evaluate_promotion` decide. On pass it flips the executor in `work.yaml` and the `.work` source (`respond: slm`), writes `models/slm/<action>/{runtime.json, promotion.json, PROMOTION.md, quality_records.jsonl}`; `owc build demote` rolls back.
+- `owc build bench` executes promoted SLM steps for real (server-reported tokens, latency, gate verdict as the match; per-model ledger separates the SLM from the frontier model); `owc build run` runs them before any agent escalation and falls back to the agent when the gate fails; the runtime loader gives `SLMExecutor` a real inference handler.
+- Measured: customer-renewal `respond` promoted to `qwen2.5:7b` (3b failed the gate — it left placeholders) → full build **−97.0% tokens** (139,437 → 4,208), 4.8×, 8/8 outputs, 0 escalated actions; codex-session `respond` promoted to `qwen2.5:3b` → −94.8%; hybrid CUST-1002 with `respond` on the SLM: identical pricing, respond 4,205 tokens at $0 (`examples/demo/customer-renewal-bench/hybrid-CUST-1002-slm/`).
+
 ## v0.3.0 — 2026-08-29
 
 One compiler, many agents — Claude Code and OpenAI-compatible agents join Codex on both sides of the loop.

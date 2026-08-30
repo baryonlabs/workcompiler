@@ -121,10 +121,12 @@ executors:
     type: code
     handler: services.shell_find
   respond:
-    type: frontier_llm
-    preferred: claude-3-5-sonnet
+    type: slm
+    preferred: qwen2.5:3b
     fallback:
+      - frontier_llm
       - human
+    runtime: models/slm/respond/runtime.json
   shell_curl:
     type: code
     handler: services.shell_curl

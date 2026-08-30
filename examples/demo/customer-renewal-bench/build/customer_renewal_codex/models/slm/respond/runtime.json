@@ -1,0 +1,12 @@
+{
+  "backend": "openai_compat",
+  "model": "qwen2.5:7b",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "max_tokens": 700,
+  "temperature": 0.0,
+  "timeout_s": 240,
+  "min_quality": 0.9,
+  "min_recall": 0.9,
+  "min_precision": 0.9,
+  "max_length_ratio": 3.0
+}

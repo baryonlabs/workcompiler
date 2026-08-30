@@ -75,5 +75,15 @@
       "kind": "work_source",
       "path": "codex_session.work"
     }
+  ],
+  "promotions": [
+    {
+      "action": "respond",
+      "from": "frontier_llm",
+      "to": "slm",
+      "model": "qwen2.5:3b",
+      "pass_rate": 1.0,
+      "at": "2026-08-30T20:10:17"
+    }
   ]
 }

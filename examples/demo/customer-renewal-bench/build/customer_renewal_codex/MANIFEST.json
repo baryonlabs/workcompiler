@@ -142,5 +142,15 @@
       "kind": "work_source",
       "path": "customer_renewal_codex.work"
     }
+  ],
+  "promotions": [
+    {
+      "action": "respond",
+      "from": "frontier_llm",
+      "to": "slm",
+      "model": "qwen2.5:7b",
+      "pass_rate": 1.0,
+      "at": "2026-08-30T20:09:58"
+    }
   ]
 }

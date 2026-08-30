@@ -1,0 +1,64 @@
+{
+  "work": "customer-renewal-codex",
+  "action": "respond",
+  "build_dir": "build/customer_renewal_codex",
+  "runtime": {
+    "model": "qwen2.5:7b",
+    "base_url": "http://127.0.0.1:11434/v1",
+    "max_tokens": 700,
+    "temperature": 0.0,
+    "timeout_s": 240,
+    "min_quality": 0.9,
+    "min_recall": 0.9,
+    "min_precision": 0.9,
+    "max_length_ratio": 3.0
+  },
+  "totals": {
+    "evaluations": 1,
+    "pass_rate": 1.0,
+    "recorded_tokens": 20545,
+    "slm_tokens": 4208,
+    "token_savings_pct": 79.5,
+    "recorded_latency_ms": 11107.9,
+    "slm_latency_ms": 14299.1,
+    "speedup_x": 0.78,
+    "promoted": true
+  },
+  "evaluations": [
+    {
+      "step_id": "step_8",
+      "model": "qwen2.5:7b",
+      "output": "Renewal proposal completed.\n\n- Recommended seats: **270**\n- Annual price: **$116,640**\n- Discounts: **10% volume**, **0% loyalty**\n\nFiles:\n\n- [Pricing calculation](/Users/hongmartin/orca/projects/open-workflow/build/renewal/pricing-CUST-1001.json)\n- [Renewal proposal](/Users/hongmartin/orca/projects/open-workflow/build/renewal/proposal-CUST-1001.md)",
+      "prompt_tokens": 4095,
+      "completion_tokens": 113,
+      "tokens": 4208,
+      "latency_ms": 14299.1,
+      "error": "",
+      "gate": "PASS (recall 1.00; grounded 1.00; len ×1.0)",
+      "score": 1.0,
+      "checks": {
+        "non_empty": true,
+        "anchor_recall": true,
+        "grounded": true,
+        "length": true,
+        "no_placeholder": true,
+        "fact_density": true
+      },
+      "missing": [],
+      "ungrounded": [],
+      "recorded_model": "",
+      "recorded_tokens": 20545,
+      "recorded_latency_ms": 11107.9
+    }
+  ],
+  "previous_executor": {
+    "type": "frontier_llm",
+    "handler": null,
+    "preferred": "claude-3-5-sonnet",
+    "fallback": [
+      "human"
+    ]
+  },
+  "dry_run": false,
+  "at": "2026-08-30T20:09:58"
+}

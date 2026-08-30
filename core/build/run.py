@@ -137,6 +137,7 @@ class RunReport:
             "tokens": tokens, "cached_tokens": cached, "uncached_tokens": tokens - cached, "latency_ms": round(latency, 1),
             "cost_usd": round(sum(costs), 4) if costs else None,
             "code_steps": sum(1 for s in self.steps if s.mode == "code"),
+            "slm_steps": sum(1 for s in self.steps if s.mode.startswith("slm:")),
             "escalated_steps": sum(1 for s in self.steps if s.mode.startswith("escalated")),
             "needs_agent_steps": sum(1 for s in self.steps if s.mode == "needs_agent"),
             "recorded_tokens": self.recorded_tokens, "recorded_latency_ms": round(self.recorded_latency_ms, 1),
@@ -171,7 +172,7 @@ class RunReport:
         lines += ["", "## Totals", "", "| | this run (compiled build + front agent) | recorded agent session |", "| :-- | --: | --: |",
                   f"| LLM tokens | {t['tokens']:,}" + (f" ({t['cached_tokens']:,} cached · {t['uncached_tokens']:,} uncached)" if t['cached_tokens'] else "") + f" | {t['recorded_tokens']:,} |",
                   f"| wall time | {t['latency_ms']/1000:.1f} s | {t['recorded_latency_ms']/1000:.1f} s |",
-                  f"| steps: code / escalated / needs agent | {t['code_steps']} / {t['escalated_steps']} / {t['needs_agent_steps']} | — |"]
+                  f"| steps: code / slm / escalated / needs agent | {t['code_steps']} / {t['slm_steps']} / {t['escalated_steps']} / {t['needs_agent_steps']} | — |"]
         if t["token_savings_pct"] is not None:
             pct = t["token_savings_pct"]
             lines.append(f"| token savings | {'−' if pct >= 0 else '+'}{abs(pct)}% | |")
@@ -237,8 +238,12 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
         report.recorded_latency_ms = sum(float(getattr(s, "latency_ms", 0.0) or 0.0) for s in trace.steps)
 
     steps_src = trace.steps if trace is not None else []
+    from core.build import slm as slm_tier
 
-    for step in steps_src:
+    def _context_so_far() -> List[tuple[str, str]]:
+        return [(s.action, slm_tier.expand_files(s.output)) for s in report.steps if s.output]
+
+    for idx, step in enumerate(steps_src):
         action = norm(step.action) if step.action else ""
         if action not in work_ir.actions:
             continue
@@ -273,6 +278,29 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
             continue
 
         reason = "synthesized content (agent computed it)" if action in synthesized else f"{tier} tier"
+        runtime = slm_tier.SLMRuntime.load(root, action) if tier == "slm" and action not in synthesized else None
+        if runtime is not None:
+            with telemetry.span("run.slm", work=work_ir.work, step=step.step_id, action=action, model=runtime.model) as tspan:
+                done = slm_tier.execute(root, action, work_ir.work, values, _context_so_far(), runtime=runtime,
+                                        example_output=recorded_example or (step.output.get("content", "") if isinstance(step.output, dict) else ""),
+                                        trace_id=f"run:{step.step_id}", invariants=work_ir.invariants or [],
+                                        request=request or slm_tier.step_request(step),
+                                        min_facts=slm_tier.expected_fact_count(trace, idx, work_ir.actions, norm))
+                tspan.update({"tokens": done.result.tokens, "passed": done.verdict.passed})
+            if done.result.ok and done.verdict.passed:
+                report.steps.append(RunStep(step.step_id, action, f"slm:{runtime.model}", done.result.tokens, done.result.latency_ms, True,
+                                            done.result.output, "gate " + done.verdict.summary(), model=runtime.model,
+                                            recorded_model=str(getattr(step, "model", "") or ""),
+                                            recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0), cost_usd=0.0))
+                continue
+            reason = (f"slm gate failed ({done.verdict.summary() if done.result.ok else done.result.error}); {reason}; "
+                      f"slm output: {_clip(done.result.output, 200)!r}")
+            if backend is None:
+                report.steps.append(RunStep(step.step_id, action, f"slm:{runtime.model}", done.result.tokens, done.result.latency_ms, False,
+                                            done.result.output, reason + "; no escalation backend (--escalate)", model=runtime.model,
+                                            recorded_model=str(getattr(step, "model", "") or ""),
+                                            recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0), cost_usd=0.0))
+                continue
         if backend is None:
             report.steps.append(RunStep(step.step_id, action, "needs_agent", 0, 0.0, True, "",
                                         f"{reason}; run with --escalate auto (or codex|claude|gemini|opencode|aider) to execute", model="(not run)",

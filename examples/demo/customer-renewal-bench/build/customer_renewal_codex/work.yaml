@@ -76,7 +76,9 @@ executors:
     type: code
     handler: services.write_pricing_cust_1001
   respond:
-    type: frontier_llm
-    preferred: claude-3-5-sonnet
+    type: slm
+    preferred: qwen2.5:7b
     fallback:
+      - frontier_llm
       - human
+    runtime: models/slm/respond/runtime.json

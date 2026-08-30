@@ -1,0 +1,25 @@
+{
+  "action": "respond",
+  "to": "slm",
+  "model": "qwen2.5:7b",
+  "previous_executor": {
+    "type": "frontier_llm",
+    "handler": null,
+    "preferred": "claude-3-5-sonnet",
+    "fallback": [
+      "human"
+    ]
+  },
+  "at": "2026-08-30T20:09:58",
+  "totals": {
+    "evaluations": 1,
+    "pass_rate": 1.0,
+    "recorded_tokens": 20545,
+    "slm_tokens": 4208,
+    "token_savings_pct": 79.5,
+    "recorded_latency_ms": 11107.9,
+    "slm_latency_ms": 14299.1,
+    "speedup_x": 0.78,
+    "promoted": false
+  }
+}

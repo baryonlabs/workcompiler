@@ -67,6 +67,32 @@ python3 -m core.build run build/customer_renewal_codex \
 
 토큰이 큰 이유는 에이전트 차이가 아니라 실행 환경 차이입니다: `claude -p`는 매 호출마다 이 머신의 전역 `CLAUDE.md`(수천 줄)와 도구 스키마를 프롬프트 캐시에서 읽습니다(`RUN_REPORT.md`의 cached/uncached 분리 참고). 결과는 동일하므로, 에스컬레이션 백엔드는 비용·정책에 따라 골라 쓰면 됩니다(`--escalate auto`는 `OWC_AGENT` → 녹화한 에이전트 → 설치된 첫 에이전트 순).
 
+### `respond`를 frontier LLM에서 로컬 SLM으로 승격 ([`build/customer_renewal_codex/models/slm/respond/PROMOTION.md`](build/customer_renewal_codex/models/slm/respond/PROMOTION.md))
+
+첫 벤치에서 유일하게 남아 있던 비용(최종 요약 `respond`, 20,545 토큰)을 **품질 게이트 아래에서 소형 로컬 모델**로 내렸습니다 — 학습이 아니라 라우팅입니다(예시 1개로 파인튜닝은 근거가 없음).
+
+```bash
+ollama pull qwen2.5:7b
+python3 -m core.build promote build/customer_renewal_codex respond --model qwen2.5:7b   # 게이트 통과 → work.yaml/.work에 respond: slm
+python3 -m core.build bench   build/customer_renewal_codex                               # SLM이 실제로 실행되고 토큰 원장에 모델별로 잡힘
+```
+
+| 후보 | 게이트 | 이유 |
+| :-- | :-- | :-- |
+| `qwen2.5:3b` | **FAIL** | 파일 경로의 자리표시자를 채우지 못함 (`pricing-<value>.json`) → 근거 재현율 0.50 |
+| `qwen2.5:7b` | **PASS** (재현율 1.00 · 근거 1.00 · 길이 ×1.0) | 기록된 답변의 사실 6개(270석·$116,640·10%·CUST-1001·파일 2개) 모두 상류 출력에서 재현, 환각 0 |
+
+| 승격 후 전체 벤치 | 기록된 에이전트 (Codex) | 컴파일된 빌드 (code 6 + **SLM 1**) | 차이 |
+| :-- | --: | --: | --: |
+| LLM 토큰 | 139,437 | **4,208** (전부 로컬 SLM, $0) | **−97.0%** |
+| 벽시계 시간 | 82.6 s | 17.2 s | **4.8×** |
+| 결과 재현 | — | **8/8** (SLM 스텝은 게이트 PASS가 "일치") | |
+| 에스컬레이션 액션 | 1 | **0** | |
+
+게이트: SLM의 답변에서 숫자·ID·파일경로를 뽑아 (1) frontier 답변이 말했고 상류 데이터에 실재하는 사실(anchor)을 모두 다시 말했는지, (2) 입력 어디에도 없는 숫자를 지어내지 않았는지, (3) 길이·자리표시자를 검사합니다. SLM에게는 기록된 답변을 **값을 가린 채** 예시로만 보여주므로 베끼기가 불가능합니다. 각 평가는 `QualityRecord`가 되어 `ExecutorOptimizer.evaluate_promotion`(기존 승격 게이트)을 통과해야 합니다.
+
+새 입력 CUST-1002 하이브리드([`hybrid-CUST-1002-slm/`](hybrid-CUST-1002-slm/)): code 6 + `respond`는 **SLM(qwen2.5:7b, 4,205 토큰, $0, 게이트 PASS)** + 합성 스텝 1개만 Claude Code — `pricing-CUST-1002.json`은 Codex/Claude 하이브리드와 동일. SLM이 게이트에 걸리면 자동으로 에이전트 에스컬레이션으로 넘어갑니다(`RUN_REPORT.md`에 SLM 시도와 사유가 남음).
+
 HOW 명세: [`build/customer_renewal_codex/customer_renewal_codex.work`](build/customer_renewal_codex/customer_renewal_codex.work) — executors(어떤 스텝이 code/llm인지)와 escalation(어떤 스텝이 `agent`로 남는지) 블록을 고쳐 재컴파일하면 분할을 바꿀 수 있습니다.
 
 ## 컴파일된 빌드가 하는 일

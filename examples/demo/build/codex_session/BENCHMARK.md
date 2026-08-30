@@ -4,19 +4,26 @@ Recorded agent session `01a04c51-c1ca-7512-8b81-20d832a84b85` (`codex-cli`) vs. 
 
 | | recorded (agent) | compiled (build) | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 119,974 | 35,510 | −70.4% |
-| wall time | 65.0 s | 29.67 s | 2.2× faster |
-| outputs reproduced | — | 2/4 | |
-| actions compiled / escalated | — | 3 / 1 | |
+| LLM tokens | 119,974 | 6,292 | −94.8% |
+| wall time | 65.0 s | 14.76 s | 4.4× faster |
+| outputs reproduced | — | 4/6 | |
+| actions compiled / escalated | — | 4 / 0 | |
 
 ## Per action
 
 | action | tier | executor used | tokens rec → comp | latency rec → comp | output match |
 | :-- | :-- | :-- | --: | --: | :-- |
-| `shell_python3` | code | code:codex_session/handlers | 14,041 → 0 | 4.6 s → 0.11 s | 1/1 |
-| `shell_find` | code | code:codex_session/handlers | 14,772 → 0 | 10.7 s → 0.04 s | 1/1 |
-| `respond` | frontier_llm | escalated:frontier_llm | 35,510 → 35,510 | 29.5 s → 29.49 s | n/a |
-| `shell_curl` | code | code (skipped), code:codex_session/handlers | 55,651 → 0 | 20.1 s → 0.03 s | 0/2 |
+| `shell_python3` | code | code:codex_session/handlers | 14,041 → 0 | 4.6 s → 0.12 s | 1/1 |
+| `shell_find` | code | code:codex_session/handlers | 14,772 → 0 | 10.7 s → 0.03 s | 1/1 |
+| `respond` | slm | slm:qwen2.5:3b | 35,510 → 6,292 | 29.5 s → 14.53 s | 2/2 |
+| `shell_curl` | code | code (skipped), code:codex_session/handlers | 55,651 → 0 | 20.1 s → 0.08 s | 0/2 |
+
+## SLM tier — small local model instead of the frontier LLM
+
+| step | action | model | tokens (frontier → SLM) | latency | gate |
+| :-- | :-- | :-- | --: | --: | :-- |
+| step_3 | `respond` | qwen2.5:3b | 17,344 → 3,503 | 20.5 s → 10.9 s | gate PASS (recall 0.94; grounded 1.00; len ×0.7; missing schema/quality_analyst.linkml.yaml) |
+| step_5 | `respond` | qwen2.5:3b | 18,166 → 2,789 | 9.0 s → 3.6 s | gate PASS (recall 1.00; grounded 1.00; len ×1.0) |
 
 ## Token ledger — who spent what
 
@@ -26,16 +33,17 @@ Every recorded step, the model that produced it, and what runs it in the compile
 | :-- | :-- | :-- | --: | :-- | --: |
 | step_1 | `shell_python3` | gpt-5.6-sol | 13,933 (0) + 108 = 14,041 | code | 0 |
 | step_2 | `shell_find` | gpt-5.6-sol | 14,423 (13,056) + 349 = 14,772 | code | 0 |
-| step_3 | `respond` | gpt-5.6-sol | 16,295 (14,080) + 1,049 = 17,344 | gpt-5.6-sol | 17,344 |
-| step_5 | `respond` | gpt-5.6-sol | 18,035 (17,152) + 131 = 18,166 | gpt-5.6-sol | 18,166 |
+| step_3 | `respond` | gpt-5.6-sol | 16,295 (14,080) + 1,049 = 17,344 | qwen2.5:3b | 3,503 |
+| step_5 | `respond` | gpt-5.6-sol | 18,035 (17,152) + 131 = 18,166 | qwen2.5:3b | 2,789 |
 | step_4 | `shell_curl` | gpt-5.6-sol | 17,598 (16,128) + 100 = 17,698 | code | 0 |
 | step_6 | `shell_curl` | gpt-5.6-sol | 18,582 (17,152) + 119 = 18,701 | code | 0 |
 | step_7 | `shell_curl` | gpt-5.6-sol | 19,053 (18,176) + 199 = 19,252 | skipped | 0 |
 
 | model / executor | recorded tokens | compiled tokens |
 | :-- | --: | --: |
-| gpt-5.6-sol | 119,974 | 35,510 |
+| gpt-5.6-sol | 119,974 | 0 |
 | code | 0 | 0 |
+| qwen2.5:3b | 0 | 6,292 |
 | skipped | 0 | 0 |
 
 Recorded prompt tokens served from the provider cache: 95,744 (counted in the totals above; billed at the cached rate).
@@ -109,7 +117,7 @@ build/quality_analyst/models/slm/determine_root_cause/dataset.json
 … (4920 more chars)
 ```
 
-### `respond` · step_3 — escalated:frontier_llm (kept recorded cost (frontier/human tier))
+### `respond` · step_3 — slm:qwen2.5:3b (gate PASS (recall 0.94; grounded 1.00; len ×0.7; missing schema/quality_analyst.linkml.yaml))
 
 recorded:
 
@@ -143,15 +151,15 @@ outputs:    root_cause, evidence, confidence_score, remediation_plan
 actions:    collect_data, detect_anomaly, find_correlation,
             determine_root_cause, create_report
 invariants: verify_sensor_calibration,
-            require_human_approval_for_remediation
+             require_human_approval_for_remediation
 executors:  collect_data=code
-            detect_anomaly=rule
-            find_correlation=ml
-       
-… (3514 more chars)
+             detect_anomaly=rule
+             find_correlation=ml
+    
+… (2201 more chars)
 ```
 
-### `respond` · step_5 — escalated:frontier_llm (kept recorded cost (frontier/human tier))
+### `respond` · step_5 — slm:qwen2.5:3b (gate PASS (recall 1.00; grounded 1.00; len ×1.0))
 
 recorded:
 
@@ -211,34 +219,7 @@ recorded:
 compiled:
 
 ```
-{
-  "traces": [
-    {
-      "run_id": "01a04c51-c1ca-7512-8b81-20d832a84b85",
-      "source_agent": "codex-cli",
-      "protocol": "responses",
-      "agent_version": "0.150.1",
-      "steps_count": 11,
-      "actions": [
-        "shell_python3",
-        "shell_find",
-        "respond",
-        "shell_curl",
-        "respond",
-        "shell_curl",
-        "shell_curl",
-        "shell_find",
-        "shell_sed",
-        "respond",
-        "shell_python3"
-      ],
-      "aux_tokens": 0,
-      "prompt_tokens": 201115,
-      "completion_tokens": 3753
-    },
-    {
-      "run_id": "01a04c51-f7d2-7d
-… (287 more chars)
+
 ```
 
 ### `shell_curl` · step_6 — code:codex_session/handlers
@@ -277,34 +258,7 @@ recorded:
 compiled:
 
 ```
-{
-  "traces": [
-    {
-      "run_id": "01a04c51-c1ca-7512-8b81-20d832a84b85",
-      "source_agent": "codex-cli",
-      "protocol": "responses",
-      "agent_version": "0.150.1",
-      "steps_count": 11,
-      "actions": [
-        "shell_python3",
-        "shell_find",
-        "respond",
-        "shell_curl",
-        "respond",
-        "shell_curl",
-        "shell_curl",
-        "shell_find",
-        "shell_sed",
-        "respond",
-        "shell_python3"
-      ],
-      "aux_tokens": 0,
-      "prompt_tokens": 201115,
-      "completion_tokens": 3753
-    },
-    {
-      "run_id": "01a04c51-f7d2-7d
-… (287 more chars)
+
 ```
 
 ### `shell_curl` · step_7 — code (skipped) (self-referential step (benchmarks/recompiles this build) not replayed)

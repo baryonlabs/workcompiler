@@ -61,7 +61,7 @@ flowchart LR
 | 규정화 | `.work`의 분할·한계를 검토·수정 | **LLM 컴파일** — 검증된 세션을 **HOW**(OpenWorkLang)로: code / rule / ml / slm / agent |
 | 실행 | 에스컬레이션된 예외만 처리 | **효율성**(결정론·SLM, 토큰 0~소량) + **유연성**(앞단 에이전트가 파라미터·예외 담당) |
 
-실측: 같은 갱신 제안서 작업에서 컴파일된 빌드는 에이전트 대비 토큰 **−85%**, **7.4×** 빠르게 같은 산출물을 냈고, 새 고객(CUST-1002)에 대한 하이브리드 실행은 Codex 단독 대비 **2.1×** 빠르며 에이전트 몫은 합성 스텝 2개로 줄었습니다 ([벤치마크](#30초-데모-codex-안에서-그대로-쓰기)).
+실측: 같은 갱신 제안서 작업에서 컴파일된 빌드는 에이전트 대비 토큰 **−85%**, **7.4×** 빠르게 같은 산출물을 냈고, 마지막 남은 요약 스텝을 로컬 SLM으로 승격한 뒤에는 **−97%**(frontier 에스컬레이션 0)까지 내려갔으며, 새 고객(CUST-1002)에 대한 하이브리드 실행은 Codex 단독 대비 **2.1×** 빠르며 에이전트 몫은 합성 스텝 1개로 줄었습니다 ([벤치마크](#30초-데모-codex-안에서-그대로-쓰기)).
 
 ---
 
@@ -82,19 +82,19 @@ flowchart LR
 
 | | 기록된 에이전트 (Codex) | 컴파일된 빌드 | 차이 |
 | :-- | --: | --: | --: |
-| LLM 토큰 | 119,974 | 35,510 | **−70%** |
-| 벽시계 시간 | 65.0 s | 29.7 s | **2.2×** |
-| 결과 재현 (code 계층 스텝) | — | **2/4 일치** (`shell_curl` 2개는 실행마다 달라지는 트레이스 목록 조회) | |
+| LLM 토큰 | 119,974 | 6,292 | **−95%** |
+| 벽시계 시간 | 65.0 s | 14.8 s | **4.4×** |
+| 결과 재현 | — | **4/6 일치** (`respond` 2/2는 SLM 게이트 PASS; `shell_curl` 2개는 실행마다 달라지는 트레이스 목록 조회) | |
 
-셸 스텝(`shell_python3`, `shell_find`, `shell_curl`)은 code 계층으로 내려가 토큰 0·수십 ms에 재실행됐고(컴파일·탐색 출력은 그대로 일치, 프록시 트레이스 목록 `curl`은 세션마다 내용이 달라 불일치로 표시), 남은 비용은 아직 frontier LLM으로 에스컬레이션되는 최종 요약(`respond`)뿐입니다 — 이 부분이 `models/slm/` 학습 후보가 승격되면 내려갑니다.
+셸 스텝(`shell_python3`, `shell_find`, `shell_curl`)은 code 계층으로 내려가 토큰 0·수십 ms에 재실행됐고(컴파일·탐색 출력은 그대로 일치, 프록시 트레이스 목록 `curl`은 세션마다 내용이 달라 불일치로 표시), 남은 비용은 최종 요약(`respond`)뿐인데, 이 스텝은 아래의 **SLM 승격**으로 로컬 `qwen2.5:3b`에서 실행됩니다(6,292 토큰, $0).
 
 **실제 업무 작업 — 고객 계약 갱신 제안서** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): CRM 활성 계약 확인 → 3개월 사용량 집계 → 현행 가격정책으로 산정 → 제안서·가격 JSON 작성; 원본은 [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
 
 | | 기록된 에이전트 (Codex, 8 스텝) | 컴파일된 빌드 (빈 상태에서 재실행) | 차이 |
 | :-- | --: | --: | --: |
-| LLM 토큰 | 139,437 | 20,545 | **−85%** |
+| LLM 토큰 | 139,437 | 20,545 → 승격 후 **4,208** | **−85% → −97%** |
 | 벽시계 시간 | 82.6 s | 11.2 s | **7.4×** |
-| 결과 재현 | — | **7/7 일치** | |
+| 결과 재현 | — | **7/7 일치** (승격 후 8/8) | |
 | 최종 산출물 `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **바이트 단위 동일** | |
 
 계약 조회(`jq`)·데이터 읽기·가격 산정·제안서 작성(`apply_patch`)까지 업무 자체는 전부 code 계층으로 컴파일돼 토큰 0으로 재현됐고, 남은 비용은 사람에게 보여줄 최종 요약 한 스텝입니다.
@@ -150,6 +150,32 @@ python3 -m core.build run build/customer_renewal_codex \
 같은 빌드를 **Claude Code**로 에스컬레이션해도(`--escalate claude`, 코드·빌드 변경 없음) `pricing-CUST-1002.json`은 Codex 결과와 동일합니다 — 60.7 s, 517,720 토큰(그중 363,523은 캐시 읽기: `claude -p`가 매 호출 전역 `CLAUDE.md`·도구 스키마를 읽음), [`hybrid-CUST-1002-claude/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002-claude/).
 
 토큰 절감이 첫 벤치보다 작은 이유는 명확합니다: 남은 두 에스컬레이션이 각각 새 Codex 세션(시스템 프롬프트 포함 10–16k 토큰)이기 때문입니다. 이 두 스텝이 `models/slm/` 후보로 승격되거나 제안서 문안이 템플릿(code)으로 내려가면 그때 토큰이 0에 가까워집니다 — 어디까지 내려갈 수 있는지가 `.work` 파일의 `escalation` 블록에 명시됩니다.
+
+
+### 마지막 한 단: `respond`를 frontier LLM에서 로컬 SLM으로 승격
+
+위 두 벤치에서 유일하게 남았던 비용은 사람에게 보여줄 최종 요약(`respond`)이었습니다. 이제 그 스텝도 **품질 게이트 아래에서 소형 로컬 모델**로 내려갑니다 — 파인튜닝이 아니라(예시 1–2개로 학습은 근거가 없음) 게이트가 검증한 라우팅이며, 데이터셋이 쌓이면 `models/slm/<action>/train.py`가 다음 단계입니다 ([`PROMOTION.md`](examples/demo/customer-renewal-bench/build/customer_renewal_codex/models/slm/respond/PROMOTION.md)):
+
+```bash
+ollama pull qwen2.5:7b                                                     # OpenAI 호환 로컬 엔드포인트면 무엇이든 (OPENWORKCOMPILER_SLM_BASE_URL)
+owc build promote build/customer_renewal_codex respond --model qwen2.5:7b  # 기록 예시로 게이트 평가 → 통과 시 work.yaml/.work에 respond: slm
+owc build bench   build/customer_renewal_codex                              # SLM이 실제로 실행되고 토큰 원장에 모델별로 잡힘
+owc build demote  build/customer_renewal_codex respond                      # 롤백
+```
+
+| 후보 | 게이트 | 근거 |
+| :-- | :-- | :-- |
+| `qwen2.5:3b` | **FAIL** | 파일 경로의 자리표시자를 채우지 못함 → 근거 재현율 0.50 |
+| `qwen2.5:7b` | **PASS** (재현율 1.00 · 근거 1.00 · 길이 ×1.0) | 기록된 답변의 사실 6개(270석·$116,640·10%·CUST-1001·파일 2개) 전부 상류 출력에서 재현, 환각 0 |
+
+| 승격 후 customer-renewal 전체 벤치 | 기록된 에이전트 (Codex) | 컴파일된 빌드 (code 6 + SLM 1) | 차이 |
+| :-- | --: | --: | --: |
+| LLM 토큰 | 139,437 | **4,208** (전부 로컬 SLM, $0) | **−97.0%** |
+| 벽시계 시간 | 82.6 s | 17.2 s | **4.8×** |
+| 결과 재현 | — | **8/8** | |
+| frontier LLM 에스컬레이션 | 1 스텝 | **0** | |
+
+게이트는 결정론적입니다: SLM 답변의 숫자·ID·파일경로를 뽑아 (1) frontier 답변이 말했고 상류 데이터에 실재하는 사실을 모두 다시 말했는지(재현율), (2) 입력 어디에도 없는 값을 지어내지 않았는지(근거), (3) 길이·자리표시자·사실 밀도를 검사하고, 평가마다 `QualityRecord`를 만들어 기존 `ExecutorOptimizer.evaluate_promotion`을 통과해야 합니다. SLM에게 기록된 답변은 **값을 가린 채** 예시로만 보여주므로 베끼기는 불가능합니다. codex_session의 `respond`는 `qwen2.5:3b`로도 2/2 통과해 승격됐고(−94.8%, 4.4×), 새 입력 CUST-1002 하이브리드에서는 `respond`가 SLM(4,205 토큰, $0, PASS)으로 실행되고 합성 스텝 1개만 Claude Code로 갔습니다 — 가격 JSON은 동일 ([`hybrid-CUST-1002-slm/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002-slm/)). 게이트에 걸리면 자동으로 에이전트 에스컬레이션으로 넘어가고 `RUN_REPORT.md`에 SLM의 시도와 사유가 남습니다.
 
 ### 프롬프트를 모르는 사람도 되나요? — 4가지 업무 사례를 채팅만으로
 
@@ -663,7 +689,7 @@ openworkcompiler/
 ├── .agents/skills/              # 에이전트 스킬 정본(owc skills install 로 .claude/skills 등에 동기화): ow-define(WHAT, grilling 인터뷰) · ow-compile-work · ow-traces · ow-compile-trace · ow-bench · grill-me/grilling(mattpocock/skills, skills-lock.json)
 ├── core/agents/                 # 에이전트 백엔드 레지스트리: claude · codex · gemini · opencode · aider (`--escalate auto`, `owc agent …`) · core/skills.py(스킬 동기화)
 ├── vendor/openworklang/         # 서브모듈: OpenWorkLang 언어 (baryonlabs/openworklang)
-├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + 로더 + 벤치마크(토큰 원장) + 앞단 에이전트 실행
+├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + 로더 + 벤치마크(토큰 원장) + 앞단 에이전트 실행 + slm.py(로컬 SLM 추론·품질 게이트·승격/롤백)
 ├── examples/cases/              # 4가지 업무 사례: 초보자 자료 → $ow-define → 에이전트 수행 → 컴파일 → 벤치 (transcript · 트레이스 · 빌드 포함)
 ├── tests/                       # pytest 테스트 수트 (192개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트
@@ -689,6 +715,7 @@ owc compile examples/quality_analysis.work              # .work → build/qualit
 owc build from-trace trace.json --target my-work        # 캡처한 세션 → 빌드 트리
 owc build bench build/my_work                           # 에이전트 vs 빌드: 결과 · 토큰 · 속도
 owc build run build/my_work --request "…" --escalate auto    # 앞단 에이전트 + 빌드 (auto|claude|codex|gemini|opencode|aider)
+owc build promote build/my_work respond --model qwen2.5:7b  # frontier LLM → 로컬 SLM (품질 게이트 통과 시; owc build demote 로 롤백)
 owc agent list · owc agent setup claude · owc skills install --agent claude   # 에이전트 탐지 · 프록시 연결 · 스킬 동기화
 ```
 

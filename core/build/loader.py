@@ -50,6 +50,22 @@ def load_build_into_engine(engine: Any, build_dir: Path | str) -> Dict[str, Any]
         summary["rules"].append(action)
 
     summary["prompts"] = [p.name.replace(".prompt.md", "") for p in sorted((root / "prompts").glob("*.prompt.md"))]
+    # promoted SLM actions (models/slm/<action>/runtime.json): give the engine's SLMExecutor a real inference handler
+    from core.build import slm as slm_tier
+
+    promoted = [d.name for d in sorted((root / "models" / "slm").glob("*")) if (d / slm_tier.RUNTIME_FILE).exists()]
+    summary["slm"] = promoted
+    if promoted:
+        runtimes = {a: slm_tier.SLMRuntime.load(root, a) for a in promoted}
+
+        def _infer(prompt: str = "", model: str = "", inputs: Any = None, context: Any = None, **_: Any) -> Dict[str, Any]:
+            rt = next((r for r in runtimes.values() if r.model == model), next(iter(runtimes.values())))
+            res = slm_tier.infer("You execute one step of a compiled work. Answer with the step's message only.", prompt, rt)
+            return {"text": res.output, "tokens": res.tokens, "prompt_tokens": res.prompt_tokens,
+                    "completion_tokens": res.completion_tokens, "latency_ms": res.latency_ms, "model": res.model, "error": res.error}
+
+        engine.get_executor("slm").set_inference_handler(_infer)
+
     manifest_path = root / "MANIFEST.json"
     if manifest_path.exists():
         summary["manifest"] = json.loads(manifest_path.read_text(encoding="utf-8"))

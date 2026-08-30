@@ -43,6 +43,7 @@ class StepBench:
     recorded_prompt_tokens: int = 0
     recorded_completion_tokens: int = 0
     recorded_cached_tokens: int = 0   # part of the prompt served from the provider's cache (billed cheaper)
+    quality: Optional[float] = None   # SLM tier: gate score (min of anchor recall / grounding precision)
 
 
 @dataclass
@@ -107,8 +108,9 @@ class BenchReport:
             "speedup_x": round(rl / cl, 1) if cl else None,
             "outputs_checked": len(checked),
             "outputs_matched": sum(1 for s in checked if s.output_match),
-            "compiled_actions": sum(1 for a in self.actions if a.tier in ("code", "rule", "http")),
-            "escalated_actions": sum(1 for a in self.actions if a.tier not in ("code", "rule", "http")),
+            "compiled_actions": sum(1 for a in self.actions if a.tier in ("code", "rule", "http") or any(s.executor_used.startswith("slm:") for s in a.steps)),
+            "escalated_actions": sum(1 for a in self.actions if a.tier not in ("code", "rule", "http") and not any(s.executor_used.startswith("slm:") for s in a.steps)),
+            "slm_actions": sum(1 for a in self.actions if any(s.executor_used.startswith("slm:") for s in a.steps)),
         }
 
     def by_model(self) -> Dict[str, tuple[int, int]]:
@@ -164,6 +166,13 @@ class BenchReport:
                 f"| `{a.action}` | {a.tier} | {used} | {a.recorded_tokens:,} → {a.compiled_tokens:,} | "
                 f"{a.recorded_latency_ms/1000:.1f} s → {a.compiled_latency_ms/1000:.2f} s | {a.matches} |"
             )
+        slm_steps = [(a, s) for a in self.actions for s in a.steps if s.executor_used.startswith("slm:")]
+        if slm_steps:
+            lines += ["", "## SLM tier — small local model instead of the frontier LLM", "",
+                      "| step | action | model | tokens (frontier → SLM) | latency | gate |", "| :-- | :-- | :-- | --: | --: | :-- |"]
+            for a, s in slm_steps:
+                lines.append(f"| {s.step_id} | `{a.action}` | {s.compiled_model} | {s.recorded_tokens:,} → {s.compiled_tokens:,} | "
+                             f"{s.recorded_latency_ms/1000:.1f} s → {s.compiled_latency_ms/1000:.1f} s | {s.note} |")
         lines += ["", "## Token ledger — who spent what", "",
                   "Every recorded step, the model that produced it, and what runs it in the compiled build.", "",
                   "| step | action | recorded model | prompt (cached) + completion = total | compiled executor | compiled tokens |",
@@ -326,6 +335,8 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
         for action in work_ir.actions
     }
     norm = _normalizer()
+    from core.build import slm as slm_tier
+    upstream: List[tuple[str, str]] = []      # (action, context text) of the steps replayed so far, in order
 
     # Replay in the order the agent worked: later steps may read files earlier steps wrote.
     for step in trace.steps:
@@ -339,6 +350,25 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
         rec_latency = float(getattr(step, "latency_ms", 0.0) or 0.0)
         inputs = step.input if isinstance(step.input, dict) else {}
         executable = tier in ("code", "rule", "http")
+        runtime = slm_tier.SLMRuntime.load(root, action) if tier == "slm" else None
+
+        if runtime is not None and replay:
+            # promoted SLM: really run the small model on this run's upstream outputs and gate it
+            pt, ct = _step_token_split(step)
+            with telemetry.span("bench.slm", work=work_ir.work, run_id=trace.run_id, step=step.step_id, action=action,
+                                model=runtime.model, recorded_tokens=rec_tokens) as tspan:
+                done = slm_tier.execute(root, action, work_ir.work, {}, upstream, runtime=runtime, recorded_output=rec_out,
+                                        example_output=rec_out, trace_id=f"{trace.run_id}:{step.step_id}",
+                                        invariants=work_ir.invariants or [], request=slm_tier.step_request(step))
+                tspan.update({"tokens": done.result.tokens, "passed": done.verdict.passed})
+            bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, done.result.tokens, done.result.latency_ms,
+                                         f"slm:{runtime.model}", done.verdict.passed if done.result.ok else False, rec_out,
+                                         done.result.output or done.result.error, "gate " + done.verdict.summary(),
+                                         recorded_model=_step_model(step), compiled_model=runtime.model,
+                                         recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step),
+                                         quality=done.verdict.score))
+            upstream.append((action, done.result.output))
+            continue
 
         if executable and replay and _is_self_referential(inputs):
             pt, ct = _step_token_split(step)
@@ -382,19 +412,21 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
                                          match, rec_out, comp_out, note,
                                          recorded_model=_step_model(step), compiled_model=tier,
                                          recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step)))
+            upstream.append((action, slm_tier.step_context(inputs, comp_out)))
         elif executable:
             pt, ct = _step_token_split(step)
             bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, 0.0, f"{tier} (replay disabled)",
                                          None, rec_out, "", "not replayed", recorded_model=_step_model(step),
                                          compiled_model=tier, recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step)))
         else:
-            reason = {"ml": "model not trained yet → fallback", "slm": "SLM not trained yet → fallback"}.get(tier, "")
+            reason = {"ml": "model not trained yet → fallback", "slm": "SLM not promoted yet (owc build promote) → fallback"}.get(tier, "")
             pt, ct = _step_token_split(step)
             bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, rec_tokens, rec_latency,
                                          f"escalated:{tier}", None, rec_out, rec_out,
                                          reason or "kept recorded cost (frontier/human tier)",
                                          recorded_model=_step_model(step), compiled_model=_step_model(step) or tier,
                                          recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step)))
+            upstream.append((action, rec_out))
 
     report.actions = [benches[a] for a in work_ir.actions]
     t = report.totals()
