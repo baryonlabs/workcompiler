@@ -67,7 +67,7 @@ flowchart LR
 
 ## 30초 데모: Codex 안에서 그대로 쓰기
 
-![pipx 한 줄 설치 → owc agent list → owc proxy, 그다음 Codex TUI 안에서 $ow-compile-work / $ow-traces / $ow-compile-trace / $ow-bench 스킬로 OpenWorkLang 컴파일, 캡처 세션 조회, 세션 컴파일, 벤치마크까지 수행하는 실제 녹화](docs/demo/openworkcompiler-codex-demo.gif)
+![pipx 한 줄 설치 → owc agent list → owc proxy, 그다음 Codex TUI 안에서 $ow-compile-work / $ow-traces / $ow-compile-trace / $ow-bench / $ow-promote 스킬로 OpenWorkLang 컴파일, 캡처 세션 조회, 세션 컴파일, 벤치마크, 로컬 SLM 승격까지 수행하는 실제 녹화](docs/demo/openworkcompiler-codex-demo.gif)
 
 합성 화면이 아닌 **실제 Codex 대화형 세션**입니다. `pipx install "git+https://github.com/baryonlabs/workcompiler.git"` 한 줄로 `owc`를 설치하고(`owc agent list`가 설치된 에이전트 CLI를 보여줌), `owc proxy`를 띄운 뒤 Codex를 프록시로 향하게 하면(ChatGPT 로그인 그대로) 저장소의 스킬을 `$` 멘션으로 호출할 수 있습니다.
 
@@ -77,16 +77,18 @@ flowchart LR
 | 2 | `$ow-traces` | 프록시가 캡처한 세션 목록 — **이 Codex 세션 자체**가 `shell_python3, shell_sed, respond, …` 스텝으로 잡힘 |
 | 3 | `$ow-compile-trace codex-session` | 캡처된 Codex 세션이 `build/codex_session/`로 컴파일됨 — 셸 스텝은 기록된 명령을 재실행하는 `handlers/shell_*.py`, 비결정 스텝은 `prompts/*.prompt.md` |
 | 4 | `$ow-bench codex-session` | **에이전트 vs 컴파일된 빌드** — 같은 세션을 재실행해 결과 일치·토큰·속도를 비교한 `BENCHMARK.md` |
+| 5 | `$ow-promote codex-session respond qwen2.5:7b` | 유일하게 frontier LLM에 남은 최종 요약(`respond`)을 **로컬 SLM으로 승격** — 기록 예시로 게이트 평가(근거 재현율·환각·길이) → 통과 시 `work.yaml`/`.work`에 `respond: slm` |
+| 6 | `$ow-bench codex-session` | 다시 벤치 — 이번엔 SLM이 **실제로 실행**되고 토큰 원장에서 frontier 모델과 분리되어 잡힘 |
 
 **벤치마크 결과** (작업: `.work` 파일 컴파일 후 빌드 트리 점검·요약, [`examples/demo/build/codex_session/BENCHMARK.md`](examples/demo/build/codex_session/BENCHMARK.md)):
 
 | | 기록된 에이전트 (Codex) | 컴파일된 빌드 | 차이 |
 | :-- | --: | --: | --: |
-| LLM 토큰 | 119,974 | 6,292 | **−95%** |
-| 벽시계 시간 | 65.0 s | 14.8 s | **4.4×** |
-| 결과 재현 | — | **4/6 일치** (`respond` 2/2는 SLM 게이트 PASS; `shell_curl` 2개는 실행마다 달라지는 트레이스 목록 조회) | |
+| LLM 토큰 | 147,288 | 6,551 | **−95.6%** |
+| 벽시계 시간 | 106.1 s | 31.6 s | **3.4×** |
+| 결과 재현 | — | **6/8 일치** (`respond` 2/2는 SLM 게이트 PASS; `shell_curl` 2개는 실행마다 달라지는 트레이스 목록 조회) | |
 
-셸 스텝(`shell_python3`, `shell_find`, `shell_curl`)은 code 계층으로 내려가 토큰 0·수십 ms에 재실행됐고(컴파일·탐색 출력은 그대로 일치, 프록시 트레이스 목록 `curl`은 세션마다 내용이 달라 불일치로 표시), 남은 비용은 최종 요약(`respond`)뿐인데, 이 스텝은 아래의 **SLM 승격**으로 로컬 `qwen2.5:3b`에서 실행됩니다(6,292 토큰, $0).
+셸 스텝(`shell_sed`, `shell_python3`, `shell_find`, `shell_curl`)은 code 계층으로 내려가 토큰 0·수십 ms에 재실행됐고(컴파일·탐색 출력은 그대로 일치, 프록시 트레이스 목록 `curl`은 세션마다 내용이 달라 불일치로 표시), 남은 비용은 최종 요약(`respond`)뿐인데, 이 스텝은 녹화의 5–6단계에서 **로컬 `qwen2.5:7b`로 승격**되어 실행됩니다(6,551 토큰, $0, 게이트 2/2 PASS) — 같은 세션에서 `qwen2.5:3b`는 자리표시자를 남겨 게이트에 거부됐습니다.
 
 **실제 업무 작업 — 고객 계약 갱신 제안서** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): CRM 활성 계약 확인 → 3개월 사용량 집계 → 현행 가격정책으로 산정 → 제안서·가격 JSON 작성; 원본은 [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
 
@@ -175,7 +177,7 @@ owc build demote  build/customer_renewal_codex respond                      # �
 | 결과 재현 | — | **8/8** | |
 | frontier LLM 에스컬레이션 | 1 스텝 | **0** | |
 
-게이트는 결정론적입니다: SLM 답변의 숫자·ID·파일경로를 뽑아 (1) frontier 답변이 말했고 상류 데이터에 실재하는 사실을 모두 다시 말했는지(재현율), (2) 입력 어디에도 없는 값을 지어내지 않았는지(근거), (3) 길이·자리표시자·사실 밀도를 검사하고, 평가마다 `QualityRecord`를 만들어 기존 `ExecutorOptimizer.evaluate_promotion`을 통과해야 합니다. SLM에게 기록된 답변은 **값을 가린 채** 예시로만 보여주므로 베끼기는 불가능합니다. codex_session의 `respond`는 `qwen2.5:3b`로도 2/2 통과해 승격됐고(−94.8%, 4.4×), 새 입력 CUST-1002 하이브리드에서는 `respond`가 SLM(4,205 토큰, $0, PASS)으로 실행되고 합성 스텝 1개만 Claude Code로 갔습니다 — 가격 JSON은 동일 ([`hybrid-CUST-1002-slm/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002-slm/)). 게이트에 걸리면 자동으로 에이전트 에스컬레이션으로 넘어가고 `RUN_REPORT.md`에 SLM의 시도와 사유가 남습니다.
+게이트는 결정론적입니다: SLM 답변의 숫자·ID·파일경로를 뽑아 (1) frontier 답변이 말했고 상류 데이터에 실재하는 사실을 모두 다시 말했는지(재현율), (2) 입력 어디에도 없는 값을 지어내지 않았는지(근거), (3) 길이·자리표시자·사실 밀도를 검사하고, 평가마다 `QualityRecord`를 만들어 기존 `ExecutorOptimizer.evaluate_promotion`을 통과해야 합니다. SLM에게 기록된 답변은 **값을 가린 채** 예시로만 보여주므로 베끼기는 불가능합니다. 데모 녹화의 codex_session에서는 `qwen2.5:3b`가 긴 빌드 트리 요약에서 게이트에 거부되고 `qwen2.5:7b`가 2/2 통과해 승격됐으며(전체 −95.6%, 3.4×), 새 입력 CUST-1002 하이브리드에서는 `respond`가 SLM(4,205 토큰, $0, PASS)으로 실행되고 합성 스텝 1개만 Claude Code로 갔습니다 — 가격 JSON은 동일 ([`hybrid-CUST-1002-slm/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002-slm/)). 게이트에 걸리면 자동으로 에이전트 에스컬레이션으로 넘어가고 `RUN_REPORT.md`에 SLM의 시도와 사유가 남습니다.
 
 ### 프롬프트를 모르는 사람도 되나요? — 4가지 업무 사례를 채팅만으로
 
@@ -353,6 +355,8 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
 | 2 | `$ow-traces` | `curl localhost:8787/v1/workcompiler/traces` | 프록시가 캡처한 세션 목록 — **지금 이 Codex 세션 자체**가 `shell_python3, shell_sed, respond, …` 스텝으로 잡혀 있음 |
 | 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` (`build_dir`) | 캡처된 Codex 세션이 `build/codex_session/`로 컴파일됨 — `handlers/shell_*.py`가 기록된 명령을 재실행, `respond`는 `prompts/respond.prompt.md` |
 | 4 | `$ow-bench codex-session` | `python3 -m core.build bench build/codex_session` | 빌드에 동봉된 `trace.json`에 대해 code 계층을 재실행 → 결과 일치·토큰·지연을 액션별로 비교한 `BENCHMARK.md` |
+| 5 | `$ow-promote codex-session respond qwen2.5:7b` | `python3 -m core.build promote build/codex_session respond --model qwen2.5:7b` | 로컬 Ollama의 7B 모델로 `respond`의 기록 예시를 재생성 → 결정론적 게이트 통과 시 `respond: slm`으로 전환 (`models/slm/respond/PROMOTION.md`) |
+| 6 | `$ow-bench codex-session` | `python3 -m core.build bench build/codex_session` | SLM 스텝이 실제 실행되어 토큰·지연·게이트 판정이 원장에 기록됨 |
 
 녹화 스크립트는 [`docs/demo/openworkcompiler-codex-demo.tape`](docs/demo/openworkcompiler-codex-demo.tape)입니다.
 
@@ -393,7 +397,7 @@ README 상단의 [30초 데모](#30초-데모-codex-안에서-그대로-쓰기) 
    codex                            # 또는: claude
    ```
 
-3. 에이전트 안에서 스킬을 호출합니다 — Codex는 `$ow-define <업무>`(WHAT 정의), `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`; Claude Code는 같은 이름을 `/ow-…`로. 외부 스킬(grill-me/grilling)은 `npx skills add https://github.com/mattpocock/skills --skill grilling --skill grill-me --agent codex --copy -y`로 재설치할 수 있습니다(`skills-lock.json`).
+3. 에이전트 안에서 스킬을 호출합니다 — Codex는 `$ow-define <업무>`(WHAT 정의), `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`, `$ow-promote <target> <action> [model]`(로컬 SLM 승격, `ollama pull qwen2.5:7b` 필요); Claude Code는 같은 이름을 `/ow-…`로. 외부 스킬(grill-me/grilling)은 `npx skills add https://github.com/mattpocock/skills --skill grilling --skill grill-me --agent codex --copy -y`로 재설치할 수 있습니다(`skills-lock.json`).
 
    스킬이 실행하는 명령은 셸에서 직접 써도 동일합니다:
 
@@ -686,7 +690,7 @@ openworkcompiler/
 │
 ├── agents/                      # 가이드 및 측정 에이전트 규격
 ├── docs/                        # 명세서, 아키텍처, 사용 가이드, 다이어그램
-├── .agents/skills/              # 에이전트 스킬 정본(owc skills install 로 .claude/skills 등에 동기화): ow-define(WHAT, grilling 인터뷰) · ow-compile-work · ow-traces · ow-compile-trace · ow-bench · grill-me/grilling(mattpocock/skills, skills-lock.json)
+├── .agents/skills/              # 에이전트 스킬 정본(owc skills install 로 .claude/skills 등에 동기화): ow-define(WHAT, grilling 인터뷰) · ow-compile-work · ow-traces · ow-compile-trace · ow-bench · ow-promote(SLM 승격) · grill-me/grilling(mattpocock/skills, skills-lock.json)
 ├── core/agents/                 # 에이전트 백엔드 레지스트리: claude · codex · gemini · opencode · aider (`--escalate auto`, `owc agent …`) · core/skills.py(스킬 동기화)
 ├── vendor/openworklang/         # 서브모듈: OpenWorkLang 언어 (baryonlabs/openworklang)
 ├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + 로더 + 벤치마크(토큰 원장) + 앞단 에이전트 실행 + slm.py(로컬 SLM 추론·품질 게이트·승격/롤백)

@@ -1,25 +1,25 @@
 # SLM promotion — `respond` of `codex-session`
 
-Candidate: `qwen2.5:3b` at `http://127.0.0.1:11434/v1` (local, cost $0) · gate: ≥90% of evaluations PASS, anchor recall ≥90%, grounding ≥90%.
+Candidate: `qwen2.5:7b` at `http://127.0.0.1:11434/v1` (local, cost $0) · gate: ≥90% of evaluations PASS, anchor recall ≥90%, grounding ≥90%.
 
 **Result: PROMOTED** — pass rate 100% over 2 recorded example(s).
 
 | | recorded (frontier) | SLM | delta |
 | :-- | --: | --: | --: |
-| tokens | 35,510 | 6,124 | −82.8% |
-| latency | 29.5 s | 18.3 s | 1.62× |
+| tokens | 34,038 | 5,926 | −82.6% |
+| latency | 65.7 s | 35.7 s | 1.84× |
 
 ## Evaluations
 
 | step | recorded model → tokens | SLM tokens (prompt + completion) | latency | gate |
 | :-- | :-- | --: | --: | :-- |
-| step_3 | gpt-5.6-sol → 17,344 | 3,274 (2,574 + 700) | 13.4 s | PASS (recall 0.94; grounded 1.00; len ×0.7; missing schema/quality_analyst.linkml.yaml) |
-| step_5 | gpt-5.6-sol → 18,166 | 2,850 (2,704 + 146) | 4.8 s | PASS (recall 1.00; grounded 1.00; len ×1.0) |
+| step_4 | gpt-5.6-sol → 16,560 | 2,873 (2,225 + 648) | 24.3 s | PASS (recall 1.00; grounded 1.00; len ×0.8) |
+| step_7 | gpt-5.6-sol → 17,478 | 3,053 (2,898 + 155) | 11.4 s | PASS (recall 1.00; grounded 1.00; len ×1.0) |
 
-### step_3 — SLM output
+### step_4 — SLM output
 
 ```
-Compiled successfully to [build/quality_analyst](/Users/hongmartin/orca/projects/open-workflow/build/quality_analyst).
+Compiled successfully to [build/quality_analyst](/ow-compile-work <path/to/file.work>).
 
 ```text
 work:       quality_analyst (v4.0)
@@ -29,21 +29,9 @@ actions:    collect_data, detect_anomaly, find_correlation,
             determine_root_cause, create_report
 invariants: verify_sensor_calibration,
             require_human_approval_for_remediation
-executors:  collect_data=code
-            detect_anomaly=rule
-            find_correlation=ml
-            determine_root_cause=slm
+executors:  collect_data=code, detect_anomaly=rule,
+            find_correlation=ml, determine_root_cause=slm,
             create_report=slm
-linkml:     build/quality_analyst/schema/quality_analyst.linkml.yaml
-artifacts:
-  work_ir       work.yaml
-  code          handlers/collect_data.py
-  rule          rules/detect_anomaly.rule.yaml
-  ml            models/ml/find_correlation/model_card.yaml, models/ml/find_correlation/dataset.jsonl, models/ml/find_correlation/train.py
-  slm           models/slm/determine_root_cause/training_candidate.yaml, models/slm/determine_root_cause/dataset.jsonl, models/slm/determine_root_cause/train.py, models/slm/create_report/training_candidate.yaml, models/slm/create_report/dataset.jsonl, models/slm/create_report/train.py
-  params        PARAMS.json
-  schema        build/quality_analyst/schema/quality_analyst.linkml.yaml
-  openworklang  quality_analyst.work
 ```
 
 Generated tree:
@@ -68,11 +56,38 @@ build/quality_analyst/schema/quality_analyst.linkml.yaml
 build/quality_analyst/work.yaml
 ```
 
-First 25 lines of [work.yaml](/Users/hongmartin/orca/projects/open-workflow/build/quality_analyst/work.yaml):
+First 25 lines of [work.yaml](/build/quality_analyst/work.yaml):
 
 ```yaml
-wo
-… [265 more chars]
+work: quality_analyst
+version: '4.0'
+description: Analyze production line quality anomaly root causes and generate remediation
+  plans
+inputs:
+  - production_data
+  - quality_inspection_data
+  - equipment_logs
+outputs:
+  - root_cause
+  - evidence
+  - confidence_score
+  - remediation_plan
+states:
+  - initialized
+  - collect_data_completed
+  - detect_anomaly_completed
+  - find_correlation_completed
+  - determine_root_cause_completed
+  - create_report_completed
+actions:
+  - collect_data
+  - detect_anomaly
+  - find_correlation
+  - determine_root_cause
+```
+
+The handler provides the deterministic `run(**inputs)` scaffold; the rule artifact encodes anomaly-detection branches; the ML package supplies its model card, dataset, and trainer; and the SLM packages supply promotion metadata, datasets, and TRL trainers. No frontier-LLM prompt was generated, 
+… [100 more chars]
 ```
 
 Recorded (frontier) output:
@@ -88,22 +103,9 @@ actions:    collect_data, detect_anomaly, find_correlation,
             determine_root_cause, create_report
 invariants: verify_sensor_calibration,
             require_human_approval_for_remediation
-executors:  collect_data=code
-            detect_anomaly=rule
-            find_correlation=ml
-            determine_root_cause=slm
+executors:  collect_data=code, detect_anomaly=rule,
+            find_correlation=ml, determine_root_cause=slm,
             create_report=slm
-linkml:     build/quality_analyst/schema/quality_analyst.linkml.yaml
-artifacts:
-  work_ir       work.yaml
-  code          handlers/collect_data.py
-  rule          rules/detect_anomaly.rule.yaml
-  ml            models/ml/find_correlation/{model_card.yaml,dataset.jsonl,train.py}
-  slm           models/slm/determine_root_cause/{training_candidate.yaml,dataset.jsonl,train.py}
-                models/slm/create_report/{training_candidate.yaml,dataset.jsonl,train.py}
-  params        PARAMS.json
-  schema        schema/quality_analyst.linkml.yaml
-  openworklang  quality_analyst.work
 ```
 
 Generated tree:
@@ -137,19 +139,45 @@ description: Analyze production line quality anomaly root causes and generate re
   plans
 inputs:
   - production_data
-  - quality_in
-… [1614 more chars]
+  - quality_inspection_data
+  - equipment_logs
+outputs:
+  - root_cause
+  - evidence
+  - confidence_score
+  - remediation_plan
+states:
+  - initialized
+  - collect_data_completed
+  - detect_anomaly_completed
+  - find_correlation_completed
+  - determine_root_cause_completed
+  - create_report_completed
+actions:
+  - collect_data
+  - detect_anomaly
+  - find_correlation
+  - determine_root_cause
 ```
 
-### step_5 — SLM output
+Generated [collect_data.py](/Users/hongmartin/orca/projects/open-workflow/build/quality_analyst/handlers/collect_data.py):
+
+```python
+"""collect_data — code-tier handler for work 'quality_analyst'.
+
+generated by OpenWor
+… [952 more chars]
+```
+
+### step_7 — SLM output
 
 ```
 Captured sessions:
 
-- `01a04c51-c1ca-7512-8b81-20d832a84b85` — `codex-cli` — 4 steps — `shell_python3`, `shell_find`, `respond`, `shell_curl`
-- `01a04c51-f7d2-7de0-9ae2-8ec624f02dfd` — `codex-cli` — 1 step — `respond`
+- `01a05282-99e6-73d3-8279-7025e4645a95` — `codex-cli` — 6 steps — `shell_sed`, `shell_python3`, `shell_find`, `respond`, `shell_sed`, `shell_curl`
+- `01a05282-a2c6-77b0-9dea-3dc88530327c` — `codex-cli` — 1 step — `respond`
 
-This current Codex session is itself being captured through the proxy, so its shell calls—including this trace query—appear as steps. 📡
+This current Codex session is itself captured through the proxy, so its shell calls appear as trace steps. 📡
 ```
 
 Recorded (frontier) output:
@@ -157,10 +185,10 @@ Recorded (frontier) output:
 ```
 Captured sessions:
 
-- `01a04c51-c1ca-7512-8b81-20d832a84b85` — `codex-cli` — 4 steps — `shell_python3`, `shell_find`, `respond`, `shell_curl`
-- `01a04c51-f7d2-7de0-9ae2-8ec624f02dfd` — `codex-cli` — 1 step — `respond`
+- `01a05282-99e6-73d3-8279-7025e4645a95` — `codex-cli` — 6 steps — `shell_sed`, `shell_python3`, `shell_find`, `respond`, `shell_sed`, `shell_curl`
+- `01a05282-a2c6-77b0-9dea-3dc88530327c` — `codex-cli` — 1 step — `respond`
 
-This current Codex session is itself being captured through the proxy, so its shell calls—including this trace query—appear as steps. 📡
+This current Codex session is itself captured through the proxy, so its shell calls appear as trace steps. 📡
 ```
 
 How the gate works: *anchors* are the numbers / ids / file paths the frontier answer stated that also exist in the upstream step outputs; the SLM must restate them (recall) and must not state numbers that exist nowhere in its inputs (grounding). Process invariants are enforced by the compiled upstream steps.

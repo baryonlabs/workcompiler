@@ -20,8 +20,10 @@
 #   trust_level = "trusted"
 #
 # The $ow-* skills are discovered automatically from .agents/skills/ in this repository.
+# Step 5 needs a local model server: `ollama pull qwen2.5:7b` (Ollama listens on 127.0.0.1:11434). The 3B model
+# fails the gate on this session's long build-tree summary (it leaves a placeholder), so the demo promotes to 7B.
 #
-# Post-process to keep the GIF small (raw vhs output is ~33 MB; this brings it to ~7.8 MB):
+# Post-process to keep the GIF small (raw vhs output is ~36 MB; this brings it to ~8.5 MB):
 #
 #   ffmpeg -y -i docs/demo/openworkcompiler-codex-demo.gif \
 #     -vf "fps=5,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=48:stats_mode=diff[p];[b][p]paletteuse=dither=none:diff_mode=rectangle" \
@@ -94,6 +96,24 @@ Type " codex-session"
 Sleep 1s
 Enter
 Sleep 70s
+
+# 5) Promote the one step still on the frontier LLM (the final summary) to a small local model — gated
+Type "$ow-promote"
+Sleep 1.5s
+Enter
+Type " codex-session respond qwen2.5:7b"
+Sleep 1s
+Enter
+Sleep 100s
+
+# 6) Benchmark again: the SLM now really runs, split from the frontier model in the token ledger
+Type "$ow-bench"
+Sleep 1.5s
+Enter
+Type " codex-session"
+Sleep 1s
+Enter
+Sleep 90s
 
 Type "/quit"
 Sleep 500ms

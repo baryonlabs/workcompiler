@@ -13,21 +13,26 @@ outputs:
   - status
 states:
   - initialized
+  - sed_shelled
   - python3_shelled
   - find_shelled
   - respond_completed
   - curl_shelled
 actions:
+  - shell_sed
   - shell_python3
   - shell_find
   - respond
   - shell_curl
 dependencies:
+  shell_python3:
+    - shell_sed
   shell_find:
     - shell_python3
   respond:
     - shell_find
   shell_curl:
+    - shell_sed
     - respond
 invariants:
   - keep_report_evidence_auditable
@@ -114,6 +119,9 @@ escalation:
   on_quality_drop: require_human_review
   on_timeout: escalate_to_human
 executors:
+  shell_sed:
+    type: code
+    handler: services.shell_sed
   shell_python3:
     type: code
     handler: services.shell_python3
@@ -122,7 +130,7 @@ executors:
     handler: services.shell_find
   respond:
     type: slm
-    preferred: qwen2.5:3b
+    preferred: qwen2.5:7b
     fallback:
       - frontier_llm
       - human

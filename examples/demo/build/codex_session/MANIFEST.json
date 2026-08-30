@@ -1,18 +1,21 @@
 {
   "work": "codex-session",
   "build_dir": "/Users/hongmartin/orca/projects/open-workflow/build/codex_session",
-  "artifact_count": 8,
+  "artifact_count": 11,
   "by_tier": {
     "work_ir": [
       "work.yaml"
     ],
     "code": [
+      "handlers/shell_sed.py",
       "handlers/shell_python3.py",
       "handlers/shell_find.py",
       "handlers/shell_curl.py"
     ],
-    "frontier_llm": [
-      "prompts/respond.prompt.md"
+    "ml": [
+      "models/ml/respond/model_card.yaml",
+      "models/ml/respond/dataset.jsonl",
+      "models/ml/respond/train.py"
     ],
     "params": [
       "PARAMS.json"
@@ -34,6 +37,12 @@
       "path": "work.yaml"
     },
     {
+      "action": "shell_sed",
+      "tier": "code",
+      "kind": "handler",
+      "path": "handlers/shell_sed.py"
+    },
+    {
       "action": "shell_python3",
       "tier": "code",
       "kind": "handler",
@@ -47,9 +56,21 @@
     },
     {
       "action": "respond",
-      "tier": "frontier_llm",
-      "kind": "prompt",
-      "path": "prompts/respond.prompt.md"
+      "tier": "ml",
+      "kind": "model_card.yaml",
+      "path": "models/ml/respond/model_card.yaml"
+    },
+    {
+      "action": "respond",
+      "tier": "ml",
+      "kind": "dataset.jsonl",
+      "path": "models/ml/respond/dataset.jsonl"
+    },
+    {
+      "action": "respond",
+      "tier": "ml",
+      "kind": "train.py",
+      "path": "models/ml/respond/train.py"
     },
     {
       "action": "shell_curl",
@@ -79,11 +100,11 @@
   "promotions": [
     {
       "action": "respond",
-      "from": "frontier_llm",
+      "from": "ml",
       "to": "slm",
-      "model": "qwen2.5:3b",
+      "model": "qwen2.5:7b",
       "pass_rate": 1.0,
-      "at": "2026-08-30T20:10:17"
+      "at": "2026-08-30T20:56:28"
     }
   ]
 }

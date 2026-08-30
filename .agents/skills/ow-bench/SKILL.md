@@ -15,6 +15,6 @@ Invoked as `$ow-bench <target_name>` in Codex, `/ow-bench <target_name>` in Clau
    ```
 
 3. Show the command output, then print the top table of `build/TARGET_DIR/BENCHMARK.md` (first 25 lines).
-4. In two or three sentences, state: how many tokens the compiled path saves and why (code/rule tiers spend 0), the speedup, how many outputs were reproduced exactly, and which actions are still escalated to a frontier LLM (and that they become cheaper once the ML/SLM candidates are trained).
+4. In two or three sentences, state: how many tokens the compiled path saves and why (code/rule tiers spend 0), the speedup, how many outputs were reproduced exactly, and which actions are still escalated to a frontier LLM — those can be lowered to a small local model with `$ow-promote <target> <action>`; if an action already runs on the SLM tier, say so and quote its gate verdict from the SLM section of the report.
 
 End your reply with 📊.

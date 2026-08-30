@@ -67,7 +67,7 @@ Measured: on the same renewal-proposal task the compiled build produced identica
 
 ## 30-second demo: use it from inside Codex
 
-![Real recording: pipx one-line install → owc agent list → owc proxy, then inside the Codex TUI the $ow-compile-work / $ow-traces / $ow-compile-trace / $ow-bench skills compile an OpenWorkLang file, list captured sessions, compile the session itself and benchmark it](docs/demo/openworkcompiler-codex-demo.gif)
+![Real recording: pipx one-line install → owc agent list → owc proxy, then inside the Codex TUI the $ow-compile-work / $ow-traces / $ow-compile-trace / $ow-bench / $ow-promote skills compile an OpenWorkLang file, list captured sessions, compile the session itself, benchmark it and promote its last LLM step to a local SLM](docs/demo/openworkcompiler-codex-demo.gif)
 
 A **real interactive Codex session**, not a mock-up. Install `owc` with one line — `pipx install "git+https://github.com/baryonlabs/workcompiler.git"` (`owc agent list` shows the agent CLIs it found) — start `owc proxy`, point Codex at it (ChatGPT login reused as-is) and invoke the skills shipped in this repository with `$` mentions.
 
@@ -77,16 +77,18 @@ A **real interactive Codex session**, not a mock-up. Install `owc` with one line
 | 2 | `$ow-traces` | Sessions captured by the proxy — **this very Codex session** appears as `shell_python3, shell_sed, respond, …` steps |
 | 3 | `$ow-compile-trace codex-session` | The captured Codex session compiles into `build/codex_session/` — shell steps become `handlers/shell_*.py` that replay the recorded command, non-deterministic steps become `prompts/*.prompt.md` |
 | 4 | `$ow-bench codex-session` | **Agent vs. compiled build** — replays the same session and compares output equality, tokens and speed in `BENCHMARK.md` |
+| 5 | `$ow-promote codex-session respond qwen2.5:7b` | **Promotes the only step left on the frontier LLM** (the final summary `respond`) to a local SLM — gated on the recorded examples (anchor recall · grounding · length) → on pass `respond: slm` in `work.yaml`/`.work` |
+| 6 | `$ow-bench codex-session` | Benchmark again — this time the SLM **really runs** and is split from the frontier model in the token ledger |
 
 **Benchmark** (task: compile a `.work` file, inspect the build tree, summarize — [`examples/demo/build/codex_session/BENCHMARK.md`](examples/demo/build/codex_session/BENCHMARK.md)):
 
 | | recorded agent (Codex) | compiled build | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 119,974 | 6,292 | **−95%** |
-| wall time | 65.0 s | 14.8 s | **4.4×** |
-| outputs reproduced | — | **4/6** (`respond` 2/2 = SLM gate PASS; the two `shell_curl` steps query the proxy's trace list, which differs per session) | |
+| LLM tokens | 147,288 | 6,551 | **−95.6%** |
+| wall time | 106.1 s | 31.6 s | **3.4×** |
+| outputs reproduced | — | **6/8** (`respond` 2/2 = SLM gate PASS; the two `shell_curl` steps query the proxy's trace list, which differs per session) | |
 
-The shell steps (`shell_python3`, `shell_find`, `shell_curl`) lowered to the code tier and replayed with zero tokens in tens of milliseconds (compile and search output identical; the proxy trace-list `curl` differs per session and is reported as a mismatch); the remaining cost is the final summary (`respond`), which the **SLM promotion** below runs on a local `qwen2.5:3b` (6,292 tokens, $0).
+The shell steps (`shell_sed`, `shell_python3`, `shell_find`, `shell_curl`) lowered to the code tier and replayed with zero tokens in tens of milliseconds (compile and search output identical; the proxy trace-list `curl` differs per session and is reported as a mismatch); the remaining cost is the final summary (`respond`), which steps 5–6 of the recording **promote to a local `qwen2.5:7b`** (6,551 tokens, $0, gate 2/2 PASS) — on the same session `qwen2.5:3b` left a placeholder and was rejected by the gate.
 
 **A real business task — customer contract renewal proposal** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): verify the active CRM contract → aggregate 3 months of usage → price with the current policy → write the proposal and pricing JSON; artifacts in [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
 
@@ -175,7 +177,7 @@ owc build demote  build/customer_renewal_codex respond                      # ro
 | outputs reproduced | — | **8/8** | |
 | frontier-LLM escalations | 1 step | **0** | |
 
-The gate is deterministic: it extracts numbers, ids and file paths from the SLM's answer and checks (1) that every fact the frontier answer stated *and* that exists in the upstream data is restated (recall), (2) that no value appears that exists nowhere in the inputs (grounding), (3) length, placeholders and fact density; every evaluation becomes a `QualityRecord` that must pass the existing `ExecutorOptimizer.evaluate_promotion`. The recorded answer is shown to the SLM only with its **values masked**, so copying is impossible. codex-session's `respond` passed 2/2 even on `qwen2.5:3b` and was promoted (−94.8%, 4.4×); in the CUST-1002 hybrid run `respond` executed on the SLM (4,205 tokens, $0, PASS) and only the one synthesized step went to Claude Code — identical pricing JSON ([`hybrid-CUST-1002-slm/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002-slm/)). When the gate fails, the step falls through to the agent escalation and `RUN_REPORT.md` keeps the SLM's attempt and the reason.
+The gate is deterministic: it extracts numbers, ids and file paths from the SLM's answer and checks (1) that every fact the frontier answer stated *and* that exists in the upstream data is restated (recall), (2) that no value appears that exists nowhere in the inputs (grounding), (3) length, placeholders and fact density; every evaluation becomes a `QualityRecord` that must pass the existing `ExecutorOptimizer.evaluate_promotion`. The recorded answer is shown to the SLM only with its **values masked**, so copying is impossible. in the recorded demo session `qwen2.5:3b` was rejected by the gate on the long build-tree summary while `qwen2.5:7b` passed 2/2 and was promoted (−95.6% overall, 3.4×); in the CUST-1002 hybrid run `respond` executed on the SLM (4,205 tokens, $0, PASS) and only the one synthesized step went to Claude Code — identical pricing JSON ([`hybrid-CUST-1002-slm/`](examples/demo/customer-renewal-bench/hybrid-CUST-1002-slm/)). When the gate fails, the step falls through to the agent escalation and `RUN_REPORT.md` keeps the SLM's attempt and the reason.
 
 ### Does it work for someone who has never written a prompt? — four business cases, chat only
 
@@ -327,6 +329,8 @@ The [30-second demo](#30-second-demo-use-it-from-inside-codex) at the top of thi
 | 2 | `$ow-traces` | `curl localhost:8787/v1/workcompiler/traces` | Sessions captured by the proxy — **this very Codex session** shows up as `shell_python3, shell_sed, respond, …` steps |
 | 3 | `$ow-compile-trace codex-session` | `POST /v1/workcompiler/compile` (`build_dir`) | The captured Codex session compiles into `build/codex_session/` — `handlers/shell_*.py` replay the recorded commands, `respond` becomes `prompts/respond.prompt.md` |
 | 4 | `$ow-bench codex-session` | `python3 -m core.build bench build/codex_session` | Replays the code tier against the bundled `trace.json` → per-action output equality, tokens and latency in `BENCHMARK.md` |
+| 5 | `$ow-promote codex-session respond qwen2.5:7b` | `python3 -m core.build promote build/codex_session respond --model qwen2.5:7b` | Regenerates the recorded `respond` examples with the local 7B model → on passing the deterministic gate, switches to `respond: slm` (`models/slm/respond/PROMOTION.md`) |
+| 6 | `$ow-bench codex-session` | `python3 -m core.build bench build/codex_session` | The SLM step executes for real; its tokens, latency and gate verdict land in the ledger |
 
 The recording script is [`docs/demo/openworkcompiler-codex-demo.tape`](docs/demo/openworkcompiler-codex-demo.tape).
 
@@ -367,7 +371,7 @@ The recording script is [`docs/demo/openworkcompiler-codex-demo.tape`](docs/demo
    codex                            # or: claude
    ```
 
-3. Inside the agent, invoke the skills — Codex: `$ow-define <work>` (define the WHAT), `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`; Claude Code: the same names as `/ow-…`. The external skills (grill-me/grilling) can be reinstalled with `npx skills add https://github.com/mattpocock/skills --skill grilling --skill grill-me --agent codex --copy -y` (`skills-lock.json`).
+3. Inside the agent, invoke the skills — Codex: `$ow-define <work>` (define the WHAT), `$ow-compile-work <file.work>`, `$ow-traces`, `$ow-compile-trace <target>`, `$ow-bench <target>`, `$ow-promote <target> <action> [model]` (local SLM promotion, needs `ollama pull qwen2.5:7b`); Claude Code: the same names as `/ow-…`. The external skills (grill-me/grilling) can be reinstalled with `npx skills add https://github.com/mattpocock/skills --skill grilling --skill grill-me --agent codex --copy -y` (`skills-lock.json`).
 
    The commands the skills run work from a plain shell too:
 
@@ -660,7 +664,7 @@ openworkcompiler/
 │
 ├── agents/                      # Guide and measurement fleet specs
 ├── docs/                        # Specifications, architecture, usage guides, and diagrams
-├── .agents/skills/              # canonical agent skills (synced into .claude/skills etc. by owc skills install): ow-define (WHAT, grilling interview) · ow-compile-work · ow-traces · ow-compile-trace · ow-bench · grill-me/grilling (mattpocock/skills, skills-lock.json)
+├── .agents/skills/              # canonical agent skills (synced into .claude/skills etc. by owc skills install): ow-define (WHAT, grilling interview) · ow-compile-work · ow-traces · ow-compile-trace · ow-bench · ow-promote (SLM promotion) · grill-me/grilling (mattpocock/skills, skills-lock.json)
 ├── core/agents/                 # agent backend registry: claude · codex · gemini · opencode · aider (`--escalate auto`, `owc agent …`) · core/skills.py (skills sync)
 ├── vendor/openworklang/         # submodule: the OpenWorkLang language (baryonlabs/openworklang)
 ├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + loader + benchmark (token ledger) + front-agent runner + slm.py (local SLM inference · quality gate · promote/demote)

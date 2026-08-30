@@ -1,25 +1,23 @@
 {
   "action": "respond",
   "to": "slm",
-  "model": "qwen2.5:3b",
+  "model": "qwen2.5:7b",
   "previous_executor": {
-    "type": "frontier_llm",
-    "handler": null,
-    "preferred": "claude-3-5-sonnet",
-    "fallback": [
-      "human"
-    ]
+    "type": "ml",
+    "handler": "services.respond",
+    "preferred": "models/ml/codex-session-respond-xgb",
+    "fallback": null
   },
-  "at": "2026-08-30T20:10:17",
+  "at": "2026-08-30T20:56:28",
   "totals": {
     "evaluations": 2,
     "pass_rate": 1.0,
-    "recorded_tokens": 35510,
-    "slm_tokens": 6124,
-    "token_savings_pct": 82.8,
-    "recorded_latency_ms": 29493.8,
-    "slm_latency_ms": 18256.4,
-    "speedup_x": 1.62,
+    "recorded_tokens": 34038,
+    "slm_tokens": 5926,
+    "token_savings_pct": 82.6,
+    "recorded_latency_ms": 65712.1,
+    "slm_latency_ms": 35711.0,
+    "speedup_x": 1.84,
     "promoted": false
   }
 }
