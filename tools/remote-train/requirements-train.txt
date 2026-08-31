@@ -1,0 +1,9 @@
+# Pinned training environment — captured from linux-builder ~/owc-train-venv (RTX 4090, driver 590.48.01)
+# python 3.12.3 · CUDA 12.8
+torch==2.10.0+cu128
+transformers==5.16.1
+trl==1.12.0
+peft==0.20.0
+bitsandbytes==0.50.2
+datasets==5.0.1
+accelerate==1.14.0
