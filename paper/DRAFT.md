@@ -1,9 +1,9 @@
 # Learning to Apply, Not to Memorize: Policy-in-Context Fine-Tuning Generalizes to Unseen Organizational Policies
 
-> **Draft v0.4 (2026-09-01)** — target: EMNLP/ACL Industry track. All numbers are measured and
-> reproducible from this repository (pointers in §7). All arXiv IDs and titles below were
-> verified against the abstract pages; claims marked ⚠body rest on paper bodies not yet read
-> and must be confirmed (or kept in their current abstract-safe wording) before submission.
+> **Draft v0.5 (2026-09-01)** — target: EMNLP/ACL Industry track. All numbers are measured and
+> reproducible from this repository (pointers in §7). All arXiv IDs and titles were verified
+> against the abstract pages; the TriMPI and PRT positioning claims were additionally confirmed
+> against the paper bodies (Policy Override §5.2; per-policy instance splits).
 
 ## Abstract
 
@@ -86,19 +86,21 @@ We contribute:
 
 **Policy internalization vs. policy-in-context.** Multimodal Policy Internalization (TriMPI,
 2510.09474) trains policies *into* model parameters so the policy need not be in context at
-inference — the exact opposite maintenance bet from ours (⚠body: its "policy override" probe,
-an unseen policy supplied at inference, would make the contrast sharper if confirmed in the
-body). Policy Reasoning Traces (2509.23291) improves compliance assessment on specific policies
-such as HIPAA and GDPR (⚠body: whether its splits hold out entire policies). GuideBench
-(2505.11368) benchmarks robustness to rule updates for LLM agents.
+inference — the exact opposite maintenance bet from ours. Its "Policy Override" setting (§5.2
+there) supplies an updated policy in context at inference as a *generalization probe* of the
+internalized model; we make in-context application the training objective itself. Policy
+Reasoning Traces (2509.23291) improves compliance assessment on specific policies such as HIPAA
+and GDPR with per-policy instance-level train/test splits; cross-policy transfer appears only
+as an auxiliary analysis (their §4.2/App. G), not as the held-out-policy protocol we use.
+GuideBench (2505.11368) benchmarks robustness to rule updates for LLM agents.
 
 **Policy-following benchmarks.** τ-bench (2406.12045) evaluates state-of-the-art agents given
 domain-specific policy guidelines; RuleArena's (2412.08972) findings distinguish failures of
 rule identification from failures of the computations the rules require — directly anticipating
 our §5.3 boundary; CRMArena-Pro (2505.18878) assesses LLM agents across enterprise scenarios,
-including confidentiality awareness under prompted policies. EntCollabBench
-(2605.08761, *abstract verified*) independently builds a rule-engine-judged enterprise decision
-benchmark; it is evaluation-only and has no discretion bands. DMN (OMG standard) has long
+including confidentiality awareness under prompted policies. A contemporaneous enterprise
+benchmark ("Beyond the All-in-One Agent", 2605.08761, *abstract verified*) independently builds
+rule-engine-judged enterprise decisions; it is evaluation-only and has no discretion bands. DMN (OMG standard) has long
 standardized ordered decision rules with FIRST-hit semantics; our DSL is deliberately in that
 family — the ML contribution is the transfer measurement, not the rule language.
 
@@ -323,9 +325,8 @@ generator and stored model outputs.
 ---
 
 ### TODO before submission
-- [ ] ⚠body items (TriMPI policy-override probe; PRT split design): read the paper bodies, then
-      either restore the sharper claims or keep the abstract-safe wording.
 - [ ] Related-work prose (§2 is currently a positioning skeleton).
+- [x] refs.bib authors completed from arXiv pages (four highly-cited entries kept as first-author + others).
 - [ ] Decide the venue and convert to its LaTeX template (ACL style files).
 - [ ] Limitations section as a separate ACL-required section (lift from §3.4/§6).
 - [ ] Consider adding the 14B/other-base-model column if GPU time allows.

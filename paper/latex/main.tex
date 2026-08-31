@@ -13,7 +13,7 @@
 
 \title{Learning to Apply, Not to Memorize: \\ Policy-in-Context Fine-Tuning Generalizes to Unseen Organizational Policies}
 
-\author{Anonymous \\ \texttt{draft v0.4 --- not for distribution}}
+\author{Anonymous \\ \texttt{draft v0.5 --- not for distribution}}
 
 \begin{document}
 \maketitle
@@ -47,9 +47,9 @@ Our contributions:
 
 \section{Related Work}
 
-\paragraph{Policy internalization vs.\ policy-in-context.} Multimodal Policy Internalization \citep{trimpi2025} trains policies \emph{into} model parameters so the policy need not be in context at inference---the opposite maintenance bet from ours. Policy Reasoning Traces \citep{prt2025} improves compliance assessment on specific policies such as HIPAA and GDPR. GuideBench \citep{guidebench2025} benchmarks robustness to rule updates.
+\paragraph{Policy internalization vs.\ policy-in-context.} Multimodal Policy Internalization \citep{trimpi2025} trains policies \emph{into} model parameters so the policy need not be in context at inference---the opposite maintenance bet from ours. Its ``Policy Override'' setting supplies an updated policy in context at inference as a \emph{generalization probe} of the internalized model; we make in-context application the training objective itself. Policy Reasoning Traces \citep{prt2025} improves compliance assessment on specific policies such as HIPAA and GDPR with per-policy instance-level train/test splits; cross-policy transfer appears only as an auxiliary analysis, not as the held-out-policy protocol we use. GuideBench \citep{guidebench2025} benchmarks robustness to rule updates.
 
-\paragraph{Policy-following benchmarks.} $\tau$-bench \citep{taubench2024} evaluates state-of-the-art agents given domain policy guidelines; RuleArena's \citep{rulearena2024} findings distinguish failures of rule identification from failures of the computations the rules require---directly anticipating our \S\ref{sec:control}; CRMArena-Pro \citep{crmarena2025} assesses agents across enterprise scenarios. A contemporaneous enterprise benchmark \citep{entcollabbench2026} independently builds rule-engine-judged decisions; it is evaluation-only and has no discretion bands. DMN \citep{dmn2024} has long standardized ordered decision rules with FIRST-hit semantics; our DSL is deliberately in that family---the ML contribution is the transfer measurement, not the rule language.
+\paragraph{Policy-following benchmarks.} $\tau$-bench \citep{taubench2024} evaluates state-of-the-art agents given domain policy guidelines; RuleArena's \citep{rulearena2024} findings distinguish failures of rule identification from failures of the computations the rules require---directly anticipating our \S\ref{sec:control}; CRMArena-Pro \citep{crmarena2025} assesses agents across enterprise scenarios. A contemporaneous enterprise benchmark \citep{enterprisebench2026} independently builds rule-engine-judged decisions; it is evaluation-only and has no discretion bands. DMN \citep{dmn2024} has long standardized ordered decision rules with FIRST-hit semantics; our DSL is deliberately in that family---the ML contribution is the transfer measurement, not the rule language.
 
 \paragraph{SFT and arithmetic.} Faith and Fate \citep{faithfate2023} shows Transformers fail at compositional multi-step arithmetic; \citet{sftmemorizes2025} shows SFT tends to memorize and struggles out-of-distribution; PAL \citep{pal2022} offloads the solution step to a Python interpreter. Our contribution is the \emph{pairing}: the same recipe, corpus scale and gate that fail on arithmetic succeed on rule application---and a tool-less frontier model fails the same arithmetic gate, sharpening ``small models can't compute'' into ``inference can't compute.''
 
