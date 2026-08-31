@@ -190,7 +190,8 @@ def cmd_dataset(args) -> int:
     from core.build.dataset import build_dataset
 
     rep = build_dataset(args.build_dir, args.action,
-                        holdout_customers=args.holdout.split(",") if args.holdout else None)
+                        holdout_customers=args.holdout.split(",") if args.holdout else None,
+                        cot=getattr(args, "cot", False))
     print(f"[dataset] {args.action} ({rep.mode}): {rep.rows} rows "
           f"({', '.join(f'{k} {v}' for k, v in rep.sources.items())}); held out: {', '.join(rep.eval_customers) or '-'}")
     print(f"  train: {rep.train_path}\n  valid: {rep.valid_path}")
@@ -334,6 +335,8 @@ def main(argv=None) -> int:
     i = sub.add_parser("dataset", help="Build the action's supervised dataset (recorded + cache + fleet truth)")
     i.add_argument("build_dir"); i.add_argument("action")
     i.add_argument("--holdout", help="Comma-separated customers to pin as the held-out evaluation set")
+    i.add_argument("--cot", action="store_true",
+                   help="Prefix fleet targets with a deterministic computation walkthrough (writes to data-cot/)")
     i.set_defaults(func=cmd_dataset)
 
     j = sub.add_parser("train", help="LoRA-train a local base model on the action's dataset (mlx-lm, Apple Silicon)")

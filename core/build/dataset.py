@@ -63,6 +63,40 @@ def _file_blocks(files: Dict[str, str]) -> str:
                      for path, content in sorted(files.items()))
 
 
+def _cot_walkthrough(files: Dict[str, str]) -> str:
+    """Deterministic chain-of-thought prefix for a fleet training target, derived from the truth
+    pricing JSON (every intermediate is already a field there). The prompt asks the model to reason;
+    without this the SFT target teaches it to answer cold — the ablation the arithmetic negative
+    result needs. Emitted *before* the ===FILE blocks, which the parser and gate ignore."""
+    pricing_path = next((p for p in files if "pricing-" in p and p.endswith(".json")), None)
+    if pricing_path is None:
+        return ""
+    d = json.loads(files[pricing_path])
+    u, s, disc = d.get("usage", {}), d.get("seat_recommendation", {}), d.get("discounts", {})
+    seats = s.get("recommended_committed_seats")
+    price = d.get("list_price_per_seat_month_usd")
+    gross = d.get("gross_monthly_usd")
+    pct = disc.get("total_discount_pct")
+    lines = [
+        "## 계산 과정",
+        f"1. 좌석 추천: 피크 활성 좌석 {s.get('peak_seats_active')} → 10 단위 올림 → {seats}석"
+        + (f" (현 계약 {s.get('current_contract_seats')}석)" if s.get("current_contract_seats") is not None else ""),
+        f"2. 성장률: ({u.get('last_month_seats_active')} - {u.get('first_month_seats_active')}) / "
+        f"{u.get('first_month_seats_active')} × 100 = {u.get('seats_active_growth_pct')}%",
+        f"3. 월 총액(할인 전): {seats} × {price} = {gross} USD",
+        f"4. 할인: 볼륨 {disc.get('volume_discount_pct')}% + 로열티 {disc.get('loyalty_discount_pct')}%"
+        f" (로열티 자격: {disc.get('loyalty_eligibility_date')} ≤ {d.get('proposal_date')} → "
+        f"{disc.get('loyalty_eligible_on_proposal_date')}) = {disc.get('uncapped_total_discount_pct')}%,"
+        f" 상한 {disc.get('max_total_discount_pct')}% 적용 후 {pct}%",
+        f"5. 월 할인액: {gross} × {pct}/100 = {disc.get('monthly_discount_usd')} USD",
+        f"6. 월 최종: {gross} - {disc.get('monthly_discount_usd')} = {d.get('monthly_total_usd')} USD",
+        f"7. 연 총액: {d.get('monthly_total_usd')} × 12 = {d.get('annual_total_usd')} USD",
+        f"8. 평균 API 호출: 3개월 평균 = {u.get('average_api_calls')}",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 # --------------------------------------------------------------------------- rows
 
 @dataclass
@@ -89,7 +123,7 @@ def _recorded_write_step(build_dir: Path) -> Tuple[Optional[Any], Optional[Any]]
 
 
 def build_rows(build_dir: Path | str, action: str, *, fleet: Optional[Path] = None,
-               seed: int = 20260831) -> Tuple[List[Dict[str, Any]], DatasetReport]:
+               seed: int = 20260831, cot: bool = False) -> Tuple[List[Dict[str, Any]], DatasetReport]:
     """One chat row per example. For a derivation step the assistant message is the ===FILE blocks;
     for a text step it is the answer text."""
     root = Path(build_dir)
@@ -157,7 +191,8 @@ def build_rows(build_dir: Path | str, action: str, *, fleet: Optional[Path] = No
                 truth = {p.replace(str(recorded_params.get(param_name, "CUST-1001")), cid): c
                          for p, c in _fleet_truth_files(fleet, cid).items()}
                 system, user = slm.build_file_prompt(action, work, params, upstream, recorded_patch or "")
-                add(system, user, _file_blocks(truth), "fleet", cid)
+                target = (_cot_walkthrough(truth) + "\n" + _file_blocks(truth)) if cot else _file_blocks(truth)
+                add(system, user, target, "fleet", cid)
             else:
                 respond = (fleet / "truth" / cid / "respond.md").read_text(encoding="utf-8")
                 pricing = (fleet / "truth" / cid / f"pricing-{cid}.json").read_text(encoding="utf-8")
@@ -172,12 +207,13 @@ def build_rows(build_dir: Path | str, action: str, *, fleet: Optional[Path] = No
 
 
 def build_dataset(build_dir: Path | str, action: str, *, fleet: Optional[Path] = None, seed: int = 20260831,
-                  holdout: int = EVAL_HOLDOUT, holdout_customers: Optional[Sequence[str]] = None) -> DatasetReport:
+                  holdout: int = EVAL_HOLDOUT, holdout_customers: Optional[Sequence[str]] = None,
+                  cot: bool = False) -> DatasetReport:
     """Write train/valid jsonl (mlx-lm chat format) and eval.json under models/slm/<action>/data/.
     ``holdout_customers`` pins the evaluation set (so it stays comparable when the corpus grows)."""
     root = Path(build_dir)
     fleet = fleet or fleet_dir(root)
-    rows, report = build_rows(root, action, fleet=fleet, seed=seed)
+    rows, report = build_rows(root, action, fleet=fleet, seed=seed, cot=cot)
     fleet_customers = sorted({r["_customer"] for r in rows if r["_source"] == "fleet" and r["_customer"]})
     rng = random.Random(seed)
     if holdout_customers:
@@ -189,7 +225,7 @@ def build_dataset(build_dir: Path | str, action: str, *, fleet: Optional[Path] =
     n_valid = max(1, len(train_rows) // 10) if len(train_rows) > 3 else 0
     valid_rows, train_rows = train_rows[:n_valid], train_rows[n_valid:]
 
-    out = slm.slm_dir(root, action) / "data"
+    out = slm.slm_dir(root, action) / ("data-cot" if cot else "data")
     out.mkdir(parents=True, exist_ok=True)
     for name, subset in (("train", train_rows), ("valid", valid_rows or train_rows[:1])):
         path = out / f"{name}.jsonl"
