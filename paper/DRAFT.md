@@ -1,6 +1,6 @@
 # Learning to Apply, Not to Memorize: Policy-in-Context Fine-Tuning Generalizes to Unseen Organizational Policies
 
-> **Draft v0.3 (2026-09-01)** — target: EMNLP/ACL Industry track. All numbers are measured and
+> **Draft v0.4 (2026-09-01)** — target: EMNLP/ACL Industry track. All numbers are measured and
 > reproducible from this repository (pointers in §7). All arXiv IDs and titles below were
 > verified against the abstract pages; claims marked ⚠body rest on paper bodies not yet read
 > and must be confirmed (or kept in their current abstract-safe wording) before submission.
@@ -51,6 +51,15 @@ RuleArena, 2412.08972), or measures robustness to rule updates (GuideBench, 2505
 is the combination that deployment actually needs: **fine-tune a small, locally-servable model on
 the *transferable skill* of applying an arbitrary in-context policy, and measure transfer to
 policies never seen in training.**
+
+Organizational policy decisions are our testbed, but the object of study is more general: a
+**content-in-context, skill-in-weights** decomposition. The same shape recurs wherever an
+organization's *documents* define correct behavior and change on the organization's schedule —
+support runbooks, escalation matrices, grading rubrics, editorial style guides, compliance
+checklists. We use declarative decision policies because they are the cleanest instance of the
+class that still admits a deterministic grader: the skill (ordered evaluation, first-match,
+grounded citation) is non-trivial, while correctness is checkable to the byte. Whether the
+recipe transfers to messier members of the class is an open question we scope explicitly (§6).
 
 We contribute:
 
@@ -278,6 +287,16 @@ denominator small.
 **Why not internalize?** A weights-internalized policy answers fast but ages instantly and
 cannot explain a rule edit. Policy-in-context inverts the maintenance economics: the policy file
 is the deployment artifact; retraining is only needed when the *skill* (not the policy) drifts.
+
+**Beyond policy decisions.** Nothing in the recipe is specific to approval workflows: the
+training rows are (document, record, grounded structured answer) triples, and the counterfactual
+control generalizes to any document class whose semantics can be programmatically perturbed.
+Runbooks (procedure-in-context, execution-skill-in-weights) and rubrics (criteria-in-context,
+grading-skill-in-weights) are the nearest neighbors; each needs its own deterministic grader,
+which is the actual bottleneck for widening the claim. This paper is also one tier of a larger
+compiled-pipeline system — recorded agent sessions lowered to code/rule/cache tiers, with the
+trained-SLM tier of this paper occupying the judgment slot behind a promotion gate — whose
+end-to-end economics (§5.4) motivate but do not depend on the transfer result.
 
 **Path to prose policies.** Our substrate removes entity alignment (rule field names match
 record keys). The natural next experiment keeps the trained applier fixed and inserts a

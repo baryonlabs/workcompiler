@@ -1,0 +1,77 @@
+\begin{thebibliography}{13}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{{[authors TBD]}(2024{\natexlab{a}})}]{rulearena2024}
+{[authors TBD]}. 2024{\natexlab{a}}.
+\newblock Rulearena: A benchmark for rule-guided reasoning with llms in
+  real-world scenarios.
+\newblock ArXiv:2412.08972.
+
+\bibitem[{{[authors TBD]}(2024{\natexlab{b}})}]{taubench2024}
+{[authors TBD]}. 2024{\natexlab{b}}.
+\newblock $\tau$-bench: A benchmark for tool-agent-user interaction in
+  real-world domains.
+\newblock ArXiv:2406.12045.
+
+\bibitem[{{[authors TBD]}(2025{\natexlab{a}})}]{crmarena2025}
+{[authors TBD]}. 2025{\natexlab{a}}.
+\newblock Crmarena-pro: Holistic assessment of llm agents across diverse
+  business scenarios and interactions.
+\newblock ArXiv:2505.18878.
+
+\bibitem[{{[authors TBD]}(2025{\natexlab{b}})}]{guidebench2025}
+{[authors TBD]}. 2025{\natexlab{b}}.
+\newblock Guidebench: Benchmarking domain-oriented guideline following for llm
+  agents.
+\newblock ArXiv:2505.11368.
+
+\bibitem[{{[authors TBD]}(2025{\natexlab{c}})}]{trimpi2025}
+{[authors TBD]}. 2025{\natexlab{c}}.
+\newblock Multimodal policy internalization for conversational agents.
+\newblock ArXiv:2510.09474.
+
+\bibitem[{{[authors TBD]}(2025{\natexlab{d}})}]{prt2025}
+{[authors TBD]}. 2025{\natexlab{d}}.
+\newblock Scaling policy compliance assessment in language models with policy
+  reasoning traces.
+\newblock ArXiv:2509.23291.
+
+\bibitem[{{[authors TBD]}(2026)}]{entcollabbench2026}
+{[authors TBD]}. 2026.
+\newblock Entcollabbench (working name): Rule-engine-judged enterprise
+  collaboration benchmark.
+\newblock ArXiv:2605.08761.
+
+\bibitem[{Belcak et~al.(2025)}]{slmposition2025}
+Peter Belcak et~al. 2025.
+\newblock Small language models are the future of agentic ai.
+\newblock ArXiv:2506.02153.
+
+\bibitem[{Chu et~al.(2025)}]{sftmemorizes2025}
+Tianzhe Chu et~al. 2025.
+\newblock Sft memorizes, rl generalizes: A comparative study of foundation
+  model post-training.
+\newblock ArXiv:2501.17161.
+
+\bibitem[{Dziri et~al.(2023)}]{faithfate2023}
+Nouha Dziri et~al. 2023.
+\newblock Faith and fate: Limits of transformers on compositionality.
+\newblock ArXiv:2305.18654, NeurIPS 2023.
+
+\bibitem[{Gao et~al.(2022)}]{pal2022}
+Luyu Gao et~al. 2022.
+\newblock Pal: Program-aided language models.
+\newblock ArXiv:2211.10435.
+
+\bibitem[{{Object Management Group}(2024)}]{dmn2024}
+{Object Management Group}. 2024.
+\newblock Decision model and notation (dmn) v1.5.
+\newblock OMG standard.
+
+\bibitem[{Trooskens et~al.(2026)}]{compiledai2026}
+{[first name TBD]} Trooskens et~al. 2026.
+\newblock Compiled ai: Deterministic code generation for llm-based workflow
+  automation.
+\newblock ArXiv:2604.05150.
+
+\end{thebibliography}
