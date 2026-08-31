@@ -1,0 +1,66 @@
+[
+  {
+    "label": "tuned-7b-counterfactual",
+    "at": "2026-09-01T00:39:32",
+    "n": 50,
+    "exact": 44,
+    "exact_pct": 88.0,
+    "verdict_pct": 88.0,
+    "relaxed_pct": 88.0,
+    "ci95_cluster": [
+      68.0,
+      100.0
+    ],
+    "per_case": {
+      "cs-goodwill-coupon-cf": "10/10",
+      "finance-budget-overrun-cf": "10/10",
+      "hr-overtime-approval-cf": "5/10",
+      "proc-price-increase-cf": "10/10",
+      "sec-sharing-exception-cf": "9/10"
+    },
+    "mode": "cf"
+  },
+  {
+    "label": "raw-7b-counterfactual",
+    "at": "2026-09-01T00:40:32",
+    "n": 50,
+    "exact": 24,
+    "exact_pct": 48.0,
+    "verdict_pct": 76.0,
+    "relaxed_pct": 48.0,
+    "ci95_cluster": [
+      28.0,
+      62.0
+    ],
+    "per_case": {
+      "cs-goodwill-coupon-cf": "6/10",
+      "finance-budget-overrun-cf": "1/10",
+      "hr-overtime-approval-cf": "5/10",
+      "proc-price-increase-cf": "7/10",
+      "sec-sharing-exception-cf": "5/10"
+    },
+    "mode": "cf"
+  },
+  {
+    "label": "raw-7b-3shot-icl",
+    "at": "2026-09-01T00:41:31",
+    "n": 60,
+    "exact": 30,
+    "exact_pct": 50.0,
+    "verdict_pct": 75.0,
+    "relaxed_pct": 51.7,
+    "ci95_cluster": [
+      28.3,
+      71.7
+    ],
+    "per_case": {
+      "cs-goodwill-coupon": "9/10",
+      "finance-budget-overrun": "8/10",
+      "hr-overtime-approval": "1/10",
+      "log-return-disposition": "4/10",
+      "proc-price-increase": "3/10",
+      "sec-sharing-exception": "5/10"
+    },
+    "mode": "icl"
+  }
+]
