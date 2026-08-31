@@ -29,6 +29,8 @@ AI가 한 번 작업하게 하세요. OpenWorkCompiler는 이후 작업을 안�
 
 ## 사람과 AI의 역할 분담: WHAT은 사람이, HOW는 컴파일러가
 
+<p align="center"><img src="docs/images/compile-loop.png" alt="한 번의 성공을, 반복 가능한 실행으로 — 기록·컴파일·검증·승격·반복 루프" width="840"></p>
+
 ```mermaid
 flowchart LR
     subgraph HUMAN["사람 — 무엇을(WHAT) · 맞는지(검증)"]
@@ -89,6 +91,8 @@ flowchart LR
 | 결과 재현 | — | **6/8 일치** (`respond` 2/2는 SLM 게이트 PASS; `shell_curl` 2개는 실행마다 달라지는 트레이스 목록 조회) | |
 
 셸 스텝(`shell_sed`, `shell_python3`, `shell_find`, `shell_curl`)은 code 계층으로 내려가 토큰 0·수십 ms에 재실행됐고(컴파일·탐색 출력은 그대로 일치, 프록시 트레이스 목록 `curl`은 세션마다 내용이 달라 불일치로 표시), 남은 비용은 최종 요약(`respond`)뿐인데, 이 스텝은 녹화의 5–6단계에서 **로컬 `qwen2.5:7b`로 승격**되어 실행됩니다(6,551 토큰, $0, 게이트 2/2 PASS) — 같은 세션에서 `qwen2.5:3b`는 자리표시자를 남겨 게이트에 거부됐습니다.
+
+<p align="center"><img src="docs/images/case-renewal.png" alt="사례 — 고객 계약 갱신 제안서: 비용 −97%, 속도 7배, 결과 동일" width="840"></p>
 
 **실제 업무 작업 — 고객 계약 갱신 제안서** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): CRM 활성 계약 확인 → 3개월 사용량 집계 → 현행 가격정책으로 산정 → 제안서·가격 JSON 작성; 원본은 [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
 
@@ -230,6 +234,23 @@ work customer_renewal_codex {
 설정 방법과 각 단계가 실행하는 명령은 [Zero-Code 에이전트 프록시](#zero-code-에이전트-프록시-adaptersproxy) 섹션을, 입력 프롬프트·Codex 출력·컴파일 산출물·벤치마크 원본은 [`examples/demo/`](examples/demo/)를 참조하세요.
 
 ---
+
+## 조직의 "판단하는 방법"을 축적한다 — 결정 카탈로그 · 결정-SLM · 하네스 루프
+
+<p align="center"><img src="docs/images/judgment-accumulation.png" alt="좋은 답 하나가 아니라, 좋은 판단이 반복되는 구조" width="840"></p>
+
+AI가 "12%"라고 답해주는 것으로는 조직에 아무것도 남지 않습니다. OpenWorkCompiler는 판단 자체를 자산으로 만듭니다:
+**[조직 결정 카탈로그](examples/org/)** — 10개 조직 34개 결정 사례(할인 승인, 경비, 환불, 휴가, 발주, 계약 라우팅, 장애 분류, 리드 스코어링, 출하 보류 …)를 선언적 스펙 하나로 정의하고, 공용 엔진이 사례마다 온톨로지(개체·관계) · 정책(규칙) · **라벨된 판단 3,400건**(인용 규칙·근거 포함)을 결정론적으로 생성합니다. 명문 정책은 규칙으로, 정책이 의도적으로 열어둔 재량 밴드만 AI가 추천하고, 지정된 승인자가 결정하며, 모든 판정에 "왜"가 기록됩니다.
+
+<p align="center"><img src="docs/images/case-discount.png" alt="사례 — 할인 승인: 규칙 + AI 추천 + 사람 승인" width="840"></p>
+
+**판단은 배울 수 있습니다 (계산과 달리).** 정책을 프롬프트에 제공하는 방식으로 소형 모델을 훈련하면(RTX 4090 QLoRA 12분), 훈련에서 **정책 자체를 본 적 없는** 사례 6개에 대한 4중 완전 일치(판정·라우팅·파라미터·인용 규칙 + 인용 조건의 실제 성립 검증)가 raw 7b 16.7% → **68.3%**(verdict 수준 86.7%)로 뜁니다. 같은 방법으로 산술(파생)은 0/6 — 그래서 계산은 code 계층이 맡습니다 ([결과](examples/org/decision-slm/RESULTS.md) · [산술 대조 실험](examples/demo/customer-renewal-bench/slm-training/)).
+
+<p align="center"><img src="docs/images/decision-training.png" alt="조직의 판단 방식, 작은 AI가 배운다 — 처음 보는 정책 적용 정확도 8%→68%" width="840"></p>
+
+**빌드 완성도는 하네스 루프가 끌어올립니다.** `owc build harden`은 컴파일 타임 Producer-Reviewer 루프입니다 — 수정은 아무 코드 에이전트나, **채점은 결정론적 벤치마크**가: 재현 점수가 실측으로 오를 때만 수정을 수용하고 아니면 롤백하며, 실패 서명별 시도 이력이 영속되어 같은 실패에 예산을 두 번 쓰지 않고, 본질적으로 재현 불가한 출력(시각, 라이브 목록)은 추적하는 대신 명시적 사람-확인 게이트로 넘깁니다. 실전: Claude 세션 빌드 4/6 → **5/6 재현, 수렴** ([HARDEN.md](examples/demo/claude-code-bench/build/customer_renewal_claude/HARDEN.md)).
+
+<p align="center"><img src="docs/images/harness-loop.png" alt="수정은 AI가, 채점은 기계처럼 — 컴파일 타임 하네스 루프" width="840"></p>
 
 ## 전체 아키텍처 및 파이프라인 개요
 

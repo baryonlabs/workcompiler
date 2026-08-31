@@ -29,6 +29,8 @@ Let AI do the work once. OpenWorkCompiler learns how to run it reliably thereaft
 
 ## Human / AI split: humans own the WHAT, the compiler owns the HOW
 
+<p align="center"><img src="docs/images/compile-loop.png" alt="One success, made repeatable — record·compile·verify·promote·replay loop" width="840"></p>
+
 ```mermaid
 flowchart LR
     subgraph HUMAN["Human — what (WHAT) · whether it is right (verification)"]
@@ -89,6 +91,8 @@ A **real interactive Codex session**, not a mock-up. Install `owc` with one line
 | outputs reproduced | — | **6/8** (`respond` 2/2 = SLM gate PASS; the two `shell_curl` steps query the proxy's trace list, which differs per session) | |
 
 The shell steps (`shell_sed`, `shell_python3`, `shell_find`, `shell_curl`) lowered to the code tier and replayed with zero tokens in tens of milliseconds (compile and search output identical; the proxy trace-list `curl` differs per session and is reported as a mismatch); the remaining cost is the final summary (`respond`), which steps 5–6 of the recording **promote to a local `qwen2.5:7b`** (6,551 tokens, $0, gate 2/2 PASS) — on the same session `qwen2.5:3b` left a placeholder and was rejected by the gate.
+
+<p align="center"><img src="docs/images/case-renewal.png" alt="Case — customer renewal proposal: −97% cost, 7× faster, identical outputs" width="840"></p>
 
 **A real business task — customer contract renewal proposal** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): verify the active CRM contract → aggregate 3 months of usage → price with the current policy → write the proposal and pricing JSON; artifacts in [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
 
@@ -230,6 +234,23 @@ work customer_renewal_codex {
 Setup and the exact commands each step runs are in the [Zero-Code Agent Proxy](#zero-code-agent-proxy-adaptersproxy) section; the prompts, Codex transcripts, compiled artifacts and benchmark are in [`examples/demo/`](examples/demo/).
 
 ---
+
+## Accumulating how the organization judges — decision catalog · decision-SLM · harness loop
+
+<p align="center"><img src="docs/images/judgment-accumulation.png" alt="Not one good answer, but a structure where good judgment repeats" width="840"></p>
+
+An AI answering "12%" leaves nothing behind. OpenWorkCompiler turns the judgment itself into an asset:
+the **[organizational decision catalog](examples/org/)** defines 34 decision cases across 10 departments (discount approval, expenses, refunds, leave, purchase orders, contract routing, incident triage, lead scoring, shipment holds …) as one declarative spec; a generic engine emits, per case, the ontology (entities·relations), the policy rules, and **3,400 labeled judgments** with cited rules and rationale. Explicit policy runs as rules, the AI recommends only inside bands the policy deliberately leaves open, a named approver decides, and every verdict records its "why".
+
+<p align="center"><img src="docs/images/case-discount.png" alt="Case — discount approval: rules + AI recommendation + human approval" width="840"></p>
+
+**Judgment is learnable (unlike arithmetic).** Training a small model with the policy in the prompt (12 min of QLoRA on an RTX 4090) lifts four-way exact match (verdict·route·params·cited rule, with the cited condition verified against the record) on six policies **never seen in training** from 16.7% (raw 7b) to **68.3%** (verdict-level 86.7%). The same method scores 0/6 on multi-step arithmetic — which is why computation belongs to the code tier ([results](examples/org/decision-slm/RESULTS.md) · [the arithmetic contrast](examples/demo/customer-renewal-bench/slm-training/)).
+
+<p align="center"><img src="docs/images/decision-training.png" alt="A small model learns the organization's way of judging — unseen-policy accuracy 8%→68%" width="840"></p>
+
+**Build completeness comes from a harness loop.** `owc build harden` is a compile-time Producer-Reviewer loop — any coding agent proposes fixes, and the **deterministic benchmark is the reviewer**: a fix survives only if the reproduced-output score measurably improves, failed attempts persist per failure signature so budget is never re-spent on the same dead end, and inherently run-dependent outputs (timestamps, live listings) go to an explicit needs-human gate instead of being chased. Real run: the Claude-session build went 4/6 → **5/6 reproduced, converged** ([HARDEN.md](examples/demo/claude-code-bench/build/customer_renewal_claude/HARDEN.md)).
+
+<p align="center"><img src="docs/images/harness-loop.png" alt="AI fixes, machine grades — the compile-time harness loop" width="840"></p>
 
 ## High-Level Architecture & Pipeline Overview
 
