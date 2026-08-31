@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.6.0 — 2026-08-31
+
+조직의 '판단하는 방법'을 실행 가능한 자산으로 — the decision catalog, the training win, and the compile-time harness loop.
 
 - **Cache freshness**: every cache entry now stores a fingerprint of the upstream step outputs it was computed from; a run whose replayed code outputs differ (the CRM record changed, the policy was replaced) skips the entry as *stale* and escalates again, noting why in the report. `owc build run --no-cache` bypasses the cache; `owc build cache list|clear <build> [--action a]` inspects and prunes it. Entries written before v0.5.1 carry no fingerprint and stay valid until refreshed.
 

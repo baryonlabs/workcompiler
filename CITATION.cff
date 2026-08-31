@@ -6,7 +6,7 @@ authors:
     given-names: Seungwoo
     affiliation: Baryon Labs
 type: software
-version: 0.5.0
+version: 0.6.0
 date-released: 2026-08-31
 repository-code: https://github.com/baryonlabs/workcompiler
 url: https://baryonlabs.github.io/workcompiler/
