@@ -89,6 +89,7 @@ cost-quality Pareto + FAR/FRR 곡선.
 
 - **C1**: Progressive Crystallization 2607.07052 · WALT 2510.01524 · Amazon tool-making 2607.08010 ·
   Compiled AI 2604.05150 · 대조 계보 DSPy/ADAS/AFlow/GPTSwarm(프로그램 탐색, LLM 하향 없음) ·
+  NOOA류 코드-네이티브 에이전트 프레임워크(LLM을 프로그램 *안에* 상주시킴 — 우리는 반대로 밖으로 내림) ·
   FrugalGPT/RouteLLM(전 티어 LLM cascade)
 - **C2**: VeriFin 2608.10213 · ERBench 2403.05266 · AutoMix 2310.12963 · Daikon(ICSE'99) ·
   Auto-Validate by-History 2306.02421 · SelfCheckGPT 2303.08896(anti-baseline) · RAGAS 2309.15217(최강 반론) ·

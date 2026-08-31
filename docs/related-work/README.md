@@ -32,6 +32,18 @@ Classical compilers (LLVM/Clang) and LLMs loop together; an abstract business-le
 - ACCLAIM (Agentic Code Optimization via Compiler-LLM Cooperation) — uses the compiler toolchain for translation validation of LLM-generated code.
 - The New Compiler Stack — survey on LLM+compiler synergy.
 
+### Trend 5: Code-native agent frameworks (the opposite direction)
+The agent is a program artifact from day one — but the LLM stays *inside* the program at run time.
+
+- NOOA (NVIDIA-labs OO Agents, [github.com/nvidia-nemo/labs-OO-Agents](https://github.com/nvidia-nemo/labs-OO-Agents)) —
+  an agent is a Python class: fields are state, docstrings are prompts, type annotations are the I/O
+  contract, and a method whose body is `...` is implemented by the LLM at run time (code-as-action in a
+  REPL, typed outputs with auto-retry, a built-in trace viewer). **Opposite direction to ours**: NOOA
+  embeds the LLM permanently inside the program (every `...` call is an inference call, every run),
+  while OpenWorkCompiler lowers LLM execution *out of* the program tier by tier until repeat runs are
+  deterministic. No compilation, caching, reproduction benchmarking, or SLM promotion concepts in its
+  docs — which also makes it a natural *front-end*: a NOOA session, traced, is compilable by us.
+
 ## 2. Frontier labs and researchers
 
 ### UC Berkeley — SqueezeAI Lab
