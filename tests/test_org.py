@@ -14,6 +14,10 @@ from core.build import slm
 
 @pytest.fixture()
 def registry(tmp_path, monkeypatch):
+    # CI runners have no git identity configured; commits (fixture's and org.publish's) need one
+    for var, value in [("GIT_AUTHOR_NAME", "owc-test"), ("GIT_AUTHOR_EMAIL", "owc@test"),
+                       ("GIT_COMMITTER_NAME", "owc-test"), ("GIT_COMMITTER_EMAIL", "owc@test")]:
+        monkeypatch.setenv(var, value)
     bare = tmp_path / "registry.git"
     subprocess.run(["git", "init", "--bare", "--quiet", str(bare)], check=True)
     clone = tmp_path / "org-clone"
