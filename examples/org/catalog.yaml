@@ -1,0 +1,688 @@
+# 조직 결정 카탈로그 — 30개 사례, 10개 조직.
+#
+# 각 사례는 "판단하는 방법"을 데이터로 만든 것이다:
+#   ontology  — 이 결정이 다루는 개체·속성·관계(의미). "전략고객", "이탈위험", "본부장 승인 필요"는
+#               프롬프트 문구가 아니라 구조다.
+#   features  — 인스턴스 샘플링 분포(코퍼스 생성용).
+#   rules     — 명문 정책(위에서부터 첫 일치가 적용; 문서의 '단서 조항'처럼 구체적인 것이 먼저).
+#               verdict: approve|reject|hold|escalate|classified · route: 누가 승인/처리하는가
+#               defer: slm_recommend = 정책이 의도적으로 열어둔 밴드 — AI가 set: 범위 안에서 추천하고
+#               route: 의 사람이 승인한다.
+#   fallback  — 규칙이 침묵하는 상황은 추측하지 않고 사람에게 간다 (escalate, don't guess).
+#
+# 엔진(engine.py)이 이 스펙만으로 인스턴스·정답 라벨·온톨로지/정책 산출물을 결정론적으로 만든다.
+
+cases:
+  # ───────────────────────────── 영업 (Sales)
+  - id: sales-discount-approval
+    org: 영업
+    role: 영업대표
+    decision: 고객 할인율 승인·라우팅
+    ontology:
+      entities:
+        customer: [segment(strategic|mid|smb), churn_risk(low|med|high), years_active]
+        deal: [requested_discount_pct, margin_pct, annual_value_krw]
+        policy: [min_margin_pct=10, director_threshold_pct=10, strategic_cap_pct=12]
+      relations:
+        - "customer.segment=strategic ∧ churn_risk=high → 할인 상한이 12%로 확장된다"
+        - "requested_discount_pct>10 → 본부장 승인이 필요하다"
+        - "margin_pct-requested_discount_pct<10 → 최소 마진 정책 위반"
+    features:
+      segment: {type: choice, values: [strategic, mid, smb]}
+      churn_risk: {type: choice, values: [low, med, high]}
+      years_active: {type: int, min: 0, max: 12}
+      requested_discount_pct: {type: int, min: 0, max: 25}
+      margin_pct: {type: int, min: 12, max: 45}
+    rules:
+      - name: min_margin_violation
+        when: margin_pct - requested_discount_pct < 10
+        verdict: reject
+        why: 최소 마진 10% 정책 위반 — 할인 후 마진 부족
+      - name: strategic_retention_band
+        when: segment == strategic and churn_risk == high and requested_discount_pct <= 12
+        verdict: approve
+        route: 본부장
+        set: {max_discount_pct: 12}
+        why: 전략고객 이탈방어 — 12%까지 허용하되 본부장 승인
+      - name: over_director_threshold
+        when: requested_discount_pct > 10
+        verdict: escalate
+        route: 본부장
+        why: 10% 초과 할인은 본부장 승인 필요
+      - name: standard_auto
+        when: requested_discount_pct <= 5
+        verdict: approve
+        route: auto
+        why: 표준 재량 범위
+      - name: gray_band_recommend
+        when: requested_discount_pct <= 10
+        defer: slm_recommend
+        route: 팀장
+        set: {recommend_between: [5, 10]}
+        why: 5–10%는 정책이 열어둔 재량 밴드 — AI 추천 + 팀장 승인
+    fallback: {verdict: escalate, route: 본부장}
+
+  - id: sales-quote-expedite
+    org: 영업
+    role: 영업운영
+    decision: 특가 견적 처리 우선순위
+    ontology:
+      entities: {quote: [amount_krw, close_prob_pct, days_to_quarter_end], customer: [segment]}
+      relations: ["분기말 임박 ∧ 고액 → 당일 처리", "성사확률 낮음 → 표준 큐"]
+    features:
+      amount_krw: {type: int, min: 1000000, max: 500000000}
+      close_prob_pct: {type: int, min: 5, max: 95}
+      days_to_quarter_end: {type: int, min: 0, max: 90}
+      segment: {type: choice, values: [strategic, mid, smb]}
+    rules:
+      - {name: quarter_end_large, when: days_to_quarter_end <= 7 and amount_krw >= 100000000, verdict: classified, set: {queue: same_day}, route: auto, why: 분기말 고액 딜}
+      - {name: strategic_fast, when: segment == strategic and close_prob_pct >= 50, verdict: classified, set: {queue: next_day}, route: auto, why: 전략고객 우선}
+      - {name: low_prob, when: close_prob_pct < 20, verdict: classified, set: {queue: standard}, route: auto, why: 성사확률 낮음}
+      - {name: default_band, when: amount_krw >= 0, defer: slm_recommend, route: 팀장, set: {queues: [same_day, next_day, standard]}, why: 중간 구간은 맥락 판단}
+
+  - id: sales-renewal-priority
+    org: 영업
+    role: 계정관리자
+    decision: 갱신 대상 우선순위 분류
+    ontology:
+      entities: {contract: [days_to_expiry, annual_value_krw], customer: [churn_risk, nps]}
+      relations: ["만료 임박 ∧ 이탈위험 높음 → 최우선", "NPS 낮음 → 리스크 가중"]
+    features:
+      days_to_expiry: {type: int, min: 1, max: 365}
+      annual_value_krw: {type: int, min: 5000000, max: 800000000}
+      churn_risk: {type: choice, values: [low, med, high]}
+      nps: {type: int, min: -100, max: 100}
+    rules:
+      - {name: urgent, when: days_to_expiry <= 30 and churn_risk == high, verdict: classified, set: {priority: P1}, route: auto, why: 임박+고위험}
+      - {name: high_value, when: days_to_expiry <= 60 and annual_value_krw >= 200000000, verdict: classified, set: {priority: P1}, route: auto, why: 고액 임박}
+      - {name: watch, when: days_to_expiry <= 90, verdict: classified, set: {priority: P2}, route: auto, why: 분기 내 만료}
+      - {name: routine, when: days_to_expiry > 90, verdict: classified, set: {priority: P3}, route: auto, why: 여유 구간}
+
+  # ───────────────────────────── 재무 (Finance)
+  - id: finance-expense-approval
+    org: 재무
+    role: 재무담당자
+    decision: 경비 승인
+    ontology:
+      entities: {expense: [amount_krw, category, has_receipt, days_late], employee: [monthly_total_krw]}
+      relations: ["영수증 없음 → 보류", "한도 초과 → 부서장 승인", "월 누적 초과 → 재무 검토"]
+    features:
+      amount_krw: {type: int, min: 5000, max: 3000000}
+      category: {type: choice, values: [meal, travel, equipment, entertainment, education]}
+      has_receipt: {type: bool, p: 0.9}
+      days_late: {type: int, min: 0, max: 60}
+      monthly_total_krw: {type: int, min: 0, max: 5000000}
+    rules:
+      - {name: no_receipt, when: has_receipt == false, verdict: hold, route: 제출자, why: 증빙 없이는 판단하지 않는다}
+      - {name: stale_claim, when: days_late > 30, verdict: escalate, route: 재무팀장, why: 지연 청구는 수기 검토}
+      - {name: entertainment_cap, when: category == entertainment and amount_krw > 300000, verdict: escalate, route: 부서장, why: 접대비 한도}
+      - {name: monthly_overflow, when: monthly_total_krw > 3000000, verdict: escalate, route: 재무팀장, why: 월 누적 한도 초과}
+      - {name: small_auto, when: amount_krw <= 100000, verdict: approve, route: auto, why: 소액 자동 승인}
+      - {name: standard, when: amount_krw <= 1000000, verdict: approve, route: 팀장, why: 표준 결재선}
+    fallback: {verdict: escalate, route: 부서장}
+
+  - id: finance-payment-extension
+    org: 재무
+    role: 채권담당자
+    decision: 지급기한 연장 승인
+    ontology:
+      entities: {account: [overdue_krw, extension_days, past_extensions, credit_grade]}
+      relations: ["신용등급 낮음 ∧ 반복 연장 → 거절", "단기 소액 → 자동 승인"]
+    features:
+      overdue_krw: {type: int, min: 100000, max: 300000000}
+      extension_days: {type: int, min: 7, max: 120}
+      past_extensions: {type: int, min: 0, max: 5}
+      credit_grade: {type: choice, values: [A, B, C, D]}
+    rules:
+      - {name: repeat_bad_credit, when: 'credit_grade in [C|D] and past_extensions >= 2', verdict: reject, why: 반복 연장 + 저신용}
+      - {name: short_small, when: extension_days <= 14 and overdue_krw <= 5000000, verdict: approve, route: auto, why: 단기 소액}
+      - {name: large_exposure, when: overdue_krw > 100000000, verdict: escalate, route: CFO, why: 고액 익스포저}
+      - {name: gray_band, when: extension_days <= 60, defer: slm_recommend, route: 재무팀장, set: {recommend_days_max: 60}, why: 중간 구간 — 관계·이력 맥락 판단}
+    fallback: {verdict: escalate, route: 재무팀장}
+
+  - id: finance-budget-overrun
+    org: 재무
+    role: 예산관리자
+    decision: 예산 초과 결재 라우팅
+    features:
+      overrun_pct: {type: int, min: 1, max: 60}
+      dept_priority: {type: choice, values: [core, growth, support]}
+      remaining_quarter_budget_pct: {type: int, min: 0, max: 100}
+    ontology:
+      entities: {request: [overrun_pct], dept: [dept_priority, remaining_quarter_budget_pct]}
+      relations: ["초과율·부서 우선순위가 결재선을 정한다"]
+    rules:
+      - {name: minor, when: overrun_pct <= 5, verdict: approve, route: 팀장, why: 경미}
+      - {name: core_growth, when: 'overrun_pct <= 15 and dept_priority in [core|growth]', verdict: approve, route: 본부장, why: 핵심부서 한시 허용}
+      - {name: depleted, when: remaining_quarter_budget_pct < 10, verdict: escalate, route: CFO, why: 분기 예산 고갈}
+      - {name: major, when: overrun_pct > 15, verdict: escalate, route: CFO, why: 중대 초과}
+    fallback: {verdict: escalate, route: 본부장}
+
+  # ───────────────────────────── 고객지원 (CS)
+  - id: cs-refund-decision
+    org: 고객지원
+    role: CS상담원
+    decision: 환불 승인 (examples/cases/refund-approval 의 정책 요약판)
+    ontology:
+      entities: {refund: [days_since_payment, amount_krw, is_duplicate, receipt_ok]}
+      relations: ["증빙 불일치 → 보류(조항5)", "중복결제 → 전액(조항3)", "10만원 초과 → 재무 승인(조항4)"]
+    features:
+      days_since_payment: {type: int, min: 0, max: 90}
+      amount_krw: {type: int, min: 1000, max: 500000}
+      is_duplicate: {type: bool, p: 0.15}
+      receipt_ok: {type: bool, p: 0.92}
+    rules:
+      - {name: clause5_evidence, when: receipt_ok == false, verdict: hold, route: 고객, why: 증빙 불일치 — 조항 5}
+      - {name: clause3_duplicate, when: is_duplicate == true, verdict: approve, set: {refund_pct: 100}, route: auto, why: 중복결제 전액 — 조항 3}
+      - {name: clause1_full, when: days_since_payment <= 7, verdict: approve, set: {refund_pct: 100}, route: auto, why: 7일 내 전액 — 조항 1}
+      - {name: clause2_half, when: days_since_payment <= 30, verdict: approve, set: {refund_pct: 50}, route: auto, why: 8–30일 50% — 조항 2}
+      - {name: clause3_none, when: days_since_payment > 30, verdict: reject, why: 31일 이후 환불 불가 — 조항 3}
+    fallback: {verdict: escalate, route: CS팀장}
+
+  - id: cs-goodwill-coupon
+    org: 고객지원
+    role: CS상담원
+    decision: 보상 쿠폰 지급
+    features:
+      complaint_severity: {type: choice, values: [low, med, high]}
+      customer_ltv_krw: {type: int, min: 0, max: 20000000}
+      coupons_this_year: {type: int, min: 0, max: 6}
+      our_fault: {type: bool, p: 0.6}
+    ontology:
+      entities: {complaint: [complaint_severity, our_fault], customer: [customer_ltv_krw, coupons_this_year]}
+      relations: ["귀책 아님 ∧ 경미 → 미지급", "연간 지급 한도 존재"]
+    rules:
+      - {name: abuse_guard, when: coupons_this_year >= 4, verdict: escalate, route: CS팀장, why: 연간 한도 도달 — 남용 점검}
+      - {name: not_our_fault_low, when: our_fault == false and complaint_severity == low, verdict: reject, why: 귀책 아님·경미}
+      - {name: high_sev, when: complaint_severity == high and our_fault == true, verdict: approve, set: {coupon_krw: 30000}, route: auto, why: 중대 귀책}
+      - {name: gray, when: 'complaint_severity in [low|med]', defer: slm_recommend, route: 팀장, set: {coupon_range_krw: [5000, 20000]}, why: 재량 밴드}
+    fallback: {verdict: escalate, route: CS팀장}
+
+  - id: cs-ticket-tiering
+    org: 고객지원
+    role: CS운영
+    decision: 문의 에스컬레이션 티어 분류
+    features:
+      channel: {type: choice, values: [chat, email, phone, social]}
+      sentiment: {type: choice, values: [calm, upset, furious]}
+      is_paying: {type: bool, p: 0.7}
+      mentions_legal: {type: bool, p: 0.05}
+    ontology:
+      entities: {ticket: [channel, sentiment, mentions_legal], customer: [is_paying]}
+      relations: ["법적 언급 → 즉시 상급 이관", "소셜 채널 ∧ 격앙 → 평판 리스크"]
+    rules:
+      - {name: legal_mention, when: mentions_legal == true, verdict: classified, set: {tier: T3_legal}, route: 법무, why: 법적 리스크}
+      - {name: social_fury, when: channel == social and sentiment == furious, verdict: classified, set: {tier: T2_urgent}, route: CS팀장, why: 평판 리스크}
+      - {name: paying_upset, when: is_paying == true and sentiment != calm, verdict: classified, set: {tier: T2_urgent}, route: auto, why: 유료 고객 불만}
+      - {name: routine, when: sentiment == calm, verdict: classified, set: {tier: T1_routine}, route: auto, why: 일반 문의}
+    fallback: {verdict: classified, route: auto, set: {tier: T1_routine}}
+
+  # ───────────────────────────── 인사 (HR)
+  - id: hr-leave-approval
+    org: 인사
+    role: 팀장
+    decision: 휴가 승인
+    features:
+      days_requested: {type: int, min: 1, max: 20}
+      notice_days: {type: int, min: 0, max: 60}
+      team_absent_pct: {type: int, min: 0, max: 60}
+      balance_days: {type: int, min: 0, max: 25}
+    ontology:
+      entities: {request: [days_requested, notice_days], team: [team_absent_pct], employee: [balance_days]}
+      relations: ["잔여일 부족 → 반려", "팀 부재율 높음 → 조정 협의"]
+    rules:
+      - {name: no_balance, when: balance_days < 1, verdict: reject, why: 잔여 휴가 없음}
+      - {name: over_balance, when: days_requested > 10 and notice_days < 14, verdict: escalate, route: 부서장, why: 장기+촉박 통보}
+      - {name: team_capacity, when: team_absent_pct > 30, verdict: hold, route: 팀장, why: 팀 부재율 초과 — 일정 협의}
+      - {name: standard, when: days_requested <= 5, verdict: approve, route: auto, why: 표준 승인}
+      - {name: long_planned, when: notice_days >= 14, verdict: approve, route: 팀장, why: 사전 계획 장기휴가}
+    fallback: {verdict: escalate, route: 부서장}
+
+  - id: hr-overtime-approval
+    org: 인사
+    role: 인사담당자
+    decision: 초과근무 승인
+    features:
+      hours_requested: {type: int, min: 1, max: 30}
+      weekly_total_hours: {type: int, min: 35, max: 60}
+      is_project_critical: {type: bool, p: 0.4}
+    ontology:
+      entities: {request: [hours_requested, is_project_critical], employee: [weekly_total_hours]}
+      relations: ["주 52시간 상한은 법정 제약 — 규칙이 절대 우선"]
+    rules:
+      - {name: legal_cap, when: weekly_total_hours > 52, verdict: reject, why: 주 52시간 법정 상한}
+      - {name: near_cap, when: weekly_total_hours >= 48, verdict: escalate, route: 인사팀장, why: 상한 임박 — 건강권 점검}
+      - {name: critical_small, when: is_project_critical == true and hours_requested <= 8, verdict: approve, route: 팀장, why: 핵심 프로젝트 단기}
+      - {name: routine, when: hours_requested <= 4, verdict: approve, route: auto, why: 소량}
+    fallback: {verdict: escalate, route: 인사팀장}
+
+  - id: hr-resume-screening
+    org: 인사
+    role: 채용담당자
+    decision: 서류 전형 라우팅
+    features:
+      years_experience: {type: int, min: 0, max: 20}
+      skill_match_pct: {type: int, min: 10, max: 100}
+      referral: {type: bool, p: 0.15}
+      salary_gap_pct: {type: int, min: -30, max: 60}
+    ontology:
+      entities: {candidate: [years_experience, skill_match_pct, referral], offer: [salary_gap_pct]}
+      relations: ["스킬 적합도·경력이 1차 판단, 급여 갭은 협상 리스크"]
+    rules:
+      - {name: strong_match, when: skill_match_pct >= 80 and years_experience >= 3, verdict: classified, set: {stage: interview}, route: auto, why: 강한 적합}
+      - {name: referral_boost, when: referral == true and skill_match_pct >= 60, verdict: classified, set: {stage: interview}, route: auto, why: 추천 채용}
+      - {name: salary_risk, when: salary_gap_pct > 40, verdict: escalate, route: 채용위원회, why: 급여 갭 과대}
+      - {name: weak, when: skill_match_pct < 40, verdict: classified, set: {stage: reject}, route: auto, why: 부적합}
+      - {name: gray, when: skill_match_pct < 80, defer: slm_recommend, route: 채용담당자, set: {stages: [interview, hold, reject]}, why: 중간 구간 — 서류 맥락 판단}
+
+  # ───────────────────────────── 구매 (Procurement)
+  - id: proc-po-approval
+    org: 구매
+    role: 구매담당자
+    decision: 발주 승인 라우팅
+    features:
+      amount_krw: {type: int, min: 100000, max: 2000000000}
+      vendor_registered: {type: bool, p: 0.85}
+      is_sole_source: {type: bool, p: 0.2}
+      budget_line_exists: {type: bool, p: 0.9}
+    ontology:
+      entities: {po: [amount_krw, is_sole_source], vendor: [vendor_registered], budget: [budget_line_exists]}
+      relations: ["미등록 공급사 → 등록 심사 선행", "수의계약 고액 → 감사 관점 상급 결재"]
+    rules:
+      - {name: unregistered, when: vendor_registered == false, verdict: hold, route: 구매팀, why: 공급사 등록 선행}
+      - {name: no_budget, when: budget_line_exists == false, verdict: escalate, route: 재무, why: 예산 항목 없음}
+      - {name: sole_source_large, when: is_sole_source == true and amount_krw > 50000000, verdict: escalate, route: 구매위원회, why: 고액 수의계약}
+      - {name: small, when: amount_krw <= 5000000, verdict: approve, route: auto, why: 소액}
+      - {name: mid, when: amount_krw <= 100000000, verdict: approve, route: 구매팀장, why: 표준 결재}
+    fallback: {verdict: escalate, route: CFO}
+
+  - id: proc-vendor-onboarding
+    org: 구매
+    role: 공급망관리자
+    decision: 공급사 등록 심사
+    features:
+      financial_grade: {type: choice, values: [A, B, C, D]}
+      compliance_flags: {type: int, min: 0, max: 4}
+      reference_count: {type: int, min: 0, max: 10}
+    ontology:
+      entities: {vendor: [financial_grade, compliance_flags, reference_count]}
+      relations: ["컴플라이언스 플래그는 등급과 무관하게 우선 검토"]
+    rules:
+      - {name: compliance_block, when: compliance_flags >= 2, verdict: reject, why: 컴플라이언스 다중 플래그}
+      - {name: one_flag, when: compliance_flags == 1, verdict: escalate, route: 법무, why: 플래그 1건 — 법무 확인}
+      - {name: strong, when: 'financial_grade in [A|B] and reference_count >= 2', verdict: approve, route: 구매팀장, why: 재무 건전 + 레퍼런스}
+      - {name: weak_finance, when: financial_grade == D, verdict: reject, why: 재무 위험}
+    fallback: {verdict: escalate, route: 구매위원회}
+
+  - id: proc-price-increase
+    org: 구매
+    role: 카테고리매니저
+    decision: 공급 단가 인상 수용
+    features:
+      increase_pct: {type: int, min: 1, max: 40}
+      market_index_pct: {type: int, min: -5, max: 30}
+      is_critical_part: {type: bool, p: 0.3}
+      alt_vendor_exists: {type: bool, p: 0.6}
+    ontology:
+      entities: {request: [increase_pct], market: [market_index_pct], part: [is_critical_part, alt_vendor_exists]}
+      relations: ["시장지수 대비 초과 인상 → 협상", "대체 공급사 없음 ∧ 핵심부품 → 수용 압력"]
+    rules:
+      - {name: below_market, when: increase_pct <= 3, verdict: approve, route: auto, why: 경미 인상}
+      - {name: critical_no_alt, when: is_critical_part == true and alt_vendor_exists == false and increase_pct <= 15, verdict: approve, route: 구매팀장, why: 공급 연속성 우선}
+      - {name: above_market, when: increase_pct > 20, verdict: reject, why: 시장 대비 과도 — 재협상}
+      - {name: negotiate_band, when: increase_pct <= 20, defer: slm_recommend, route: 구매팀장, set: {accept_up_to_pct: 15}, why: 협상 밴드 — 시장·관계 맥락}
+    fallback: {verdict: escalate, route: 구매위원회}
+
+  # ───────────────────────────── 법무 (Legal)
+  - id: legal-contract-routing
+    org: 법무
+    role: 법무담당자
+    decision: 계약 검토 라우팅
+    features:
+      contract_value_krw: {type: int, min: 1000000, max: 5000000000}
+      is_standard_template: {type: bool, p: 0.6}
+      has_liability_change: {type: bool, p: 0.25}
+      counterparty_country: {type: choice, values: [KR, US, EU, CN, OTHER]}
+    ontology:
+      entities: {contract: [contract_value_krw, is_standard_template, has_liability_change], counterparty: [counterparty_country]}
+      relations: ["표준 템플릿 무수정 → 자동 통과", "책임조항 변경 → 변호사 검토"]
+    rules:
+      - {name: template_clean, when: is_standard_template == true and has_liability_change == false and contract_value_krw <= 100000000, verdict: approve, route: auto, why: 표준 템플릿 무변경}
+      - {name: liability, when: has_liability_change == true, verdict: escalate, route: 사내변호사, why: 책임조항 변경}
+      - {name: cross_border, when: 'counterparty_country not_in [KR]', verdict: escalate, route: 사내변호사, why: 국제계약}
+      - {name: high_value, when: contract_value_krw > 1000000000, verdict: escalate, route: 법무총괄, why: 고액}
+    fallback: {verdict: escalate, route: 법무담당자}
+
+  - id: legal-nda-fastpass
+    org: 법무
+    role: 법무운영
+    decision: NDA 자동 승인
+    features:
+      is_our_template: {type: bool, p: 0.7}
+      term_years: {type: int, min: 1, max: 10}
+      mutual: {type: bool, p: 0.8}
+    ontology:
+      entities: {nda: [is_our_template, term_years, mutual]}
+      relations: ["자사 표준 ∧ 상호 ∧ 5년 이하 → 자동"]
+    rules:
+      - {name: fastpass, when: is_our_template == true and mutual == true and term_years <= 5, verdict: approve, route: auto, why: 표준 상호 NDA}
+      - {name: one_way, when: mutual == false, verdict: escalate, route: 법무담당자, why: 일방 NDA}
+      - {name: long_term, when: term_years > 5, verdict: escalate, route: 법무담당자, why: 장기 구속}
+    fallback: {verdict: escalate, route: 법무담당자}
+
+  - id: legal-privacy-incident
+    org: 법무
+    role: 개인정보보호책임
+    decision: 개인정보 이슈 등급 분류
+    features:
+      records_affected: {type: int, min: 1, max: 1000000}
+      data_sensitivity: {type: choice, values: [contact, financial, health, credentials]}
+      external_exposure: {type: bool, p: 0.3}
+    ontology:
+      entities: {incident: [records_affected, data_sensitivity, external_exposure]}
+      relations: ["민감정보 ∧ 외부노출 → 신고 의무 검토(법정 시한)"]
+    rules:
+      - {name: reportable, when: external_exposure == true and records_affected >= 1000, verdict: classified, set: {grade: S1_report}, route: DPO, why: 신고 의무 검토}
+      - {name: sensitive, when: 'data_sensitivity in [health|credentials|financial] and external_exposure == true', verdict: classified, set: {grade: S1_report}, route: DPO, why: 민감정보 외부 노출}
+      - {name: internal_only, when: external_exposure == false, verdict: classified, set: {grade: S3_internal}, route: auto, why: 내부 한정}
+    fallback: {verdict: classified, route: DPO, set: {grade: S2_review}}
+
+  # ───────────────────────────── IT운영 (IT Ops)
+  - id: it-incident-priority
+    org: IT운영
+    role: 온콜엔지니어
+    decision: 장애 우선순위 분류 (examples/cases/incident-triage 의 정책 요약판)
+    features:
+      users_affected_pct: {type: int, min: 0, max: 100}
+      revenue_impacting: {type: bool, p: 0.3}
+      has_workaround: {type: bool, p: 0.5}
+      security_related: {type: bool, p: 0.1}
+    ontology:
+      entities: {incident: [users_affected_pct, revenue_impacting, has_workaround, security_related]}
+      relations: ["보안 관련 → 보안팀 동시 호출", "매출 영향 ∧ 광범위 → P1"]
+    rules:
+      - {name: security, when: security_related == true, verdict: classified, set: {priority: P1}, route: 보안팀, why: 보안 사건 병행 대응}
+      - {name: p1, when: revenue_impacting == true and users_affected_pct >= 30, verdict: classified, set: {priority: P1}, route: auto, why: 매출+광범위}
+      - {name: p2, when: users_affected_pct >= 30 and has_workaround == false, verdict: classified, set: {priority: P2}, route: auto, why: 광범위·우회 없음}
+      - {name: p3, when: users_affected_pct >= 5, verdict: classified, set: {priority: P3}, route: auto, why: 제한적 영향}
+      - {name: p4, when: users_affected_pct < 5, verdict: classified, set: {priority: P4}, route: auto, why: 경미}
+
+  - id: it-access-request
+    org: IT운영
+    role: 보안운영
+    decision: 시스템 접근권한 승인
+    features:
+      system_criticality: {type: choice, values: [low, med, high, crown_jewel]}
+      is_permanent: {type: bool, p: 0.3}
+      requester_level: {type: choice, values: [staff, lead, manager, director]}
+      has_training: {type: bool, p: 0.8}
+    ontology:
+      entities: {request: [is_permanent], system: [system_criticality], requester: [requester_level, has_training]}
+      relations: ["핵심 시스템 영구 권한 → 이중 승인", "교육 미이수 → 보류"]
+    rules:
+      - {name: training_gate, when: has_training == false, verdict: hold, route: 요청자, why: 보안교육 선행}
+      - {name: crown_jewel, when: system_criticality == crown_jewel, verdict: escalate, route: CISO, why: 최중요 시스템}
+      - {name: permanent_high, when: is_permanent == true and system_criticality == high, verdict: escalate, route: 보안팀장, why: 영구+고위험 이중 승인}
+      - {name: temp_low, when: 'is_permanent == false and system_criticality in [low|med]', verdict: approve, route: auto, why: 임시·저위험}
+    fallback: {verdict: escalate, route: 보안팀장}
+
+  - id: it-change-approval
+    org: IT운영
+    role: 변경관리자
+    decision: 배포(변경) 승인
+    features:
+      env: {type: choice, values: [dev, staging, prod]}
+      has_rollback: {type: bool, p: 0.85}
+      test_pass_pct: {type: int, min: 50, max: 100}
+      is_freeze_window: {type: bool, p: 0.15}
+    ontology:
+      entities: {change: [env, has_rollback, test_pass_pct], calendar: [is_freeze_window]}
+      relations: ["프리즈 기간 prod 변경 → CAB 예외 승인", "롤백 없음 → 반려"]
+    rules:
+      - {name: no_rollback_prod, when: env == prod and has_rollback == false, verdict: reject, why: 롤백 계획 없는 prod 변경}
+      - {name: freeze, when: env == prod and is_freeze_window == true, verdict: escalate, route: CAB, why: 프리즈 예외 절차}
+      - {name: test_gate, when: env == prod and test_pass_pct < 95, verdict: hold, route: 요청자, why: 테스트 기준 미달}
+      - {name: prod_ok, when: env == prod, verdict: approve, route: 변경관리자, why: 기준 충족 prod}
+      - {name: lower_env, when: 'env in [dev|staging]', verdict: approve, route: auto, why: 하위 환경}
+
+  # ───────────────────────────── 마케팅 (Marketing)
+  - id: mkt-lead-scoring
+    org: 마케팅
+    role: 마케팅운영
+    decision: 리드 등급 분류·이관
+    features:
+      company_size: {type: choice, values: [enterprise, mid, smb, unknown]}
+      engagement_score: {type: int, min: 0, max: 100}
+      budget_declared: {type: bool, p: 0.35}
+      competitor_user: {type: bool, p: 0.25}
+    ontology:
+      entities: {lead: [company_size, engagement_score, budget_declared, competitor_user]}
+      relations: ["엔터프라이즈 ∧ 고관여 → 즉시 영업 이관(MQL→SQL)"]
+    rules:
+      - {name: hot, when: company_size == enterprise and engagement_score >= 70, verdict: classified, set: {grade: SQL}, route: 영업, why: 즉시 이관}
+      - {name: budget_mid, when: budget_declared == true and engagement_score >= 50, verdict: classified, set: {grade: SQL}, route: 영업, why: 예산 확인 리드}
+      - {name: nurture, when: engagement_score >= 30, verdict: classified, set: {grade: MQL}, route: auto, why: 육성 대상}
+      - {name: cold, when: engagement_score < 30, verdict: classified, set: {grade: cold}, route: auto, why: 저관여}
+
+  - id: mkt-campaign-topup
+    org: 마케팅
+    role: 퍼포먼스마케터
+    decision: 캠페인 예산 증액 승인
+    features:
+      roas: {type: float, min: 0.2, max: 8.0, round: 1}
+      topup_pct: {type: int, min: 5, max: 100}
+      days_remaining: {type: int, min: 1, max: 30}
+    ontology:
+      entities: {campaign: [roas, days_remaining], request: [topup_pct]}
+      relations: ["ROAS 기준 미달 증액 → 반려", "고성과 소폭 증액 → 자동"]
+    rules:
+      - {name: low_roas, when: roas < 1.0, verdict: reject, why: 손익 미달 캠페인 증액 불가}
+      - {name: winner_boost, when: roas >= 3.0 and topup_pct <= 30, verdict: approve, route: auto, why: 고성과 소폭 증액}
+      - {name: large_topup, when: topup_pct > 50, verdict: escalate, route: 마케팅본부장, why: 대폭 증액}
+      - {name: gray, when: roas >= 1.0, defer: slm_recommend, route: 팀장, set: {topup_cap_pct: 50}, why: 중간 성과 — 추세 판단}
+
+  - id: mkt-influencer-vetting
+    org: 마케팅
+    role: 브랜드매니저
+    decision: 인플루언서 계약 심사
+    features:
+      follower_k: {type: int, min: 1, max: 5000}
+      engagement_pct: {type: float, min: 0.1, max: 15.0, round: 1}
+      brand_risk_flags: {type: int, min: 0, max: 3}
+      fee_krw: {type: int, min: 500000, max: 300000000}
+    ontology:
+      entities: {influencer: [follower_k, engagement_pct, brand_risk_flags], deal: [fee_krw]}
+      relations: ["리스크 플래그 → 브랜드 세이프티 우선", "팔로워 대비 관여율이 진성 지표"]
+    rules:
+      - {name: risk_block, when: brand_risk_flags >= 2, verdict: reject, why: 브랜드 세이프티}
+      - {name: bot_suspect, when: follower_k >= 500 and engagement_pct < 0.5, verdict: reject, why: 관여율 비정상 — 팔로워 구매 의심}
+      - {name: big_deal, when: fee_krw > 50000000, verdict: escalate, route: 마케팅본부장, why: 고액 계약}
+      - {name: standard, when: brand_risk_flags == 0 and engagement_pct >= 2.0, verdict: approve, route: 팀장, why: 건전 지표}
+    fallback: {verdict: escalate, route: 팀장}
+
+  # ───────────────────────────── 물류 (Logistics)
+  - id: log-delay-compensation
+    org: 물류
+    role: 물류CS
+    decision: 배송지연 보상 판정
+    features:
+      delay_days: {type: int, min: 1, max: 21}
+      is_promised_date: {type: bool, p: 0.5}
+      carrier_fault: {type: bool, p: 0.6}
+      order_krw: {type: int, min: 10000, max: 3000000}
+    ontology:
+      entities: {shipment: [delay_days, is_promised_date, carrier_fault], order: [order_krw]}
+      relations: ["약속일 배송(지정일) 지연 → 가중 보상", "운송사 귀책 → 구상권 병행"]
+    rules:
+      - {name: carrier_recourse, when: carrier_fault == true and delay_days >= 7, verdict: approve, set: {comp_pct_of_order: 10, recourse: true}, route: 물류팀장, why: 장기 지연 + 구상}
+      - {name: promised_miss, when: is_promised_date == true and delay_days >= 2, verdict: approve, set: {comp_pct_of_order: 5}, route: auto, why: 지정일 미준수}
+      - {name: minor, when: delay_days <= 2, verdict: reject, why: 경미 지연 — 안내만}
+      - {name: gray, when: delay_days <= 7, defer: slm_recommend, route: 팀장, set: {comp_pct_range: [0, 5]}, why: 중간 지연 — 사유 판단}
+    fallback: {verdict: escalate, route: 물류팀장}
+
+  - id: log-reorder-point
+    org: 물류
+    role: 재고관리자
+    decision: 재주문 발주 트리거
+    features:
+      days_of_stock: {type: int, min: 0, max: 120}
+      lead_time_days: {type: int, min: 3, max: 60}
+      demand_trend: {type: choice, values: [rising, flat, falling]}
+      is_seasonal_peak: {type: bool, p: 0.25}
+    ontology:
+      entities: {sku: [days_of_stock, lead_time_days, demand_trend, is_seasonal_peak]}
+      relations: ["재고일수 < 리드타임 → 발주 필수", "시즌 피크 → 안전재고 가중"]
+    rules:
+      - {name: stockout_risk, when: days_of_stock <= 7, verdict: approve, set: {order: expedite}, route: auto, why: 임박 결품}
+      - {name: seasonal, when: is_seasonal_peak == true and days_of_stock <= 30, verdict: approve, set: {order: standard_plus_safety}, route: auto, why: 피크 대비}
+      - {name: falling_hold, when: demand_trend == falling and days_of_stock >= 45, verdict: hold, route: auto, why: 수요 하락 — 과잉재고 방지}
+      - {name: rising_below_lt, when: demand_trend == rising and days_of_stock <= 30, verdict: approve, set: {order: standard}, route: auto, why: 수요 상승}
+    fallback: {verdict: hold, route: 재고관리자}
+
+  - id: log-return-disposition
+    org: 물류
+    role: 반품검수자
+    decision: 반품 입고 판정
+    features:
+      condition: {type: choice, values: [unopened, opened_good, damaged, missing_parts]}
+      days_since_delivery: {type: int, min: 1, max: 60}
+      is_defect_claim: {type: bool, p: 0.3}
+    ontology:
+      entities: {return: [condition, days_since_delivery, is_defect_claim]}
+      relations: ["하자 주장 ∧ 손상 → 품질팀 감정", "미개봉 조기 반품 → 재판매"]
+    rules:
+      - {name: defect_inspect, when: 'is_defect_claim == true and condition in [damaged|missing_parts]', verdict: classified, set: {disposition: qa_inspection}, route: 품질팀, why: 하자 감정}
+      - {name: restock, when: condition == unopened and days_since_delivery <= 14, verdict: classified, set: {disposition: restock}, route: auto, why: 재판매}
+      - {name: refurb, when: condition == opened_good, verdict: classified, set: {disposition: refurbish}, route: auto, why: 리퍼}
+      - {name: late_return, when: days_since_delivery > 30, verdict: escalate, route: CS팀장, why: 기한 초과 반품}
+    fallback: {verdict: classified, route: 반품검수자, set: {disposition: manual_review}}
+
+  # ───────────────────────────── 보안 (Security)
+  - id: sec-phishing-response
+    org: 보안
+    role: 보안분석가
+    decision: 피싱 신고 대응 등급
+    features:
+      reporters_count: {type: int, min: 1, max: 200}
+      credential_submitted: {type: bool, p: 0.15}
+      sender_spoofs_exec: {type: bool, p: 0.2}
+    ontology:
+      entities: {report: [reporters_count, credential_submitted, sender_spoofs_exec]}
+      relations: ["자격증명 유출 → 즉시 차단·초기화", "임원 사칭 → 표적공격 전환"]
+    rules:
+      - {name: cred_leak, when: credential_submitted == true, verdict: classified, set: {grade: SEV1_containment}, route: 보안팀장, why: 자격증명 유출 — 즉시 초기화}
+      - {name: exec_spoof, when: sender_spoofs_exec == true, verdict: classified, set: {grade: SEV2_targeted}, route: 보안팀장, why: 표적 공격 의심}
+      - {name: campaign, when: reporters_count >= 10, verdict: classified, set: {grade: SEV2_targeted}, route: auto, why: 조직 캠페인}
+      - {name: single, when: reporters_count < 10, verdict: classified, set: {grade: SEV3_routine}, route: auto, why: 일상 대응}
+
+  - id: sec-sharing-exception
+    org: 보안
+    role: 보안운영
+    decision: 외부 공유 예외 승인
+    features:
+      data_class: {type: choice, values: [public, internal, confidential, secret]}
+      duration_days: {type: int, min: 1, max: 365}
+      recipient_has_nda: {type: bool, p: 0.7}
+    ontology:
+      entities: {request: [duration_days], data: [data_class], recipient: [recipient_has_nda]}
+      relations: ["기밀 이상 ∧ NDA 없음 → 불가", "기간은 최소권한 원칙"]
+    rules:
+      - {name: secret_block, when: data_class == secret, verdict: reject, why: 최고 기밀 외부 공유 불가}
+      - {name: no_nda, when: 'data_class in [confidential] and recipient_has_nda == false', verdict: reject, why: NDA 없는 기밀 공유}
+      - {name: long_confidential, when: data_class == confidential and duration_days > 90, verdict: escalate, route: CISO, why: 장기 기밀 공유}
+      - {name: internal_ok, when: 'data_class in [public|internal] and duration_days <= 90', verdict: approve, route: auto, why: 저위험}
+    fallback: {verdict: escalate, route: 보안팀장}
+
+  # ───────────────────────────── 경영지원 (G&A)
+  - id: ga-travel-approval
+    org: 경영지원
+    role: 총무담당자
+    decision: 출장 승인
+    features:
+      est_cost_krw: {type: int, min: 100000, max: 15000000}
+      is_international: {type: bool, p: 0.3}
+      advance_days: {type: int, min: 0, max: 60}
+      has_client_meeting: {type: bool, p: 0.6}
+    ontology:
+      entities: {trip: [est_cost_krw, is_international, advance_days, has_client_meeting]}
+      relations: ["해외 ∧ 고액 → 본부장", "촉박 예약 → 비용 가중 사유 확인"]
+    rules:
+      - {name: intl_large, when: is_international == true and est_cost_krw > 5000000, verdict: escalate, route: 본부장, why: 해외 고액}
+      - {name: last_minute, when: advance_days < 3 and est_cost_krw > 1000000, verdict: escalate, route: 팀장, why: 촉박 예약 사유 확인}
+      - {name: client_standard, when: has_client_meeting == true and est_cost_krw <= 3000000, verdict: approve, route: 팀장, why: 고객 미팅 표준}
+      - {name: small_domestic, when: is_international == false and est_cost_krw <= 500000, verdict: approve, route: auto, why: 소액 국내}
+    fallback: {verdict: escalate, route: 팀장}
+
+  - id: ga-asset-disposal
+    org: 경영지원
+    role: 자산관리자
+    decision: 자산 폐기·매각 판정
+    features:
+      book_value_krw: {type: int, min: 0, max: 50000000}
+      age_years: {type: int, min: 1, max: 10}
+      contains_storage: {type: bool, p: 0.4}
+      is_functional: {type: bool, p: 0.6}
+    ontology:
+      entities: {asset: [book_value_krw, age_years, contains_storage, is_functional]}
+      relations: ["저장장치 포함 → 보안 소거 선행", "장부가 잔존 → 재무 승인"]
+    rules:
+      - {name: wipe_first, when: contains_storage == true, verdict: hold, route: 보안팀, why: 데이터 소거 선행}
+      - {name: book_value, when: book_value_krw > 1000000, verdict: escalate, route: 재무, why: 장부가 잔존 — 매각/상각 판단}
+      - {name: resale, when: is_functional == true and age_years <= 5, verdict: classified, set: {disposition: resale}, route: auto, why: 매각 가치}
+      - {name: scrap, when: is_functional == false, verdict: classified, set: {disposition: scrap}, route: auto, why: 폐기}
+    fallback: {verdict: classified, route: 자산관리자, set: {disposition: manual_review}}
+
+  - id: ga-donation-request
+    org: 경영지원
+    role: 대외협력
+    decision: 기부·후원 요청 심사
+    features:
+      amount_krw: {type: int, min: 100000, max: 100000000}
+      is_registered_nonprofit: {type: bool, p: 0.7}
+      aligns_with_esg: {type: bool, p: 0.5}
+      requester_conflict: {type: bool, p: 0.1}
+    ontology:
+      entities: {request: [amount_krw, requester_conflict], org: [is_registered_nonprofit, aligns_with_esg]}
+      relations: ["이해충돌 → 즉시 상급 심사", "미등록 단체 → 불가"]
+    rules:
+      - {name: conflict, when: requester_conflict == true, verdict: escalate, route: 감사, why: 이해충돌 심사}
+      - {name: unregistered, when: is_registered_nonprofit == false, verdict: reject, why: 미등록 단체}
+      - {name: esg_small, when: aligns_with_esg == true and amount_krw <= 5000000, verdict: approve, route: 팀장, why: ESG 부합 소액}
+      - {name: large, when: amount_krw > 20000000, verdict: escalate, route: 경영위원회, why: 고액 후원}
+    fallback: {verdict: escalate, route: 대외협력팀장}
+
+  # ───────────────────────────── 제품/품질 (Product & Quality)
+  - id: pq-feature-flag-rollout
+    org: 제품
+    role: 프로덕트매니저
+    decision: 기능 점진 배포 승인
+    features:
+      error_rate_delta_pct: {type: float, min: -1.0, max: 5.0, round: 2}
+      conversion_delta_pct: {type: float, min: -5.0, max: 5.0, round: 2}
+      current_rollout_pct: {type: int, min: 1, max: 50}
+    ontology:
+      entities: {experiment: [error_rate_delta_pct, conversion_delta_pct, current_rollout_pct]}
+      relations: ["오류율 악화 → 롤백", "전환 개선 ∧ 안정 → 확대"]
+    rules:
+      - {name: regression, when: error_rate_delta_pct > 0.5, verdict: reject, set: {action: rollback}, why: 오류율 악화 — 롤백}
+      - {name: winner, when: conversion_delta_pct >= 1.0 and error_rate_delta_pct <= 0.1, verdict: approve, set: {action: expand_2x}, route: auto, why: 명확한 개선}
+      - {name: flat, when: conversion_delta_pct < 0.5, defer: slm_recommend, route: PM, set: {actions: [hold, expand_slow, stop]}, why: 애매한 신호 — 정성 판단}
+    fallback: {verdict: hold, route: PM}
+
+  - id: pq-defect-batch-hold
+    org: 품질
+    role: 품질관리자
+    decision: 생산 배치 출하 보류 판정
+    features:
+      defect_rate_pct: {type: float, min: 0.0, max: 8.0, round: 2}
+      is_safety_related: {type: bool, p: 0.1}
+      customer_committed: {type: bool, p: 0.4}
+    ontology:
+      entities: {batch: [defect_rate_pct, is_safety_related], order: [customer_committed]}
+      relations: ["안전 관련 → 무조건 보류(출하 금지)", "허용 불량률 임계 존재"]
+    rules:
+      - {name: safety_hold, when: is_safety_related == true, verdict: hold, route: 품질위원회, why: 안전 관련 — 출하 금지}
+      - {name: over_threshold, when: defect_rate_pct > 2.0, verdict: hold, route: 품질팀장, why: 허용 불량률 초과}
+      - {name: marginal_committed, when: defect_rate_pct > 1.0 and customer_committed == true, verdict: escalate, route: 품질팀장, why: 납기 압박 vs 품질 — 사람 판단}
+      - {name: pass, when: defect_rate_pct <= 1.0, verdict: approve, route: auto, why: 기준 이내}
+    fallback: {verdict: hold, route: 품질팀장}

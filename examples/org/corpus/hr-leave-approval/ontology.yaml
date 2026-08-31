@@ -1,0 +1,16 @@
+case: hr-leave-approval
+org: 인사
+role: 팀장
+decision: 휴가 승인
+ontology:
+  entities:
+    request:
+    - days_requested
+    - notice_days
+    team:
+    - team_absent_pct
+    employee:
+    - balance_days
+  relations:
+  - 잔여일 부족 → 반려
+  - 팀 부재율 높음 → 조정 협의

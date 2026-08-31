@@ -1,0 +1,15 @@
+case: sales-renewal-priority
+org: 영업
+role: 계정관리자
+decision: 갱신 대상 우선순위 분류
+ontology:
+  entities:
+    contract:
+    - days_to_expiry
+    - annual_value_krw
+    customer:
+    - churn_risk
+    - nps
+  relations:
+  - 만료 임박 ∧ 이탈위험 높음 → 최우선
+  - NPS 낮음 → 리스크 가중

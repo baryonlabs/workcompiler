@@ -1,0 +1,13 @@
+case: hr-overtime-approval
+org: 인사
+role: 인사담당자
+decision: 초과근무 승인
+ontology:
+  entities:
+    request:
+    - hours_requested
+    - is_project_critical
+    employee:
+    - weekly_total_hours
+  relations:
+  - 주 52시간 상한은 법정 제약 — 규칙이 절대 우선

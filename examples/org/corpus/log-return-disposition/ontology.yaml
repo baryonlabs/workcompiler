@@ -1,0 +1,13 @@
+case: log-return-disposition
+org: 물류
+role: 반품검수자
+decision: 반품 입고 판정
+ontology:
+  entities:
+    return:
+    - condition
+    - days_since_delivery
+    - is_defect_claim
+  relations:
+  - 하자 주장 ∧ 손상 → 품질팀 감정
+  - 미개봉 조기 반품 → 재판매

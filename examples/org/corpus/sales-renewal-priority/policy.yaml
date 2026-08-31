@@ -1,0 +1,31 @@
+case: sales-renewal-priority
+rules:
+- name: urgent
+  when: days_to_expiry <= 30 and churn_risk == high
+  verdict: classified
+  set:
+    priority: P1
+  route: auto
+  why: 임박+고위험
+- name: high_value
+  when: days_to_expiry <= 60 and annual_value_krw >= 200000000
+  verdict: classified
+  set:
+    priority: P1
+  route: auto
+  why: 고액 임박
+- name: watch
+  when: days_to_expiry <= 90
+  verdict: classified
+  set:
+    priority: P2
+  route: auto
+  why: 분기 내 만료
+- name: routine
+  when: days_to_expiry > 90
+  verdict: classified
+  set:
+    priority: P3
+  route: auto
+  why: 여유 구간
+fallback: null

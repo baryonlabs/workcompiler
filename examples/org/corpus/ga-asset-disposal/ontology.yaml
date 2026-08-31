@@ -1,0 +1,14 @@
+case: ga-asset-disposal
+org: 경영지원
+role: 자산관리자
+decision: 자산 폐기·매각 판정
+ontology:
+  entities:
+    asset:
+    - book_value_krw
+    - age_years
+    - contains_storage
+    - is_functional
+  relations:
+  - 저장장치 포함 → 보안 소거 선행
+  - 장부가 잔존 → 재무 승인

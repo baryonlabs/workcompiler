@@ -1,0 +1,36 @@
+case: sales-discount-approval
+rules:
+- name: min_margin_violation
+  when: margin_pct - requested_discount_pct < 10
+  verdict: reject
+  why: 최소 마진 10% 정책 위반 — 할인 후 마진 부족
+- name: strategic_retention_band
+  when: segment == strategic and churn_risk == high and requested_discount_pct <=
+    12
+  verdict: approve
+  route: 본부장
+  set:
+    max_discount_pct: 12
+  why: 전략고객 이탈방어 — 12%까지 허용하되 본부장 승인
+- name: over_director_threshold
+  when: requested_discount_pct > 10
+  verdict: escalate
+  route: 본부장
+  why: 10% 초과 할인은 본부장 승인 필요
+- name: standard_auto
+  when: requested_discount_pct <= 5
+  verdict: approve
+  route: auto
+  why: 표준 재량 범위
+- name: gray_band_recommend
+  when: requested_discount_pct <= 10
+  defer: slm_recommend
+  route: 팀장
+  set:
+    recommend_between:
+    - 5
+    - 10
+  why: 5–10%는 정책이 열어둔 재량 밴드 — AI 추천 + 팀장 승인
+fallback:
+  verdict: escalate
+  route: 본부장

@@ -1,0 +1,23 @@
+case: proc-vendor-onboarding
+rules:
+- name: compliance_block
+  when: compliance_flags >= 2
+  verdict: reject
+  why: 컴플라이언스 다중 플래그
+- name: one_flag
+  when: compliance_flags == 1
+  verdict: escalate
+  route: 법무
+  why: 플래그 1건 — 법무 확인
+- name: strong
+  when: financial_grade in [A|B] and reference_count >= 2
+  verdict: approve
+  route: 구매팀장
+  why: 재무 건전 + 레퍼런스
+- name: weak_finance
+  when: financial_grade == D
+  verdict: reject
+  why: 재무 위험
+fallback:
+  verdict: escalate
+  route: 구매위원회

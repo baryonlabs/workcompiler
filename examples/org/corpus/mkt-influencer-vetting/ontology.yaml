@@ -1,0 +1,15 @@
+case: mkt-influencer-vetting
+org: 마케팅
+role: 브랜드매니저
+decision: 인플루언서 계약 심사
+ontology:
+  entities:
+    influencer:
+    - follower_k
+    - engagement_pct
+    - brand_risk_flags
+    deal:
+    - fee_krw
+  relations:
+  - 리스크 플래그 → 브랜드 세이프티 우선
+  - 팔로워 대비 관여율이 진성 지표

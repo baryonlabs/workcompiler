@@ -1,0 +1,23 @@
+case: mkt-influencer-vetting
+rules:
+- name: risk_block
+  when: brand_risk_flags >= 2
+  verdict: reject
+  why: 브랜드 세이프티
+- name: bot_suspect
+  when: follower_k >= 500 and engagement_pct < 0.5
+  verdict: reject
+  why: 관여율 비정상 — 팔로워 구매 의심
+- name: big_deal
+  when: fee_krw > 50000000
+  verdict: escalate
+  route: 마케팅본부장
+  why: 고액 계약
+- name: standard
+  when: brand_risk_flags == 0 and engagement_pct >= 2.0
+  verdict: approve
+  route: 팀장
+  why: 건전 지표
+fallback:
+  verdict: escalate
+  route: 팀장

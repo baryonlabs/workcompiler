@@ -1,0 +1,14 @@
+case: pq-defect-batch-hold
+org: 품질
+role: 품질관리자
+decision: 생산 배치 출하 보류 판정
+ontology:
+  entities:
+    batch:
+    - defect_rate_pct
+    - is_safety_related
+    order:
+    - customer_committed
+  relations:
+  - 안전 관련 → 무조건 보류(출하 금지)
+  - 허용 불량률 임계 존재

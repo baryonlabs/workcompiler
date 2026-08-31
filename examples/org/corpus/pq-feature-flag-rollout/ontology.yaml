@@ -1,0 +1,13 @@
+case: pq-feature-flag-rollout
+org: 제품
+role: 프로덕트매니저
+decision: 기능 점진 배포 승인
+ontology:
+  entities:
+    experiment:
+    - error_rate_delta_pct
+    - conversion_delta_pct
+    - current_rollout_pct
+  relations:
+  - 오류율 악화 → 롤백
+  - 전환 개선 ∧ 안정 → 확대

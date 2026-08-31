@@ -1,0 +1,13 @@
+case: mkt-lead-scoring
+org: 마케팅
+role: 마케팅운영
+decision: 리드 등급 분류·이관
+ontology:
+  entities:
+    lead:
+    - company_size
+    - engagement_score
+    - budget_declared
+    - competitor_user
+  relations:
+  - 엔터프라이즈 ∧ 고관여 → 즉시 영업 이관(MQL→SQL)

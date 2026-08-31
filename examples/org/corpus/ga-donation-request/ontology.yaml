@@ -1,0 +1,15 @@
+case: ga-donation-request
+org: 경영지원
+role: 대외협력
+decision: 기부·후원 요청 심사
+ontology:
+  entities:
+    request:
+    - amount_krw
+    - requester_conflict
+    org:
+    - is_registered_nonprofit
+    - aligns_with_esg
+  relations:
+  - 이해충돌 → 즉시 상급 심사
+  - 미등록 단체 → 불가

@@ -1,0 +1,15 @@
+case: sec-sharing-exception
+org: 보안
+role: 보안운영
+decision: 외부 공유 예외 승인
+ontology:
+  entities:
+    request:
+    - duration_days
+    data:
+    - data_class
+    recipient:
+    - recipient_has_nda
+  relations:
+  - 기밀 이상 ∧ NDA 없음 → 불가
+  - 기간은 최소권한 원칙

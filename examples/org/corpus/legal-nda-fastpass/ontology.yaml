@@ -1,0 +1,12 @@
+case: legal-nda-fastpass
+org: 법무
+role: 법무운영
+decision: NDA 자동 승인
+ontology:
+  entities:
+    nda:
+    - is_our_template
+    - term_years
+    - mutual
+  relations:
+  - 자사 표준 ∧ 상호 ∧ 5년 이하 → 자동

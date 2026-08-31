@@ -1,0 +1,35 @@
+case: cs-ticket-tiering
+rules:
+- name: legal_mention
+  when: mentions_legal == true
+  verdict: classified
+  set:
+    tier: T3_legal
+  route: 법무
+  why: 법적 리스크
+- name: social_fury
+  when: channel == social and sentiment == furious
+  verdict: classified
+  set:
+    tier: T2_urgent
+  route: CS팀장
+  why: 평판 리스크
+- name: paying_upset
+  when: is_paying == true and sentiment != calm
+  verdict: classified
+  set:
+    tier: T2_urgent
+  route: auto
+  why: 유료 고객 불만
+- name: routine
+  when: sentiment == calm
+  verdict: classified
+  set:
+    tier: T1_routine
+  route: auto
+  why: 일반 문의
+fallback:
+  verdict: classified
+  route: auto
+  set:
+    tier: T1_routine

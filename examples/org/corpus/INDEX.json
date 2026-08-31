@@ -1,0 +1,654 @@
+{
+  "cases": 34,
+  "instances": 3400,
+  "orgs": {
+    "영업": 3,
+    "재무": 3,
+    "고객지원": 3,
+    "인사": 3,
+    "구매": 3,
+    "법무": 3,
+    "IT운영": 3,
+    "마케팅": 3,
+    "물류": 3,
+    "보안": 2,
+    "경영지원": 3,
+    "제품": 1,
+    "품질": 1
+  },
+  "stats": [
+    {
+      "id": "sales-discount-approval",
+      "org": "영업",
+      "role": "영업대표",
+      "decision": "고객 할인율 승인·라우팅",
+      "instances": 100,
+      "verdicts": {
+        "approve": 21,
+        "reject": 40,
+        "escalate": 32,
+        "defer": 7
+      },
+      "routes": {
+        "본부장": 38,
+        "auto": 55,
+        "팀장": 7
+      },
+      "rules": 5,
+      "has_slm_band": true
+    },
+    {
+      "id": "sales-quote-expedite",
+      "org": "영업",
+      "role": "영업운영",
+      "decision": "특가 견적 처리 우선순위",
+      "instances": 100,
+      "verdicts": {
+        "classified": 38,
+        "defer": 62
+      },
+      "routes": {
+        "auto": 38,
+        "팀장": 62
+      },
+      "rules": 4,
+      "has_slm_band": true
+    },
+    {
+      "id": "sales-renewal-priority",
+      "org": "영업",
+      "role": "계정관리자",
+      "decision": "갱신 대상 우선순위 분류",
+      "instances": 100,
+      "verdicts": {
+        "classified": 100
+      },
+      "routes": {
+        "auto": 100
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "finance-expense-approval",
+      "org": "재무",
+      "role": "재무담당자",
+      "decision": "경비 승인",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 78,
+        "hold": 8,
+        "approve": 14
+      },
+      "routes": {
+        "재무팀장": 63,
+        "제출자": 8,
+        "부서장": 15,
+        "팀장": 12,
+        "auto": 2
+      },
+      "rules": 6,
+      "has_slm_band": false
+    },
+    {
+      "id": "finance-payment-extension",
+      "org": "재무",
+      "role": "채권담당자",
+      "decision": "지급기한 연장 승인",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 56,
+        "defer": 10,
+        "reject": 33,
+        "approve": 1
+      },
+      "routes": {
+        "CFO": 49,
+        "재무팀장": 17,
+        "auto": 34
+      },
+      "rules": 4,
+      "has_slm_band": true
+    },
+    {
+      "id": "finance-budget-overrun",
+      "org": "재무",
+      "role": "예산관리자",
+      "decision": "예산 초과 결재 라우팅",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 84,
+        "approve": 16
+      },
+      "routes": {
+        "본부장": 21,
+        "CFO": 77,
+        "팀장": 2
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "cs-refund-decision",
+      "org": "고객지원",
+      "role": "CS상담원",
+      "decision": "환불 승인 (examples/cases/refund-approval 의 정책 요약판)",
+      "instances": 100,
+      "verdicts": {
+        "hold": 6,
+        "approve": 43,
+        "reject": 51
+      },
+      "routes": {
+        "고객": 6,
+        "auto": 94
+      },
+      "rules": 5,
+      "has_slm_band": false
+    },
+    {
+      "id": "cs-goodwill-coupon",
+      "org": "고객지원",
+      "role": "CS상담원",
+      "decision": "보상 쿠폰 지급",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 41,
+        "reject": 11,
+        "defer": 29,
+        "approve": 19
+      },
+      "routes": {
+        "CS팀장": 41,
+        "auto": 30,
+        "팀장": 29
+      },
+      "rules": 4,
+      "has_slm_band": true
+    },
+    {
+      "id": "cs-ticket-tiering",
+      "org": "고객지원",
+      "role": "CS운영",
+      "decision": "문의 에스컬레이션 티어 분류",
+      "instances": 100,
+      "verdicts": {
+        "classified": 100
+      },
+      "routes": {
+        "CS팀장": 8,
+        "auto": 89,
+        "법무": 3
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "hr-leave-approval",
+      "org": "인사",
+      "role": "팀장",
+      "decision": "휴가 승인",
+      "instances": 100,
+      "verdicts": {
+        "hold": 38,
+        "approve": 37,
+        "escalate": 18,
+        "reject": 7
+      },
+      "routes": {
+        "팀장": 63,
+        "부서장": 18,
+        "auto": 19
+      },
+      "rules": 5,
+      "has_slm_band": false
+    },
+    {
+      "id": "hr-overtime-approval",
+      "org": "인사",
+      "role": "인사담당자",
+      "decision": "초과근무 승인",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 51,
+        "reject": 31,
+        "approve": 18
+      },
+      "routes": {
+        "인사팀장": 51,
+        "auto": 38,
+        "팀장": 11
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "hr-resume-screening",
+      "org": "인사",
+      "role": "채용담당자",
+      "decision": "서류 전형 라우팅",
+      "instances": 100,
+      "verdicts": {
+        "classified": 45,
+        "defer": 37,
+        "escalate": 18
+      },
+      "routes": {
+        "auto": 45,
+        "채용담당자": 37,
+        "채용위원회": 16,
+        "human": 2
+      },
+      "rules": 5,
+      "has_slm_band": true
+    },
+    {
+      "id": "proc-po-approval",
+      "org": "구매",
+      "role": "구매담당자",
+      "decision": "발주 승인 라우팅",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 81,
+        "hold": 16,
+        "approve": 3
+      },
+      "routes": {
+        "CFO": 62,
+        "구매위원회": 6,
+        "구매팀": 16,
+        "재무": 13,
+        "구매팀장": 3
+      },
+      "rules": 5,
+      "has_slm_band": false
+    },
+    {
+      "id": "proc-vendor-onboarding",
+      "org": "구매",
+      "role": "공급망관리자",
+      "decision": "공급사 등록 심사",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 37,
+        "reject": 56,
+        "approve": 7
+      },
+      "routes": {
+        "구매위원회": 6,
+        "법무": 31,
+        "auto": 56,
+        "구매팀장": 7
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "proc-price-increase",
+      "org": "구매",
+      "role": "카테고리매니저",
+      "decision": "공급 단가 인상 수용",
+      "instances": 100,
+      "verdicts": {
+        "defer": 39,
+        "reject": 48,
+        "approve": 13
+      },
+      "routes": {
+        "구매팀장": 42,
+        "auto": 58
+      },
+      "rules": 4,
+      "has_slm_band": true
+    },
+    {
+      "id": "legal-contract-routing",
+      "org": "법무",
+      "role": "법무담당자",
+      "decision": "계약 검토 라우팅",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 99,
+        "approve": 1
+      },
+      "routes": {
+        "사내변호사": 85,
+        "법무담당자": 3,
+        "법무총괄": 11,
+        "auto": 1
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "legal-nda-fastpass",
+      "org": "법무",
+      "role": "법무운영",
+      "decision": "NDA 자동 승인",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 61,
+        "approve": 39
+      },
+      "routes": {
+        "법무담당자": 61,
+        "auto": 39
+      },
+      "rules": 3,
+      "has_slm_band": false
+    },
+    {
+      "id": "legal-privacy-incident",
+      "org": "법무",
+      "role": "개인정보보호책임",
+      "decision": "개인정보 이슈 등급 분류",
+      "instances": 100,
+      "verdicts": {
+        "classified": 100
+      },
+      "routes": {
+        "auto": 69,
+        "DPO": 31
+      },
+      "rules": 3,
+      "has_slm_band": false
+    },
+    {
+      "id": "it-incident-priority",
+      "org": "IT운영",
+      "role": "온콜엔지니어",
+      "decision": "장애 우선순위 분류 (examples/cases/incident-triage 의 정책 요약판)",
+      "instances": 100,
+      "verdicts": {
+        "classified": 100
+      },
+      "routes": {
+        "auto": 88,
+        "보안팀": 12
+      },
+      "rules": 5,
+      "has_slm_band": false
+    },
+    {
+      "id": "it-access-request",
+      "org": "IT운영",
+      "role": "보안운영",
+      "decision": "시스템 접근권한 승인",
+      "instances": 100,
+      "verdicts": {
+        "hold": 29,
+        "approve": 22,
+        "escalate": 49
+      },
+      "routes": {
+        "요청자": 29,
+        "auto": 22,
+        "보안팀장": 34,
+        "CISO": 15
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "it-change-approval",
+      "org": "IT운영",
+      "role": "변경관리자",
+      "decision": "배포(변경) 승인",
+      "instances": 100,
+      "verdicts": {
+        "approve": 65,
+        "hold": 29,
+        "escalate": 2,
+        "reject": 4
+      },
+      "routes": {
+        "auto": 67,
+        "요청자": 29,
+        "CAB": 2,
+        "변경관리자": 2
+      },
+      "rules": 5,
+      "has_slm_band": false
+    },
+    {
+      "id": "mkt-lead-scoring",
+      "org": "마케팅",
+      "role": "마케팅운영",
+      "decision": "리드 등급 분류·이관",
+      "instances": 100,
+      "verdicts": {
+        "classified": 100
+      },
+      "routes": {
+        "auto": 82,
+        "영업": 18
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "mkt-campaign-topup",
+      "org": "마케팅",
+      "role": "퍼포먼스마케터",
+      "decision": "캠페인 예산 증액 승인",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 57,
+        "defer": 23,
+        "approve": 16,
+        "reject": 4
+      },
+      "routes": {
+        "마케팅본부장": 57,
+        "팀장": 23,
+        "auto": 20
+      },
+      "rules": 4,
+      "has_slm_band": true
+    },
+    {
+      "id": "mkt-influencer-vetting",
+      "org": "마케팅",
+      "role": "브랜드매니저",
+      "decision": "인플루언서 계약 심사",
+      "instances": 100,
+      "verdicts": {
+        "reject": 47,
+        "escalate": 50,
+        "approve": 3
+      },
+      "routes": {
+        "auto": 47,
+        "마케팅본부장": 43,
+        "팀장": 10
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "log-delay-compensation",
+      "org": "물류",
+      "role": "물류CS",
+      "decision": "배송지연 보상 판정",
+      "instances": 100,
+      "verdicts": {
+        "approve": 69,
+        "reject": 10,
+        "defer": 10,
+        "escalate": 11
+      },
+      "routes": {
+        "auto": 31,
+        "팀장": 10,
+        "물류팀장": 59
+      },
+      "rules": 4,
+      "has_slm_band": true
+    },
+    {
+      "id": "log-reorder-point",
+      "org": "물류",
+      "role": "재고관리자",
+      "decision": "재주문 발주 트리거",
+      "instances": 100,
+      "verdicts": {
+        "hold": 82,
+        "approve": 18
+      },
+      "routes": {
+        "재고관리자": 60,
+        "auto": 40
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "log-return-disposition",
+      "org": "물류",
+      "role": "반품검수자",
+      "decision": "반품 입고 판정",
+      "instances": 100,
+      "verdicts": {
+        "classified": 65,
+        "escalate": 35
+      },
+      "routes": {
+        "auto": 33,
+        "반품검수자": 20,
+        "품질팀": 12,
+        "CS팀장": 35
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "sec-phishing-response",
+      "org": "보안",
+      "role": "보안분석가",
+      "decision": "피싱 신고 대응 등급",
+      "instances": 100,
+      "verdicts": {
+        "classified": 100
+      },
+      "routes": {
+        "auto": 72,
+        "보안팀장": 28
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "sec-sharing-exception",
+      "org": "보안",
+      "role": "보안운영",
+      "decision": "외부 공유 예외 승인",
+      "instances": 100,
+      "verdicts": {
+        "reject": 25,
+        "escalate": 67,
+        "approve": 8
+      },
+      "routes": {
+        "auto": 33,
+        "보안팀장": 51,
+        "CISO": 16
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "ga-travel-approval",
+      "org": "경영지원",
+      "role": "총무담당자",
+      "decision": "출장 승인",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 90,
+        "approve": 10
+      },
+      "routes": {
+        "팀장": 79,
+        "본부장": 21
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "ga-asset-disposal",
+      "org": "경영지원",
+      "role": "자산관리자",
+      "decision": "자산 폐기·매각 판정",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 59,
+        "hold": 37,
+        "classified": 4
+      },
+      "routes": {
+        "재무": 59,
+        "보안팀": 37,
+        "auto": 1,
+        "자산관리자": 3
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "ga-donation-request",
+      "org": "경영지원",
+      "role": "대외협력",
+      "decision": "기부·후원 요청 심사",
+      "instances": 100,
+      "verdicts": {
+        "escalate": 68,
+        "reject": 32
+      },
+      "routes": {
+        "대외협력팀장": 16,
+        "auto": 32,
+        "경영위원회": 43,
+        "감사": 9
+      },
+      "rules": 4,
+      "has_slm_band": false
+    },
+    {
+      "id": "pq-feature-flag-rollout",
+      "org": "제품",
+      "role": "프로덕트매니저",
+      "decision": "기능 점진 배포 승인",
+      "instances": 100,
+      "verdicts": {
+        "reject": 80,
+        "hold": 3,
+        "defer": 14,
+        "approve": 3
+      },
+      "routes": {
+        "auto": 83,
+        "PM": 17
+      },
+      "rules": 3,
+      "has_slm_band": true
+    },
+    {
+      "id": "pq-defect-batch-hold",
+      "org": "품질",
+      "role": "품질관리자",
+      "decision": "생산 배치 출하 보류 판정",
+      "instances": 100,
+      "verdicts": {
+        "hold": 86,
+        "approve": 10,
+        "escalate": 4
+      },
+      "routes": {
+        "품질팀장": 78,
+        "품질위원회": 12,
+        "auto": 10
+      },
+      "rules": 4,
+      "has_slm_band": false
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+case: cs-refund-decision
+org: 고객지원
+role: CS상담원
+decision: 환불 승인 (examples/cases/refund-approval 의 정책 요약판)
+ontology:
+  entities:
+    refund:
+    - days_since_payment
+    - amount_krw
+    - is_duplicate
+    - receipt_ok
+  relations:
+  - 증빙 불일치 → 보류(조항5)
+  - 중복결제 → 전액(조항3)
+  - 10만원 초과 → 재무 승인(조항4)

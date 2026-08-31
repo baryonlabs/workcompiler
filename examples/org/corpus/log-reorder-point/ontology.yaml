@@ -1,0 +1,14 @@
+case: log-reorder-point
+org: 물류
+role: 재고관리자
+decision: 재주문 발주 트리거
+ontology:
+  entities:
+    sku:
+    - days_of_stock
+    - lead_time_days
+    - demand_trend
+    - is_seasonal_peak
+  relations:
+  - 재고일수 < 리드타임 → 발주 필수
+  - 시즌 피크 → 안전재고 가중

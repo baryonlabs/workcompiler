@@ -1,0 +1,15 @@
+case: cs-goodwill-coupon
+org: 고객지원
+role: CS상담원
+decision: 보상 쿠폰 지급
+ontology:
+  entities:
+    complaint:
+    - complaint_severity
+    - our_fault
+    customer:
+    - customer_ltv_krw
+    - coupons_this_year
+  relations:
+  - 귀책 아님 ∧ 경미 → 미지급
+  - 연간 지급 한도 존재

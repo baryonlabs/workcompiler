@@ -668,6 +668,7 @@ openworkcompiler/
 ├── core/agents/                 # agent backend registry: claude · codex · gemini · opencode · aider (`--escalate auto`, `owc agent …`) · core/skills.py (skills sync)
 ├── vendor/openworklang/         # submodule: the OpenWorkLang language (baryonlabs/openworklang)
 ├── core/build/                  # build backend: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + loader + benchmark (token ledger) + front-agent runner + slm.py (local SLM inference · quality gate · promote/demote)
+├── examples/org/                # organizational decision catalog: 34 judgment cases across 10 departments (ontology · rules · AI-recommend bands · approval routing) → 3,400 labeled decisions
 ├── examples/cases/              # four business cases: beginner materials → $ow-define → agent run → compile → bench (transcripts · traces · builds)
 ├── tests/                       # Complete pytest suite (192 tests)
 └── examples/                    # Sample workflows, LinkML schemas, and runnable demo scripts

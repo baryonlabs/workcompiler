@@ -1,0 +1,35 @@
+case: cs-refund-decision
+rules:
+- name: clause5_evidence
+  when: receipt_ok == false
+  verdict: hold
+  route: 고객
+  why: 증빙 불일치 — 조항 5
+- name: clause3_duplicate
+  when: is_duplicate == true
+  verdict: approve
+  set:
+    refund_pct: 100
+  route: auto
+  why: 중복결제 전액 — 조항 3
+- name: clause1_full
+  when: days_since_payment <= 7
+  verdict: approve
+  set:
+    refund_pct: 100
+  route: auto
+  why: 7일 내 전액 — 조항 1
+- name: clause2_half
+  when: days_since_payment <= 30
+  verdict: approve
+  set:
+    refund_pct: 50
+  route: auto
+  why: 8–30일 50% — 조항 2
+- name: clause3_none
+  when: days_since_payment > 30
+  verdict: reject
+  why: 31일 이후 환불 불가 — 조항 3
+fallback:
+  verdict: escalate
+  route: CS팀장

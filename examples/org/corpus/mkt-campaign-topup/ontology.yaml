@@ -1,0 +1,14 @@
+case: mkt-campaign-topup
+org: 마케팅
+role: 퍼포먼스마케터
+decision: 캠페인 예산 증액 승인
+ontology:
+  entities:
+    campaign:
+    - roas
+    - days_remaining
+    request:
+    - topup_pct
+  relations:
+  - ROAS 기준 미달 증액 → 반려
+  - 고성과 소폭 증액 → 자동

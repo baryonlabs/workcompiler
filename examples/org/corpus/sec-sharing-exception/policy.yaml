@@ -1,0 +1,23 @@
+case: sec-sharing-exception
+rules:
+- name: secret_block
+  when: data_class == secret
+  verdict: reject
+  why: 최고 기밀 외부 공유 불가
+- name: no_nda
+  when: data_class in [confidential] and recipient_has_nda == false
+  verdict: reject
+  why: NDA 없는 기밀 공유
+- name: long_confidential
+  when: data_class == confidential and duration_days > 90
+  verdict: escalate
+  route: CISO
+  why: 장기 기밀 공유
+- name: internal_ok
+  when: data_class in [public|internal] and duration_days <= 90
+  verdict: approve
+  route: auto
+  why: 저위험
+fallback:
+  verdict: escalate
+  route: 보안팀장

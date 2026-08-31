@@ -1,0 +1,25 @@
+case: finance-budget-overrun
+rules:
+- name: minor
+  when: overrun_pct <= 5
+  verdict: approve
+  route: 팀장
+  why: 경미
+- name: core_growth
+  when: overrun_pct <= 15 and dept_priority in [core|growth]
+  verdict: approve
+  route: 본부장
+  why: 핵심부서 한시 허용
+- name: depleted
+  when: remaining_quarter_budget_pct < 10
+  verdict: escalate
+  route: CFO
+  why: 분기 예산 고갈
+- name: major
+  when: overrun_pct > 15
+  verdict: escalate
+  route: CFO
+  why: 중대 초과
+fallback:
+  verdict: escalate
+  route: 본부장

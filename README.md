@@ -694,6 +694,7 @@ openworkcompiler/
 ├── core/agents/                 # 에이전트 백엔드 레지스트리: claude · codex · gemini · opencode · aider (`--escalate auto`, `owc agent …`) · core/skills.py(스킬 동기화)
 ├── vendor/openworklang/         # 서브모듈: OpenWorkLang 언어 (baryonlabs/openworklang)
 ├── core/build/                  # 빌드 백엔드: Work IR → build/<work>/ (handlers · rules · models/ml|slm · prompts · .work) + 로더 + 벤치마크(토큰 원장) + 앞단 에이전트 실행 + slm.py(로컬 SLM 추론·품질 게이트·승격/롤백)
+├── examples/org/                # 조직 결정 카탈로그: 10개 조직 34개 판단 사례(온톨로지·규칙·AI 추천 밴드·승인 라우팅) → 라벨된 판단 3,400건
 ├── examples/cases/              # 4가지 업무 사례: 초보자 자료 → $ow-define → 에이전트 수행 → 컴파일 → 벤치 (transcript · 트레이스 · 빌드 포함)
 ├── tests/                       # pytest 테스트 수트 (192개 테스트 전원 통과)
 └── examples/                    # Sample Work IR, LinkML 스키마, 데모 실행 스크립트

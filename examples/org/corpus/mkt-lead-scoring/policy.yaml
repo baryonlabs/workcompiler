@@ -1,0 +1,31 @@
+case: mkt-lead-scoring
+rules:
+- name: hot
+  when: company_size == enterprise and engagement_score >= 70
+  verdict: classified
+  set:
+    grade: SQL
+  route: 영업
+  why: 즉시 이관
+- name: budget_mid
+  when: budget_declared == true and engagement_score >= 50
+  verdict: classified
+  set:
+    grade: SQL
+  route: 영업
+  why: 예산 확인 리드
+- name: nurture
+  when: engagement_score >= 30
+  verdict: classified
+  set:
+    grade: MQL
+  route: auto
+  why: 육성 대상
+- name: cold
+  when: engagement_score < 30
+  verdict: classified
+  set:
+    grade: cold
+  route: auto
+  why: 저관여
+fallback: null

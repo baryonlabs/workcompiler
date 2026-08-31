@@ -1,0 +1,25 @@
+case: ga-travel-approval
+rules:
+- name: intl_large
+  when: is_international == true and est_cost_krw > 5000000
+  verdict: escalate
+  route: 본부장
+  why: 해외 고액
+- name: last_minute
+  when: advance_days < 3 and est_cost_krw > 1000000
+  verdict: escalate
+  route: 팀장
+  why: 촉박 예약 사유 확인
+- name: client_standard
+  when: has_client_meeting == true and est_cost_krw <= 3000000
+  verdict: approve
+  route: 팀장
+  why: 고객 미팅 표준
+- name: small_domestic
+  when: is_international == false and est_cost_krw <= 500000
+  verdict: approve
+  route: auto
+  why: 소액 국내
+fallback:
+  verdict: escalate
+  route: 팀장

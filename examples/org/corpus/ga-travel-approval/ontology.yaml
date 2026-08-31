@@ -1,0 +1,14 @@
+case: ga-travel-approval
+org: 경영지원
+role: 총무담당자
+decision: 출장 승인
+ontology:
+  entities:
+    trip:
+    - est_cost_krw
+    - is_international
+    - advance_days
+    - has_client_meeting
+  relations:
+  - 해외 ∧ 고액 → 본부장
+  - 촉박 예약 → 비용 가중 사유 확인

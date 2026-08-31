@@ -1,0 +1,28 @@
+case: pq-feature-flag-rollout
+rules:
+- name: regression
+  when: error_rate_delta_pct > 0.5
+  verdict: reject
+  set:
+    action: rollback
+  why: 오류율 악화 — 롤백
+- name: winner
+  when: conversion_delta_pct >= 1.0 and error_rate_delta_pct <= 0.1
+  verdict: approve
+  set:
+    action: expand_2x
+  route: auto
+  why: 명확한 개선
+- name: flat
+  when: conversion_delta_pct < 0.5
+  defer: slm_recommend
+  route: PM
+  set:
+    actions:
+    - hold
+    - expand_slow
+    - stop
+  why: 애매한 신호 — 정성 판단
+fallback:
+  verdict: hold
+  route: PM

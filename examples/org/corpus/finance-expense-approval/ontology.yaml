@@ -1,0 +1,17 @@
+case: finance-expense-approval
+org: 재무
+role: 재무담당자
+decision: 경비 승인
+ontology:
+  entities:
+    expense:
+    - amount_krw
+    - category
+    - has_receipt
+    - days_late
+    employee:
+    - monthly_total_krw
+  relations:
+  - 영수증 없음 → 보류
+  - 한도 초과 → 부서장 승인
+  - 월 누적 초과 → 재무 검토

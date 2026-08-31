@@ -1,0 +1,33 @@
+case: log-delay-compensation
+rules:
+- name: carrier_recourse
+  when: carrier_fault == true and delay_days >= 7
+  verdict: approve
+  set:
+    comp_pct_of_order: 10
+    recourse: true
+  route: 물류팀장
+  why: 장기 지연 + 구상
+- name: promised_miss
+  when: is_promised_date == true and delay_days >= 2
+  verdict: approve
+  set:
+    comp_pct_of_order: 5
+  route: auto
+  why: 지정일 미준수
+- name: minor
+  when: delay_days <= 2
+  verdict: reject
+  why: 경미 지연 — 안내만
+- name: gray
+  when: delay_days <= 7
+  defer: slm_recommend
+  route: 팀장
+  set:
+    comp_pct_range:
+    - 0
+    - 5
+  why: 중간 지연 — 사유 판단
+fallback:
+  verdict: escalate
+  route: 물류팀장

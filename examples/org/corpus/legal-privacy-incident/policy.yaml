@@ -1,0 +1,29 @@
+case: legal-privacy-incident
+rules:
+- name: reportable
+  when: external_exposure == true and records_affected >= 1000
+  verdict: classified
+  set:
+    grade: S1_report
+  route: DPO
+  why: 신고 의무 검토
+- name: sensitive
+  when: data_sensitivity in [health|credentials|financial] and external_exposure ==
+    true
+  verdict: classified
+  set:
+    grade: S1_report
+  route: DPO
+  why: 민감정보 외부 노출
+- name: internal_only
+  when: external_exposure == false
+  verdict: classified
+  set:
+    grade: S3_internal
+  route: auto
+  why: 내부 한정
+fallback:
+  verdict: classified
+  route: DPO
+  set:
+    grade: S2_review

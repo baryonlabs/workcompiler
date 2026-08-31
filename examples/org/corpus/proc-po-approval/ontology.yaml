@@ -1,0 +1,16 @@
+case: proc-po-approval
+org: 구매
+role: 구매담당자
+decision: 발주 승인 라우팅
+ontology:
+  entities:
+    po:
+    - amount_krw
+    - is_sole_source
+    vendor:
+    - vendor_registered
+    budget:
+    - budget_line_exists
+  relations:
+  - 미등록 공급사 → 등록 심사 선행
+  - 수의계약 고액 → 감사 관점 상급 결재

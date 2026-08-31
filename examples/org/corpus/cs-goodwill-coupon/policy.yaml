@@ -1,0 +1,30 @@
+case: cs-goodwill-coupon
+rules:
+- name: abuse_guard
+  when: coupons_this_year >= 4
+  verdict: escalate
+  route: CS팀장
+  why: 연간 한도 도달 — 남용 점검
+- name: not_our_fault_low
+  when: our_fault == false and complaint_severity == low
+  verdict: reject
+  why: 귀책 아님·경미
+- name: high_sev
+  when: complaint_severity == high and our_fault == true
+  verdict: approve
+  set:
+    coupon_krw: 30000
+  route: auto
+  why: 중대 귀책
+- name: gray
+  when: complaint_severity in [low|med]
+  defer: slm_recommend
+  route: 팀장
+  set:
+    coupon_range_krw:
+    - 5000
+    - 20000
+  why: 재량 밴드
+fallback:
+  verdict: escalate
+  route: CS팀장

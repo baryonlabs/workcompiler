@@ -1,0 +1,33 @@
+case: log-return-disposition
+rules:
+- name: defect_inspect
+  when: is_defect_claim == true and condition in [damaged|missing_parts]
+  verdict: classified
+  set:
+    disposition: qa_inspection
+  route: 품질팀
+  why: 하자 감정
+- name: restock
+  when: condition == unopened and days_since_delivery <= 14
+  verdict: classified
+  set:
+    disposition: restock
+  route: auto
+  why: 재판매
+- name: refurb
+  when: condition == opened_good
+  verdict: classified
+  set:
+    disposition: refurbish
+  route: auto
+  why: 리퍼
+- name: late_return
+  when: days_since_delivery > 30
+  verdict: escalate
+  route: CS팀장
+  why: 기한 초과 반품
+fallback:
+  verdict: classified
+  route: 반품검수자
+  set:
+    disposition: manual_review

@@ -1,0 +1,12 @@
+case: proc-vendor-onboarding
+org: 구매
+role: 공급망관리자
+decision: 공급사 등록 심사
+ontology:
+  entities:
+    vendor:
+    - financial_grade
+    - compliance_flags
+    - reference_count
+  relations:
+  - 컴플라이언스 플래그는 등급과 무관하게 우선 검토

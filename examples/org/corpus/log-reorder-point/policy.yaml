@@ -1,0 +1,31 @@
+case: log-reorder-point
+rules:
+- name: stockout_risk
+  when: days_of_stock <= 7
+  verdict: approve
+  set:
+    order: expedite
+  route: auto
+  why: 임박 결품
+- name: seasonal
+  when: is_seasonal_peak == true and days_of_stock <= 30
+  verdict: approve
+  set:
+    order: standard_plus_safety
+  route: auto
+  why: 피크 대비
+- name: falling_hold
+  when: demand_trend == falling and days_of_stock >= 45
+  verdict: hold
+  route: auto
+  why: 수요 하락 — 과잉재고 방지
+- name: rising_below_lt
+  when: demand_trend == rising and days_of_stock <= 30
+  verdict: approve
+  set:
+    order: standard
+  route: auto
+  why: 수요 상승
+fallback:
+  verdict: hold
+  route: 재고관리자

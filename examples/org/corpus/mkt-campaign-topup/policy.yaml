@@ -1,0 +1,24 @@
+case: mkt-campaign-topup
+rules:
+- name: low_roas
+  when: roas < 1.0
+  verdict: reject
+  why: 손익 미달 캠페인 증액 불가
+- name: winner_boost
+  when: roas >= 3.0 and topup_pct <= 30
+  verdict: approve
+  route: auto
+  why: 고성과 소폭 증액
+- name: large_topup
+  when: topup_pct > 50
+  verdict: escalate
+  route: 마케팅본부장
+  why: 대폭 증액
+- name: gray
+  when: roas >= 1.0
+  defer: slm_recommend
+  route: 팀장
+  set:
+    topup_cap_pct: 50
+  why: 중간 성과 — 추세 판단
+fallback: null

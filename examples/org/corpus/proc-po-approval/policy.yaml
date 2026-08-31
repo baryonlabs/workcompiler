@@ -1,0 +1,30 @@
+case: proc-po-approval
+rules:
+- name: unregistered
+  when: vendor_registered == false
+  verdict: hold
+  route: 구매팀
+  why: 공급사 등록 선행
+- name: no_budget
+  when: budget_line_exists == false
+  verdict: escalate
+  route: 재무
+  why: 예산 항목 없음
+- name: sole_source_large
+  when: is_sole_source == true and amount_krw > 50000000
+  verdict: escalate
+  route: 구매위원회
+  why: 고액 수의계약
+- name: small
+  when: amount_krw <= 5000000
+  verdict: approve
+  route: auto
+  why: 소액
+- name: mid
+  when: amount_krw <= 100000000
+  verdict: approve
+  route: 구매팀장
+  why: 표준 결재
+fallback:
+  verdict: escalate
+  route: CFO

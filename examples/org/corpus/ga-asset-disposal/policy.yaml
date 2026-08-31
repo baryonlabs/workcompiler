@@ -1,0 +1,31 @@
+case: ga-asset-disposal
+rules:
+- name: wipe_first
+  when: contains_storage == true
+  verdict: hold
+  route: 보안팀
+  why: 데이터 소거 선행
+- name: book_value
+  when: book_value_krw > 1000000
+  verdict: escalate
+  route: 재무
+  why: 장부가 잔존 — 매각/상각 판단
+- name: resale
+  when: is_functional == true and age_years <= 5
+  verdict: classified
+  set:
+    disposition: resale
+  route: auto
+  why: 매각 가치
+- name: scrap
+  when: is_functional == false
+  verdict: classified
+  set:
+    disposition: scrap
+  route: auto
+  why: 폐기
+fallback:
+  verdict: classified
+  route: 자산관리자
+  set:
+    disposition: manual_review

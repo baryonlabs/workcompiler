@@ -1,0 +1,20 @@
+case: legal-nda-fastpass
+rules:
+- name: fastpass
+  when: is_our_template == true and mutual == true and term_years <= 5
+  verdict: approve
+  route: auto
+  why: 표준 상호 NDA
+- name: one_way
+  when: mutual == false
+  verdict: escalate
+  route: 법무담당자
+  why: 일방 NDA
+- name: long_term
+  when: term_years > 5
+  verdict: escalate
+  route: 법무담당자
+  why: 장기 구속
+fallback:
+  verdict: escalate
+  route: 법무담당자

@@ -1,0 +1,35 @@
+case: finance-expense-approval
+rules:
+- name: no_receipt
+  when: has_receipt == false
+  verdict: hold
+  route: 제출자
+  why: 증빙 없이는 판단하지 않는다
+- name: stale_claim
+  when: days_late > 30
+  verdict: escalate
+  route: 재무팀장
+  why: 지연 청구는 수기 검토
+- name: entertainment_cap
+  when: category == entertainment and amount_krw > 300000
+  verdict: escalate
+  route: 부서장
+  why: 접대비 한도
+- name: monthly_overflow
+  when: monthly_total_krw > 3000000
+  verdict: escalate
+  route: 재무팀장
+  why: 월 누적 한도 초과
+- name: small_auto
+  when: amount_krw <= 100000
+  verdict: approve
+  route: auto
+  why: 소액 자동 승인
+- name: standard
+  when: amount_krw <= 1000000
+  verdict: approve
+  route: 팀장
+  why: 표준 결재선
+fallback:
+  verdict: escalate
+  route: 부서장

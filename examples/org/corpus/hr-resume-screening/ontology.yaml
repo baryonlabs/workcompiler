@@ -1,0 +1,14 @@
+case: hr-resume-screening
+org: 인사
+role: 채용담당자
+decision: 서류 전형 라우팅
+ontology:
+  entities:
+    candidate:
+    - years_experience
+    - skill_match_pct
+    - referral
+    offer:
+    - salary_gap_pct
+  relations:
+  - 스킬 적합도·경력이 1차 판단, 급여 갭은 협상 리스크

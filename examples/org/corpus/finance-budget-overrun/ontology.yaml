@@ -1,0 +1,13 @@
+case: finance-budget-overrun
+org: 재무
+role: 예산관리자
+decision: 예산 초과 결재 라우팅
+ontology:
+  entities:
+    request:
+    - overrun_pct
+    dept:
+    - dept_priority
+    - remaining_quarter_budget_pct
+  relations:
+  - 초과율·부서 우선순위가 결재선을 정한다

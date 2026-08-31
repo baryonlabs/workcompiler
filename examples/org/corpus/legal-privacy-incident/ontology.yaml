@@ -1,0 +1,12 @@
+case: legal-privacy-incident
+org: 법무
+role: 개인정보보호책임
+decision: 개인정보 이슈 등급 분류
+ontology:
+  entities:
+    incident:
+    - records_affected
+    - data_sensitivity
+    - external_exposure
+  relations:
+  - 민감정보 ∧ 외부노출 → 신고 의무 검토(법정 시한)

@@ -1,0 +1,15 @@
+case: legal-contract-routing
+org: 법무
+role: 법무담당자
+decision: 계약 검토 라우팅
+ontology:
+  entities:
+    contract:
+    - contract_value_krw
+    - is_standard_template
+    - has_liability_change
+    counterparty:
+    - counterparty_country
+  relations:
+  - 표준 템플릿 무수정 → 자동 통과
+  - 책임조항 변경 → 변호사 검토

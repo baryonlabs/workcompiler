@@ -1,0 +1,39 @@
+case: hr-resume-screening
+rules:
+- name: strong_match
+  when: skill_match_pct >= 80 and years_experience >= 3
+  verdict: classified
+  set:
+    stage: interview
+  route: auto
+  why: 강한 적합
+- name: referral_boost
+  when: referral == true and skill_match_pct >= 60
+  verdict: classified
+  set:
+    stage: interview
+  route: auto
+  why: 추천 채용
+- name: salary_risk
+  when: salary_gap_pct > 40
+  verdict: escalate
+  route: 채용위원회
+  why: 급여 갭 과대
+- name: weak
+  when: skill_match_pct < 40
+  verdict: classified
+  set:
+    stage: reject
+  route: auto
+  why: 부적합
+- name: gray
+  when: skill_match_pct < 80
+  defer: slm_recommend
+  route: 채용담당자
+  set:
+    stages:
+    - interview
+    - hold
+    - reject
+  why: 중간 구간 — 서류 맥락 판단
+fallback: null

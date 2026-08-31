@@ -1,0 +1,26 @@
+case: finance-payment-extension
+rules:
+- name: repeat_bad_credit
+  when: credit_grade in [C|D] and past_extensions >= 2
+  verdict: reject
+  why: 반복 연장 + 저신용
+- name: short_small
+  when: extension_days <= 14 and overdue_krw <= 5000000
+  verdict: approve
+  route: auto
+  why: 단기 소액
+- name: large_exposure
+  when: overdue_krw > 100000000
+  verdict: escalate
+  route: CFO
+  why: 고액 익스포저
+- name: gray_band
+  when: extension_days <= 60
+  defer: slm_recommend
+  route: 재무팀장
+  set:
+    recommend_days_max: 60
+  why: 중간 구간 — 관계·이력 맥락 판단
+fallback:
+  verdict: escalate
+  route: 재무팀장

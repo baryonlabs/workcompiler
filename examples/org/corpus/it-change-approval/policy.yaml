@@ -1,0 +1,27 @@
+case: it-change-approval
+rules:
+- name: no_rollback_prod
+  when: env == prod and has_rollback == false
+  verdict: reject
+  why: 롤백 계획 없는 prod 변경
+- name: freeze
+  when: env == prod and is_freeze_window == true
+  verdict: escalate
+  route: CAB
+  why: 프리즈 예외 절차
+- name: test_gate
+  when: env == prod and test_pass_pct < 95
+  verdict: hold
+  route: 요청자
+  why: 테스트 기준 미달
+- name: prod_ok
+  when: env == prod
+  verdict: approve
+  route: 변경관리자
+  why: 기준 충족 prod
+- name: lower_env
+  when: env in [dev|staging]
+  verdict: approve
+  route: auto
+  why: 하위 환경
+fallback: null

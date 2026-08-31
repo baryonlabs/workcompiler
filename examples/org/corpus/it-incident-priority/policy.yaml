@@ -1,0 +1,38 @@
+case: it-incident-priority
+rules:
+- name: security
+  when: security_related == true
+  verdict: classified
+  set:
+    priority: P1
+  route: 보안팀
+  why: 보안 사건 병행 대응
+- name: p1
+  when: revenue_impacting == true and users_affected_pct >= 30
+  verdict: classified
+  set:
+    priority: P1
+  route: auto
+  why: 매출+광범위
+- name: p2
+  when: users_affected_pct >= 30 and has_workaround == false
+  verdict: classified
+  set:
+    priority: P2
+  route: auto
+  why: 광범위·우회 없음
+- name: p3
+  when: users_affected_pct >= 5
+  verdict: classified
+  set:
+    priority: P3
+  route: auto
+  why: 제한적 영향
+- name: p4
+  when: users_affected_pct < 5
+  verdict: classified
+  set:
+    priority: P4
+  route: auto
+  why: 경미
+fallback: null

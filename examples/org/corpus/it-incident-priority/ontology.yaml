@@ -1,0 +1,14 @@
+case: it-incident-priority
+org: IT운영
+role: 온콜엔지니어
+decision: 장애 우선순위 분류 (examples/cases/incident-triage 의 정책 요약판)
+ontology:
+  entities:
+    incident:
+    - users_affected_pct
+    - revenue_impacting
+    - has_workaround
+    - security_related
+  relations:
+  - 보안 관련 → 보안팀 동시 호출
+  - 매출 영향 ∧ 광범위 → P1

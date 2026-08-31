@@ -1,0 +1,29 @@
+case: hr-leave-approval
+rules:
+- name: no_balance
+  when: balance_days < 1
+  verdict: reject
+  why: 잔여 휴가 없음
+- name: over_balance
+  when: days_requested > 10 and notice_days < 14
+  verdict: escalate
+  route: 부서장
+  why: 장기+촉박 통보
+- name: team_capacity
+  when: team_absent_pct > 30
+  verdict: hold
+  route: 팀장
+  why: 팀 부재율 초과 — 일정 협의
+- name: standard
+  when: days_requested <= 5
+  verdict: approve
+  route: auto
+  why: 표준 승인
+- name: long_planned
+  when: notice_days >= 14
+  verdict: approve
+  route: 팀장
+  why: 사전 계획 장기휴가
+fallback:
+  verdict: escalate
+  route: 부서장

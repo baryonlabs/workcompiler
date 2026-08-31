@@ -1,0 +1,26 @@
+case: legal-contract-routing
+rules:
+- name: template_clean
+  when: is_standard_template == true and has_liability_change == false and contract_value_krw
+    <= 100000000
+  verdict: approve
+  route: auto
+  why: 표준 템플릿 무변경
+- name: liability
+  when: has_liability_change == true
+  verdict: escalate
+  route: 사내변호사
+  why: 책임조항 변경
+- name: cross_border
+  when: counterparty_country not_in [KR]
+  verdict: escalate
+  route: 사내변호사
+  why: 국제계약
+- name: high_value
+  when: contract_value_krw > 1000000000
+  verdict: escalate
+  route: 법무총괄
+  why: 고액
+fallback:
+  verdict: escalate
+  route: 법무담당자

@@ -1,0 +1,22 @@
+case: sales-discount-approval
+org: 영업
+role: 영업대표
+decision: 고객 할인율 승인·라우팅
+ontology:
+  entities:
+    customer:
+    - segment(strategic|mid|smb)
+    - churn_risk(low|med|high)
+    - years_active
+    deal:
+    - requested_discount_pct
+    - margin_pct
+    - annual_value_krw
+    policy:
+    - min_margin_pct=10
+    - director_threshold_pct=10
+    - strategic_cap_pct=12
+  relations:
+  - customer.segment=strategic ∧ churn_risk=high → 할인 상한이 12%로 확장된다
+  - requested_discount_pct>10 → 본부장 승인이 필요하다
+  - margin_pct-requested_discount_pct<10 → 최소 마진 정책 위반

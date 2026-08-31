@@ -1,0 +1,34 @@
+case: sales-quote-expedite
+rules:
+- name: quarter_end_large
+  when: days_to_quarter_end <= 7 and amount_krw >= 100000000
+  verdict: classified
+  set:
+    queue: same_day
+  route: auto
+  why: 분기말 고액 딜
+- name: strategic_fast
+  when: segment == strategic and close_prob_pct >= 50
+  verdict: classified
+  set:
+    queue: next_day
+  route: auto
+  why: 전략고객 우선
+- name: low_prob
+  when: close_prob_pct < 20
+  verdict: classified
+  set:
+    queue: standard
+  route: auto
+  why: 성사확률 낮음
+- name: default_band
+  when: amount_krw >= 0
+  defer: slm_recommend
+  route: 팀장
+  set:
+    queues:
+    - same_day
+    - next_day
+    - standard
+  why: 중간 구간은 맥락 판단
+fallback: null

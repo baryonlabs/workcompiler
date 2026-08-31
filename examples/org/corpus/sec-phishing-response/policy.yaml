@@ -1,0 +1,31 @@
+case: sec-phishing-response
+rules:
+- name: cred_leak
+  when: credential_submitted == true
+  verdict: classified
+  set:
+    grade: SEV1_containment
+  route: 보안팀장
+  why: 자격증명 유출 — 즉시 초기화
+- name: exec_spoof
+  when: sender_spoofs_exec == true
+  verdict: classified
+  set:
+    grade: SEV2_targeted
+  route: 보안팀장
+  why: 표적 공격 의심
+- name: campaign
+  when: reporters_count >= 10
+  verdict: classified
+  set:
+    grade: SEV2_targeted
+  route: auto
+  why: 조직 캠페인
+- name: single
+  when: reporters_count < 10
+  verdict: classified
+  set:
+    grade: SEV3_routine
+  route: auto
+  why: 일상 대응
+fallback: null

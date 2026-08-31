@@ -1,0 +1,16 @@
+case: proc-price-increase
+org: 구매
+role: 카테고리매니저
+decision: 공급 단가 인상 수용
+ontology:
+  entities:
+    request:
+    - increase_pct
+    market:
+    - market_index_pct
+    part:
+    - is_critical_part
+    - alt_vendor_exists
+  relations:
+  - 시장지수 대비 초과 인상 → 협상
+  - 대체 공급사 없음 ∧ 핵심부품 → 수용 압력

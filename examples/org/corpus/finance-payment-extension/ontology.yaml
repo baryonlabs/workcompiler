@@ -1,0 +1,14 @@
+case: finance-payment-extension
+org: 재무
+role: 채권담당자
+decision: 지급기한 연장 승인
+ontology:
+  entities:
+    account:
+    - overdue_krw
+    - extension_days
+    - past_extensions
+    - credit_grade
+  relations:
+  - 신용등급 낮음 ∧ 반복 연장 → 거절
+  - 단기 소액 → 자동 승인

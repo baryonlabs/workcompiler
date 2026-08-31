@@ -1,0 +1,15 @@
+case: it-change-approval
+org: IT운영
+role: 변경관리자
+decision: 배포(변경) 승인
+ontology:
+  entities:
+    change:
+    - env
+    - has_rollback
+    - test_pass_pct
+    calendar:
+    - is_freeze_window
+  relations:
+  - 프리즈 기간 prod 변경 → CAB 예외 승인
+  - 롤백 없음 → 반려

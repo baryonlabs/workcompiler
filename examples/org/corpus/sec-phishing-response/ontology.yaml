@@ -1,0 +1,13 @@
+case: sec-phishing-response
+org: 보안
+role: 보안분석가
+decision: 피싱 신고 대응 등급
+ontology:
+  entities:
+    report:
+    - reporters_count
+    - credential_submitted
+    - sender_spoofs_exec
+  relations:
+  - 자격증명 유출 → 즉시 차단·초기화
+  - 임원 사칭 → 표적공격 전환

@@ -1,0 +1,27 @@
+case: proc-price-increase
+rules:
+- name: below_market
+  when: increase_pct <= 3
+  verdict: approve
+  route: auto
+  why: 경미 인상
+- name: critical_no_alt
+  when: is_critical_part == true and alt_vendor_exists == false and increase_pct <=
+    15
+  verdict: approve
+  route: 구매팀장
+  why: 공급 연속성 우선
+- name: above_market
+  when: increase_pct > 20
+  verdict: reject
+  why: 시장 대비 과도 — 재협상
+- name: negotiate_band
+  when: increase_pct <= 20
+  defer: slm_recommend
+  route: 구매팀장
+  set:
+    accept_up_to_pct: 15
+  why: 협상 밴드 — 시장·관계 맥락
+fallback:
+  verdict: escalate
+  route: 구매위원회

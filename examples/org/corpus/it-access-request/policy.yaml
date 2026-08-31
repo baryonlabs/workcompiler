@@ -1,0 +1,25 @@
+case: it-access-request
+rules:
+- name: training_gate
+  when: has_training == false
+  verdict: hold
+  route: 요청자
+  why: 보안교육 선행
+- name: crown_jewel
+  when: system_criticality == crown_jewel
+  verdict: escalate
+  route: CISO
+  why: 최중요 시스템
+- name: permanent_high
+  when: is_permanent == true and system_criticality == high
+  verdict: escalate
+  route: 보안팀장
+  why: 영구+고위험 이중 승인
+- name: temp_low
+  when: is_permanent == false and system_criticality in [low|med]
+  verdict: approve
+  route: auto
+  why: 임시·저위험
+fallback:
+  verdict: escalate
+  route: 보안팀장

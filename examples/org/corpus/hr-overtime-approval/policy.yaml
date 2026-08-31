@@ -1,0 +1,24 @@
+case: hr-overtime-approval
+rules:
+- name: legal_cap
+  when: weekly_total_hours > 52
+  verdict: reject
+  why: 주 52시간 법정 상한
+- name: near_cap
+  when: weekly_total_hours >= 48
+  verdict: escalate
+  route: 인사팀장
+  why: 상한 임박 — 건강권 점검
+- name: critical_small
+  when: is_project_critical == true and hours_requested <= 8
+  verdict: approve
+  route: 팀장
+  why: 핵심 프로젝트 단기
+- name: routine
+  when: hours_requested <= 4
+  verdict: approve
+  route: auto
+  why: 소량
+fallback:
+  verdict: escalate
+  route: 인사팀장

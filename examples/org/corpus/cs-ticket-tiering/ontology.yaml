@@ -1,0 +1,15 @@
+case: cs-ticket-tiering
+org: 고객지원
+role: CS운영
+decision: 문의 에스컬레이션 티어 분류
+ontology:
+  entities:
+    ticket:
+    - channel
+    - sentiment
+    - mentions_legal
+    customer:
+    - is_paying
+  relations:
+  - 법적 언급 → 즉시 상급 이관
+  - 소셜 채널 ∧ 격앙 → 평판 리스크

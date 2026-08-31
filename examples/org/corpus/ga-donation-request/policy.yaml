@@ -1,0 +1,24 @@
+case: ga-donation-request
+rules:
+- name: conflict
+  when: requester_conflict == true
+  verdict: escalate
+  route: 감사
+  why: 이해충돌 심사
+- name: unregistered
+  when: is_registered_nonprofit == false
+  verdict: reject
+  why: 미등록 단체
+- name: esg_small
+  when: aligns_with_esg == true and amount_krw <= 5000000
+  verdict: approve
+  route: 팀장
+  why: ESG 부합 소액
+- name: large
+  when: amount_krw > 20000000
+  verdict: escalate
+  route: 경영위원회
+  why: 고액 후원
+fallback:
+  verdict: escalate
+  route: 대외협력팀장

@@ -1,0 +1,25 @@
+case: pq-defect-batch-hold
+rules:
+- name: safety_hold
+  when: is_safety_related == true
+  verdict: hold
+  route: 품질위원회
+  why: 안전 관련 — 출하 금지
+- name: over_threshold
+  when: defect_rate_pct > 2.0
+  verdict: hold
+  route: 품질팀장
+  why: 허용 불량률 초과
+- name: marginal_committed
+  when: defect_rate_pct > 1.0 and customer_committed == true
+  verdict: escalate
+  route: 품질팀장
+  why: 납기 압박 vs 품질 — 사람 판단
+- name: pass
+  when: defect_rate_pct <= 1.0
+  verdict: approve
+  route: auto
+  why: 기준 이내
+fallback:
+  verdict: hold
+  route: 품질팀장

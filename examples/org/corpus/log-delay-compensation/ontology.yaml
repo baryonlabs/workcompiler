@@ -1,0 +1,15 @@
+case: log-delay-compensation
+org: 물류
+role: 물류CS
+decision: 배송지연 보상 판정
+ontology:
+  entities:
+    shipment:
+    - delay_days
+    - is_promised_date
+    - carrier_fault
+    order:
+    - order_krw
+  relations:
+  - 약속일 배송(지정일) 지연 → 가중 보상
+  - 운송사 귀책 → 구상권 병행

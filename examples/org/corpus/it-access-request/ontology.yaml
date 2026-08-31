@@ -1,0 +1,16 @@
+case: it-access-request
+org: IT운영
+role: 보안운영
+decision: 시스템 접근권한 승인
+ontology:
+  entities:
+    request:
+    - is_permanent
+    system:
+    - system_criticality
+    requester:
+    - requester_level
+    - has_training
+  relations:
+  - 핵심 시스템 영구 권한 → 이중 승인
+  - 교육 미이수 → 보류

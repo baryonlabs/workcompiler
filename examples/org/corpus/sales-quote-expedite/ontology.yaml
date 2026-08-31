@@ -1,0 +1,15 @@
+case: sales-quote-expedite
+org: 영업
+role: 영업운영
+decision: 특가 견적 처리 우선순위
+ontology:
+  entities:
+    quote:
+    - amount_krw
+    - close_prob_pct
+    - days_to_quarter_end
+    customer:
+    - segment
+  relations:
+  - 분기말 임박 ∧ 고액 → 당일 처리
+  - 성사확률 낮음 → 표준 큐
