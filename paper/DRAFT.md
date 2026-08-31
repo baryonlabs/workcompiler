@@ -1,6 +1,6 @@
 # Learning to Apply, Not to Memorize: Policy-in-Context Fine-Tuning Generalizes to Unseen Organizational Policies
 
-> **Draft v0.1 (2026-09-01)** — target: EMNLP/ACL Industry track. All numbers are measured and
+> **Draft v0.2 (2026-09-01)** — target: EMNLP/ACL Industry track. All numbers are measured and
 > reproducible from this repository (pointers in §7). Citations marked ⚠ have not yet been
 > re-verified against the original papers and must be checked before submission.
 
@@ -19,12 +19,15 @@ untrained model under identical serving (cluster-bootstrap 95% CI [64.7, 80.9] v
 Three controls pin down what was learned: on **counterfactual policies** (approve/reject flipped,
 evaluated only where the flip changes the answer, so prior knowledge scores zero) the tuned model
 scores **88.0%**; a 3-shot in-context-learning baseline reaches only 50.0%; and training-seed
-variance is ±4.8pp. A negative contrast bounds the recipe: the *same* recipe on an exact
+variance is ±4.8pp. A negative control bounds the recipe: the *same* recipe on an exact
 arithmetic derivation task scores **0/6 — even with chain-of-thought targets, and even for a
 frontier model prompted identically without tools** (both fail almost solely on high-precision
-division fields). Rule application is learnable by supervised fine-tuning; exact computation is
-not — it belongs to code. Together these results give practitioners a concrete placement rule for
-small models in deterministic agent pipelines.
+division fields), closing the "train harder" objection and confirming that derivations belong
+outside inference — not merely behind a per-run tool call, but compiled to code so that repeat
+runs carry no LLM in the loop at all. Because the pipeline compiles from a work session the
+organization already paid for, the frontier-token break-even is the **second run**. Together
+these results give practitioners a concrete placement rule for small models in deterministic
+agent pipelines.
 
 ## 1. Introduction
 
@@ -60,10 +63,12 @@ We contribute:
   [64.7, 80.9] vs 15.0% raw under identical bf16 greedy serving; ICL ladder 15.0 → 50.0 → 72.9.
 - **The counterfactual control** (§5.2): 88.0% on flipped policies where priors score zero by
   construction — the model learned to *read the policy*, not the world's defaults.
-- **The boundary** (§5.3): the same recipe on byte-exact arithmetic derivation fails (0/6),
-  survives a chain-of-thought-target ablation (still 0/6), and is matched by a *frontier* model
-  failing the same gate on the same division fields without tools — locating the failure in
-  one-shot inference itself, not model size, and motivating a code-tier placement rule.
+- **The negative control and placement economics** (§5.3–5.4): the same recipe on
+  byte-exact arithmetic derivation fails (0/6), survives a chain-of-thought-target ablation
+  (still 0/6), and is matched by a *frontier* model failing the same gate on the same division
+  fields without tools. This is a control, not a discovery — everyone routes arithmetic to tools —
+  but it justifies going one step further than per-run tool calls: compiling the step to code,
+  which removes the LLM from repeat runs entirely and yields a measured second-run break-even.
 
 ## 2. Related Work
 
@@ -206,7 +211,7 @@ priors. (One case has no approve/reject verdicts to flip and is excluded; 88.0% 
 model's normal unseen accuracy because the discriminating records exercise explicit verdict
 rules, the easiest citation targets.)
 
-### 5.3 The boundary: the same recipe cannot learn computation
+### 5.3 Negative control: the same recipe cannot learn computation — and neither can prompting
 
 We ran the identical recipe (same trainer, gate, corpus scale: 300 examples) on a *derivation*
 task from the same product family: regenerate a customer's renewal-pricing files
@@ -219,17 +224,39 @@ annual totals) byte-exactly for held-out customers, judged by a deterministic ga
 | SFT 7B (chain-of-thought targets) | 0/6 | 86.4% (114/132) | two long-division fields; one band-cascade error |
 | **frontier model, same prompt, no tools** | **0/6** | 93.6% (103/110) | almost solely the two long-division fields |
 
-Three readings. (i) The 0/6 headline hides near-misses: with CoT targets the model computes
-20–21 of 22 fields correctly per customer. (ii) The CoT-target ablation closes the objection
-that the negative result was an artifact of reasoning-free targets. (iii) Most importantly, a
-frontier model *prompted identically without tools also scores 0/6*, failing on the same
-high-precision division fields while getting every band and discount rule right. The original
-recorded agent produced these files correctly because it computed them **with tools**. The
-boundary is therefore not model size but *one-shot inference vs. computation*: rule application
-(this paper's positive result) is learnable; byte-exact arithmetic is not, and should be lowered
-to code. In a compiled pipeline this yields a concrete placement rule — derivations → code tier;
-policy judgments → trained-SLM tier behind the deterministic gate; declared discretion bands →
-recommendation + human approver.
+We stress that this is a **control, not a discovery**: that LLMs should route arithmetic to
+tools is settled practice. Its role here is threefold. (i) It closes the "train harder"
+objection against our tier map — the 0/6 is not an artifact of reasoning-free targets (CoT
+ablation) nor of model scale (the frontier fails the same gate on the same two long-division
+fields while getting every band and discount rule right; the recorded agent originally passed
+because it computed with tools). (ii) The field-level scores show what the exact gate hides:
+inference gets 20–21 of 22 fields; the failure is concentrated precisely where computation, not
+rule-reading, is required. (iii) It motivates going one step further than the standard remedy.
+A per-run **tool call keeps the LLM in the loop on every execution** — it re-decides which tool
+to invoke (tokens), can decide differently (nondeterminism), and re-orchestrates the sequence
+each time. Compiling the step to the **code tier makes that decision once**, at compile time;
+repeat runs then execute with no LLM present. The resulting placement rule: derivations → code
+tier; policy judgments → trained-SLM tier behind the deterministic gate; declared discretion
+bands → recommendation + human approver.
+
+### 5.4 Placement economics: break-even at the second run
+
+Lowering LLM steps out of the loop is a compiler bet — pay once, win per execution — so the
+honest question is where the break-even sits. Measured on the renewal pipeline (unique tokens,
+i.e., not double-counting the cumulative context an agent resends each turn): the recorded
+agent session costs **23,614 frontier tokens per run**; after compilation and SLM promotion a
+run consumes **0 frontier tokens** (4,208 tokens on a local model at $0 marginal cost, 7.4×
+faster, outputs reproduced 7/7 under a deterministic benchmark). Because the compiler's input
+is a work session the organization had to run once anyway, and compilation itself is
+deterministic local computation, the frontier-token **break-even is the second run** — compared
+with the ≈17-transaction break-even reported for optimization-heavy compilation (⚠ Compiled AI,
+2604.05150), where the compiler spends LLM tokens searching. Escalations for genuinely new
+parameter values each cost one frontier call, are cached with upstream-output fingerprints, and
+amortize to zero on repeats. The hidden denominator is the human cost of declaring the ontology
+and policy; the pipeline therefore pays off in proportion to a decision's repetition frequency,
+which is exactly the regime organizations automate first — and the record-first design (the
+spec is extracted from the paid-for session, not authored from scratch) is what keeps that
+denominator small.
 
 ## 6. Discussion & Limitations
 
