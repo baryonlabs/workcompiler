@@ -1,6 +1,6 @@
 # Decision-model eval report
 
-Generated 2026-08-31T17:30:08 from eval_history.json (5 run(s), 5 model(s)).
+Generated 2026-08-31T19:37:55 from eval_history.json (8 run(s), 8 model(s)).
 
 Gate = 4중 완전 일치(verdict·route·params·cited_rule) + 인용 규칙 조건이 레코드에 실제 성립.
 완화 일치 = 인용 규칙이 first-match가 아니어도 조건이 실제 성립하면 인정. unseen 95% CI = 사례(정책) 클러스터 부트스트랩 (10,000회, seed 20250831).
@@ -12,14 +12,17 @@ Gate = 4중 완전 일치(verdict·route·params·cited_rule) + 인용 규칙 �
 | qwen2.5-7b + QLoRA (decision-trained) | 50/56 (89.3%) | 41/60 (68.3%) [53.3, 83.3] | 86.7% | 71.7% | 1회 |
 | qwen2.5-7b-raw-bf16 | 18/56 (32.1%) | 9/60 (15.0%) [3.3, 26.7] | 53.3% | 15.0% | 1회 |
 | qwen2.5-3b-raw-bf16 | 9/56 (16.1%) | 7/60 (11.7%) [0.0, 25.0] | 50.0% | 11.7% | 1회 |
+| qwen2.5-7b-decision-seed11 | 51/56 (91.1%) | 36/60 (60.0%) [43.3, 76.7] | 85.0% | 63.3% | 1회 |
+| qwen2.5-7b-decision-seed22 | 52/56 (92.9%) | 36/60 (60.0%) [45.0, 78.3] | 86.7% | 63.3% | 1회 |
+| qwen2.5-7b-decision-seed33 | 50/56 (89.3%) | 41/60 (68.3%) [50.0, 85.0] | 93.3% | 71.7% | 1회 |
 
 ## Unseen 정책별 성적표 (모델별 최신 실행, 정확 일치)
 
-| 정책(사례) | qwen2.5:3b (raw) | qwen2.5:7b (raw) | qwen2.5-7b + QLoRA (decision-trained) | qwen2.5-7b-raw-bf16 | qwen2.5-3b-raw-bf16 |
-| :-- | --: | --: | --: | --: | --: |
-| cs-goodwill-coupon | 0/10 | 3/10 | 10/10 | 0/10 | 0/10 |
-| finance-budget-overrun | 0/10 | 3/10 | 8/10 | 1/10 | 0/10 |
-| hr-overtime-approval | 1/10 | 1/10 | 5/10 | 1/10 | 0/10 |
-| log-return-disposition | 3/10 | 2/10 | 4/10 | 3/10 | 3/10 |
-| proc-price-increase | 0/10 | 0/10 | 7/10 | 0/10 | 0/10 |
-| sec-sharing-exception | 1/10 | 1/10 | 7/10 | 4/10 | 4/10 |
+| 정책(사례) | qwen2.5:3b (raw) | qwen2.5:7b (raw) | qwen2.5-7b + QLoRA (decision-trained) | qwen2.5-7b-raw-bf16 | qwen2.5-3b-raw-bf16 | qwen2.5-7b-decision-seed11 | qwen2.5-7b-decision-seed22 | qwen2.5-7b-decision-seed33 |
+| :-- | --: | --: | --: | --: | --: | --: | --: | --: |
+| cs-goodwill-coupon | 0/10 | 3/10 | 10/10 | 0/10 | 0/10 | 8/10 | 10/10 | 8/10 |
+| finance-budget-overrun | 0/10 | 3/10 | 8/10 | 1/10 | 0/10 | 8/10 | 6/10 | 8/10 |
+| hr-overtime-approval | 1/10 | 1/10 | 5/10 | 1/10 | 0/10 | 3/10 | 4/10 | 5/10 |
+| log-return-disposition | 3/10 | 2/10 | 4/10 | 3/10 | 3/10 | 3/10 | 4/10 | 3/10 |
+| proc-price-increase | 0/10 | 0/10 | 7/10 | 0/10 | 0/10 | 7/10 | 7/10 | 10/10 |
+| sec-sharing-exception | 1/10 | 1/10 | 7/10 | 4/10 | 4/10 | 7/10 | 5/10 | 7/10 |

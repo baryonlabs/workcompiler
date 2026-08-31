@@ -24,3 +24,17 @@ linux-builder의 RTX 4090(TRL QLoRA, completion-only loss)에서 훈련하고, `
 
 재현: `owc build dataset <build> <action> [--holdout …]` → `owc build train …`(로컬) 또는 TRL 스크립트(원격) → `owc build fleet-eval <build> <action> --model M [--base-url U]`.
 전체 평가 이력: [TRAINING.md](TRAINING.md) · [fleet_evals.json](fleet_evals.json)
+
+
+## CoT 타깃 절제 — 부정 결과는 CoT로도 뒤집히지 않는다
+
+"프롬프트는 추론을 요구하는데 SFT 타깃에 계산 과정이 없어서 못 배운 것 아니냐"는 반론을 검증했습니다.
+`owc build dataset <build> <action> --cot`가 fleet 정답에 **결정론적 계산 과정 프리픽스**(좌석 올림 →
+성장률 → 월 총액 → 할인 자격·상한 → 월/연 총액 → API 평균; truth JSON의 중간값에서 유도)를 붙인
+`data-cot/`를 생성하고, 동일 조건(3 epochs, seed 20260831, 동일 홀드아웃 6명)으로 7b를 재훈련했습니다.
+
+결과: **0/6 — 동일**. 모델은 계산 과정을 실제로 출력하지만(평균 3,087 토큰) 실패 서명이 비-CoT와
+같습니다: 6/6 전부 `json_values`(계산된 수치가 정답과 다름), 5/6에서 컨텍스트·파생 어디에도 없는
+숫자를 날조(예: CUST-2017의 15360·4608). 즉 실패 원인은 타깃 형식이 아니라 **산술 그 자체**이며,
+"파생 스텝은 code 계층이 맡는다"는 결론은 CoT 반론을 통과했습니다
+(원자료: `models/slm/write_pricing_cust_1001/fleet_evals.json`의 `qwen2.5-7b-cot-tuned` 항목).
