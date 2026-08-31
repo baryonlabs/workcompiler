@@ -1,14 +1,15 @@
 # Learning to Apply, Not to Memorize: Policy-in-Context Fine-Tuning Generalizes to Unseen Organizational Policies
 
-> **Draft v0.5 (2026-09-01)** — target: EMNLP/ACL Industry track. All numbers are measured and
+> **Draft v0.6 (2026-09-01)** — target: EMNLP/ACL Industry track. All numbers are measured and
 > reproducible from this repository (pointers in §7). All arXiv IDs and titles were verified
 > against the abstract pages; the TriMPI and PRT positioning claims were additionally confirmed
 > against the paper bodies (Policy Override §5.2; per-policy instance splits).
 
 ## Abstract
 
-Organizations want AI systems that make decisions *their* way: following the written policy,
-citing the rule that applied, and deferring exactly where the policy grants discretion. The
+In organizations, correct behavior is defined by documents that change on the organization's
+schedule; an AI system that makes decisions *their* way must follow the written policy, cite
+the rule that applied, and defer exactly where the policy grants discretion. The
 dominant fine-tuning recipe internalizes a specific policy into model weights, which breaks the
 moment the policy changes. We study the opposite framing: supply the policy *in context* at
 inference time, and fine-tune a small model on the **skill of applying whatever policy it is
@@ -32,17 +33,29 @@ agent pipelines.
 
 ## 1. Introduction
 
-When an employee asks "can I give this customer a 12% discount?", the organization does not want
-an oracle's opinion. It wants *its own policy applied*: the ordered rules checked top-down, the
-first matching rule cited, the case routed to the approver the policy names, and the band the
-policy deliberately left open ("5–10%: AI may recommend, team lead approves") — and only that
-band — filled by a recommendation. Three properties follow that shape the ML problem:
+In most organizations, correct behavior is defined by *documents* — decision policies, support
+runbooks, escalation matrices, grading rubrics, editorial style guides, compliance checklists —
+and those documents change on the organization's schedule, not the model's. Any AI system built
+on them therefore needs a particular decomposition: the **content** (what the document says
+today) must live *in context*, where it can be swapped the day it changes, while the
+**skill** (how to read such a document and apply it faithfully to a case) can live *in
+weights*. This paper measures whether that skill is actually learnable by supervised
+fine-tuning of a small model — and, critically, whether it transfers to documents the model has
+never seen.
 
-1. **Policies change faster than models.** A model that memorized policy P is wrong the day P
-   becomes P′. The policy must live *outside* the weights.
+We study the cleanest instance of this class that still admits a deterministic grader:
+organizational decision policies. When an employee asks "can I give this customer a 12%
+discount?", the organization does not want an oracle's opinion. It wants *its own policy
+applied*: the ordered rules checked top-down, the first matching rule cited, the case routed to
+the approver the policy names, and the band the policy deliberately left open ("5–10%: AI may
+recommend, team lead approves") — and only that band — filled by a recommendation. Three
+properties follow that shape the ML problem, and each instantiates the general decomposition:
+
+1. **The documents change faster than models.** A model that memorized policy P is wrong the
+   day P becomes P′. The content must live *outside* the weights.
 2. **Judgments must be auditable.** "Approve" is not an answer; "approve, route to director,
    citing `strategic_retention_band` whose condition holds on this record" is.
-3. **Discretion is declared, not inferred.** The policy says where the model may recommend;
+3. **Discretion is declared, not inferred.** The document says where the model may recommend;
    confidence thresholds do not.
 
 Prior work internalizes policies into weights (Multimodal Policy Internalization / TriMPI,
@@ -52,14 +65,10 @@ is the combination that deployment actually needs: **fine-tune a small, locally-
 the *transferable skill* of applying an arbitrary in-context policy, and measure transfer to
 policies never seen in training.**
 
-Organizational policy decisions are our testbed, but the object of study is more general: a
-**content-in-context, skill-in-weights** decomposition. The same shape recurs wherever an
-organization's *documents* define correct behavior and change on the organization's schedule —
-support runbooks, escalation matrices, grading rubrics, editorial style guides, compliance
-checklists. We use declarative decision policies because they are the cleanest instance of the
-class that still admits a deterministic grader: the skill (ordered evaluation, first-match,
-grounded citation) is non-trivial, while correctness is checkable to the byte. Whether the
-recipe transfers to messier members of the class is an open question we scope explicitly (§6).
+Declarative decision policies make the skill (ordered evaluation, first-match, grounded
+citation) non-trivial while keeping correctness checkable to the byte. Whether the recipe
+transfers to messier members of the document class — runbooks, rubrics — is an open question we
+scope explicitly, with a roadmap, in §6.
 
 We contribute:
 
@@ -299,6 +308,14 @@ which is the actual bottleneck for widening the claim. This paper is also one ti
 compiled-pipeline system — recorded agent sessions lowered to code/rule/cache tiers, with the
 trained-SLM tier of this paper occupying the judgment slot behind a promotion gate — whose
 end-to-end economics (§5.4) motivate but do not depend on the transfer result.
+
+| document class | content in context | skill in weights | deterministic grader needed | status |
+| :-- | :-- | :-- | :-- | :-- |
+| declarative decision policies | ontology + ordered rules | ordered evaluation, first-match, grounded citation | rules engine (exists) | **measured — this paper** |
+| escalation matrices | routing table + thresholds | table lookup + boundary cases | table-lookup checker | near — several catalog cases are of this shape |
+| compliance checklists | itemized requirements | item-by-record matching | per-item rule checker | not started |
+| grading rubrics | criteria + level descriptors | criterion application, level assignment | answer-key grader | not started |
+| support runbooks | procedure + preconditions | step execution & state tracking | state-machine checker | not started |
 
 **Path to prose policies.** Our substrate removes entity alignment (rule field names match
 record keys). The natural next experiment keeps the trained applier fixed and inserts a
