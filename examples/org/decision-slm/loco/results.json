@@ -1,0 +1,2491 @@
+{
+  "folds": {
+    "0": {
+      "n": 60,
+      "exact": 39,
+      "verdict_ok": 52,
+      "relaxed_ok": 39,
+      "results": [
+        {
+          "case_id": "sales-quote-expedite",
+          "instance": "sales-quote-expedite-0001",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "sales-quote-expedite",
+          "instance": "sales-quote-expedite-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-quote-expedite",
+          "instance": "sales-quote-expedite-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-quote-expedite",
+          "instance": "sales-quote-expedite-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-quote-expedite",
+          "instance": "sales-quote-expedite-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-quote-expedite",
+          "instance": "sales-quote-expedite-0006",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "sales-quote-expedite",
+          "instance": "sales-quote-expedite-0007",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "sales-quote-expedite",
+          "instance": "sales-quote-expedite-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-quote-expedite",
+          "instance": "sales-quote-expedite-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-quote-expedite",
+          "instance": "sales-quote-expedite-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-expense-approval",
+          "instance": "finance-expense-approval-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-expense-approval",
+          "instance": "finance-expense-approval-0002",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-expense-approval",
+          "instance": "finance-expense-approval-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-expense-approval",
+          "instance": "finance-expense-approval-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-expense-approval",
+          "instance": "finance-expense-approval-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-expense-approval",
+          "instance": "finance-expense-approval-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-expense-approval",
+          "instance": "finance-expense-approval-0007",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-expense-approval",
+          "instance": "finance-expense-approval-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-expense-approval",
+          "instance": "finance-expense-approval-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-expense-approval",
+          "instance": "finance-expense-approval-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-ticket-tiering",
+          "instance": "cs-ticket-tiering-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-ticket-tiering",
+          "instance": "cs-ticket-tiering-0002",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "cs-ticket-tiering",
+          "instance": "cs-ticket-tiering-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-ticket-tiering",
+          "instance": "cs-ticket-tiering-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-ticket-tiering",
+          "instance": "cs-ticket-tiering-0005",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "cs-ticket-tiering",
+          "instance": "cs-ticket-tiering-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-ticket-tiering",
+          "instance": "cs-ticket-tiering-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-ticket-tiering",
+          "instance": "cs-ticket-tiering-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-ticket-tiering",
+          "instance": "cs-ticket-tiering-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-ticket-tiering",
+          "instance": "cs-ticket-tiering-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-overtime-approval",
+          "instance": "hr-overtime-approval-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-overtime-approval",
+          "instance": "hr-overtime-approval-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-overtime-approval",
+          "instance": "hr-overtime-approval-0003",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-overtime-approval",
+          "instance": "hr-overtime-approval-0004",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-overtime-approval",
+          "instance": "hr-overtime-approval-0005",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-overtime-approval",
+          "instance": "hr-overtime-approval-0006",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-overtime-approval",
+          "instance": "hr-overtime-approval-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-overtime-approval",
+          "instance": "hr-overtime-approval-0008",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-overtime-approval",
+          "instance": "hr-overtime-approval-0009",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-overtime-approval",
+          "instance": "hr-overtime-approval-0010",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "proc-price-increase",
+          "instance": "proc-price-increase-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-price-increase",
+          "instance": "proc-price-increase-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-price-increase",
+          "instance": "proc-price-increase-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-price-increase",
+          "instance": "proc-price-increase-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-price-increase",
+          "instance": "proc-price-increase-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-price-increase",
+          "instance": "proc-price-increase-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-price-increase",
+          "instance": "proc-price-increase-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-price-increase",
+          "instance": "proc-price-increase-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-price-increase",
+          "instance": "proc-price-increase-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-price-increase",
+          "instance": "proc-price-increase-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-travel-approval",
+          "instance": "ga-travel-approval-0001",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-travel-approval",
+          "instance": "ga-travel-approval-0002",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-travel-approval",
+          "instance": "ga-travel-approval-0003",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-travel-approval",
+          "instance": "ga-travel-approval-0004",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-travel-approval",
+          "instance": "ga-travel-approval-0005",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-travel-approval",
+          "instance": "ga-travel-approval-0006",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-travel-approval",
+          "instance": "ga-travel-approval-0007",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-travel-approval",
+          "instance": "ga-travel-approval-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-travel-approval",
+          "instance": "ga-travel-approval-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-travel-approval",
+          "instance": "ga-travel-approval-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        }
+      ],
+      "holdout": [
+        "finance-expense-approval",
+        "sales-quote-expedite",
+        "cs-ticket-tiering",
+        "hr-overtime-approval",
+        "ga-travel-approval",
+        "proc-price-increase"
+      ]
+    },
+    "1": {
+      "n": 60,
+      "exact": 44,
+      "verdict_ok": 50,
+      "relaxed_ok": 44,
+      "results": [
+        {
+          "case_id": "sales-discount-approval",
+          "instance": "sales-discount-approval-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-discount-approval",
+          "instance": "sales-discount-approval-0002",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "sales-discount-approval",
+          "instance": "sales-discount-approval-0003",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "sales-discount-approval",
+          "instance": "sales-discount-approval-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-discount-approval",
+          "instance": "sales-discount-approval-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-discount-approval",
+          "instance": "sales-discount-approval-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-discount-approval",
+          "instance": "sales-discount-approval-0007",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "sales-discount-approval",
+          "instance": "sales-discount-approval-0008",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "sales-discount-approval",
+          "instance": "sales-discount-approval-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-discount-approval",
+          "instance": "sales-discount-approval-0010",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-resume-screening",
+          "instance": "hr-resume-screening-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-resume-screening",
+          "instance": "hr-resume-screening-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-resume-screening",
+          "instance": "hr-resume-screening-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-resume-screening",
+          "instance": "hr-resume-screening-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-resume-screening",
+          "instance": "hr-resume-screening-0005",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-resume-screening",
+          "instance": "hr-resume-screening-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-resume-screening",
+          "instance": "hr-resume-screening-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-resume-screening",
+          "instance": "hr-resume-screening-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-resume-screening",
+          "instance": "hr-resume-screening-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-resume-screening",
+          "instance": "hr-resume-screening-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-incident-priority",
+          "instance": "it-incident-priority-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-incident-priority",
+          "instance": "it-incident-priority-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-incident-priority",
+          "instance": "it-incident-priority-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-incident-priority",
+          "instance": "it-incident-priority-0004",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "it-incident-priority",
+          "instance": "it-incident-priority-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-incident-priority",
+          "instance": "it-incident-priority-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-incident-priority",
+          "instance": "it-incident-priority-0007",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "it-incident-priority",
+          "instance": "it-incident-priority-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-incident-priority",
+          "instance": "it-incident-priority-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-incident-priority",
+          "instance": "it-incident-priority-0010",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "it-access-request",
+          "instance": "it-access-request-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-access-request",
+          "instance": "it-access-request-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-access-request",
+          "instance": "it-access-request-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-access-request",
+          "instance": "it-access-request-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-access-request",
+          "instance": "it-access-request-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-access-request",
+          "instance": "it-access-request-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-access-request",
+          "instance": "it-access-request-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-access-request",
+          "instance": "it-access-request-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-access-request",
+          "instance": "it-access-request-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-access-request",
+          "instance": "it-access-request-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-influencer-vetting",
+          "instance": "mkt-influencer-vetting-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-influencer-vetting",
+          "instance": "mkt-influencer-vetting-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-influencer-vetting",
+          "instance": "mkt-influencer-vetting-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-influencer-vetting",
+          "instance": "mkt-influencer-vetting-0004",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "mkt-influencer-vetting",
+          "instance": "mkt-influencer-vetting-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-influencer-vetting",
+          "instance": "mkt-influencer-vetting-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-influencer-vetting",
+          "instance": "mkt-influencer-vetting-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-influencer-vetting",
+          "instance": "mkt-influencer-vetting-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-influencer-vetting",
+          "instance": "mkt-influencer-vetting-0009",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "mkt-influencer-vetting",
+          "instance": "mkt-influencer-vetting-0010",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-delay-compensation",
+          "instance": "log-delay-compensation-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-delay-compensation",
+          "instance": "log-delay-compensation-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-delay-compensation",
+          "instance": "log-delay-compensation-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-delay-compensation",
+          "instance": "log-delay-compensation-0004",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-delay-compensation",
+          "instance": "log-delay-compensation-0005",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-delay-compensation",
+          "instance": "log-delay-compensation-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-delay-compensation",
+          "instance": "log-delay-compensation-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-delay-compensation",
+          "instance": "log-delay-compensation-0008",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-delay-compensation",
+          "instance": "log-delay-compensation-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-delay-compensation",
+          "instance": "log-delay-compensation-0010",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        }
+      ],
+      "holdout": [
+        "it-access-request",
+        "sales-discount-approval",
+        "mkt-influencer-vetting",
+        "hr-resume-screening",
+        "log-delay-compensation",
+        "it-incident-priority"
+      ]
+    },
+    "2": {
+      "n": 60,
+      "exact": 44,
+      "verdict_ok": 55,
+      "relaxed_ok": 47,
+      "results": [
+        {
+          "case_id": "finance-payment-extension",
+          "instance": "finance-payment-extension-0001",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-payment-extension",
+          "instance": "finance-payment-extension-0002",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-payment-extension",
+          "instance": "finance-payment-extension-0003",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-payment-extension",
+          "instance": "finance-payment-extension-0004",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-payment-extension",
+          "instance": "finance-payment-extension-0005",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-payment-extension",
+          "instance": "finance-payment-extension-0006",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-payment-extension",
+          "instance": "finance-payment-extension-0007",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-payment-extension",
+          "instance": "finance-payment-extension-0008",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-payment-extension",
+          "instance": "finance-payment-extension-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-payment-extension",
+          "instance": "finance-payment-extension-0010",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-budget-overrun",
+          "instance": "finance-budget-overrun-0001",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "finance-budget-overrun",
+          "instance": "finance-budget-overrun-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-budget-overrun",
+          "instance": "finance-budget-overrun-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-budget-overrun",
+          "instance": "finance-budget-overrun-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-budget-overrun",
+          "instance": "finance-budget-overrun-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-budget-overrun",
+          "instance": "finance-budget-overrun-0006",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-budget-overrun",
+          "instance": "finance-budget-overrun-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-budget-overrun",
+          "instance": "finance-budget-overrun-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-budget-overrun",
+          "instance": "finance-budget-overrun-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "finance-budget-overrun",
+          "instance": "finance-budget-overrun-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-refund-decision",
+          "instance": "cs-refund-decision-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-refund-decision",
+          "instance": "cs-refund-decision-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-refund-decision",
+          "instance": "cs-refund-decision-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-refund-decision",
+          "instance": "cs-refund-decision-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-refund-decision",
+          "instance": "cs-refund-decision-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-refund-decision",
+          "instance": "cs-refund-decision-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-refund-decision",
+          "instance": "cs-refund-decision-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-refund-decision",
+          "instance": "cs-refund-decision-0008",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "cs-refund-decision",
+          "instance": "cs-refund-decision-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-refund-decision",
+          "instance": "cs-refund-decision-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-privacy-incident",
+          "instance": "legal-privacy-incident-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-privacy-incident",
+          "instance": "legal-privacy-incident-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-privacy-incident",
+          "instance": "legal-privacy-incident-0003",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-privacy-incident",
+          "instance": "legal-privacy-incident-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-privacy-incident",
+          "instance": "legal-privacy-incident-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-privacy-incident",
+          "instance": "legal-privacy-incident-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-privacy-incident",
+          "instance": "legal-privacy-incident-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-privacy-incident",
+          "instance": "legal-privacy-incident-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-privacy-incident",
+          "instance": "legal-privacy-incident-0009",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-privacy-incident",
+          "instance": "legal-privacy-incident-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-sharing-exception",
+          "instance": "sec-sharing-exception-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-sharing-exception",
+          "instance": "sec-sharing-exception-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-sharing-exception",
+          "instance": "sec-sharing-exception-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-sharing-exception",
+          "instance": "sec-sharing-exception-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-sharing-exception",
+          "instance": "sec-sharing-exception-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-sharing-exception",
+          "instance": "sec-sharing-exception-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-sharing-exception",
+          "instance": "sec-sharing-exception-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-sharing-exception",
+          "instance": "sec-sharing-exception-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-sharing-exception",
+          "instance": "sec-sharing-exception-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-sharing-exception",
+          "instance": "sec-sharing-exception-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-defect-batch-hold",
+          "instance": "pq-defect-batch-hold-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-defect-batch-hold",
+          "instance": "pq-defect-batch-hold-0002",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "pq-defect-batch-hold",
+          "instance": "pq-defect-batch-hold-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-defect-batch-hold",
+          "instance": "pq-defect-batch-hold-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-defect-batch-hold",
+          "instance": "pq-defect-batch-hold-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-defect-batch-hold",
+          "instance": "pq-defect-batch-hold-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-defect-batch-hold",
+          "instance": "pq-defect-batch-hold-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-defect-batch-hold",
+          "instance": "pq-defect-batch-hold-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-defect-batch-hold",
+          "instance": "pq-defect-batch-hold-0009",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "pq-defect-batch-hold",
+          "instance": "pq-defect-batch-hold-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        }
+      ],
+      "holdout": [
+        "finance-budget-overrun",
+        "cs-refund-decision",
+        "finance-payment-extension",
+        "sec-sharing-exception",
+        "legal-privacy-incident",
+        "pq-defect-batch-hold"
+      ]
+    },
+    "3": {
+      "n": 60,
+      "exact": 46,
+      "verdict_ok": 48,
+      "relaxed_ok": 46,
+      "results": [
+        {
+          "case_id": "hr-leave-approval",
+          "instance": "hr-leave-approval-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "hr-leave-approval",
+          "instance": "hr-leave-approval-0002",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-leave-approval",
+          "instance": "hr-leave-approval-0003",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-leave-approval",
+          "instance": "hr-leave-approval-0004",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-leave-approval",
+          "instance": "hr-leave-approval-0005",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-leave-approval",
+          "instance": "hr-leave-approval-0006",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-leave-approval",
+          "instance": "hr-leave-approval-0007",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-leave-approval",
+          "instance": "hr-leave-approval-0008",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-leave-approval",
+          "instance": "hr-leave-approval-0009",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "hr-leave-approval",
+          "instance": "hr-leave-approval-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-po-approval",
+          "instance": "proc-po-approval-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-po-approval",
+          "instance": "proc-po-approval-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-po-approval",
+          "instance": "proc-po-approval-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-po-approval",
+          "instance": "proc-po-approval-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-po-approval",
+          "instance": "proc-po-approval-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-po-approval",
+          "instance": "proc-po-approval-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-po-approval",
+          "instance": "proc-po-approval-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-po-approval",
+          "instance": "proc-po-approval-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-po-approval",
+          "instance": "proc-po-approval-0009",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "proc-po-approval",
+          "instance": "proc-po-approval-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-change-approval",
+          "instance": "it-change-approval-0001",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "it-change-approval",
+          "instance": "it-change-approval-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-change-approval",
+          "instance": "it-change-approval-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-change-approval",
+          "instance": "it-change-approval-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-change-approval",
+          "instance": "it-change-approval-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-change-approval",
+          "instance": "it-change-approval-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-change-approval",
+          "instance": "it-change-approval-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-change-approval",
+          "instance": "it-change-approval-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-change-approval",
+          "instance": "it-change-approval-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "it-change-approval",
+          "instance": "it-change-approval-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-campaign-topup",
+          "instance": "mkt-campaign-topup-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-campaign-topup",
+          "instance": "mkt-campaign-topup-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-campaign-topup",
+          "instance": "mkt-campaign-topup-0003",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "mkt-campaign-topup",
+          "instance": "mkt-campaign-topup-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-campaign-topup",
+          "instance": "mkt-campaign-topup-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-campaign-topup",
+          "instance": "mkt-campaign-topup-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-campaign-topup",
+          "instance": "mkt-campaign-topup-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-campaign-topup",
+          "instance": "mkt-campaign-topup-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-campaign-topup",
+          "instance": "mkt-campaign-topup-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-campaign-topup",
+          "instance": "mkt-campaign-topup-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-asset-disposal",
+          "instance": "ga-asset-disposal-0001",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-asset-disposal",
+          "instance": "ga-asset-disposal-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-asset-disposal",
+          "instance": "ga-asset-disposal-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-asset-disposal",
+          "instance": "ga-asset-disposal-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-asset-disposal",
+          "instance": "ga-asset-disposal-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-asset-disposal",
+          "instance": "ga-asset-disposal-0006",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-asset-disposal",
+          "instance": "ga-asset-disposal-0007",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-asset-disposal",
+          "instance": "ga-asset-disposal-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-asset-disposal",
+          "instance": "ga-asset-disposal-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-asset-disposal",
+          "instance": "ga-asset-disposal-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-feature-flag-rollout",
+          "instance": "pq-feature-flag-rollout-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-feature-flag-rollout",
+          "instance": "pq-feature-flag-rollout-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-feature-flag-rollout",
+          "instance": "pq-feature-flag-rollout-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-feature-flag-rollout",
+          "instance": "pq-feature-flag-rollout-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-feature-flag-rollout",
+          "instance": "pq-feature-flag-rollout-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-feature-flag-rollout",
+          "instance": "pq-feature-flag-rollout-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-feature-flag-rollout",
+          "instance": "pq-feature-flag-rollout-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-feature-flag-rollout",
+          "instance": "pq-feature-flag-rollout-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-feature-flag-rollout",
+          "instance": "pq-feature-flag-rollout-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "pq-feature-flag-rollout",
+          "instance": "pq-feature-flag-rollout-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        }
+      ],
+      "holdout": [
+        "pq-feature-flag-rollout",
+        "hr-leave-approval",
+        "mkt-campaign-topup",
+        "it-change-approval",
+        "ga-asset-disposal",
+        "proc-po-approval"
+      ]
+    },
+    "4": {
+      "n": 50,
+      "exact": 40,
+      "verdict_ok": 49,
+      "relaxed_ok": 40,
+      "results": [
+        {
+          "case_id": "sales-renewal-priority",
+          "instance": "sales-renewal-priority-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-renewal-priority",
+          "instance": "sales-renewal-priority-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-renewal-priority",
+          "instance": "sales-renewal-priority-0003",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "sales-renewal-priority",
+          "instance": "sales-renewal-priority-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-renewal-priority",
+          "instance": "sales-renewal-priority-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-renewal-priority",
+          "instance": "sales-renewal-priority-0006",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "sales-renewal-priority",
+          "instance": "sales-renewal-priority-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-renewal-priority",
+          "instance": "sales-renewal-priority-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sales-renewal-priority",
+          "instance": "sales-renewal-priority-0009",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "sales-renewal-priority",
+          "instance": "sales-renewal-priority-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-goodwill-coupon",
+          "instance": "cs-goodwill-coupon-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-goodwill-coupon",
+          "instance": "cs-goodwill-coupon-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-goodwill-coupon",
+          "instance": "cs-goodwill-coupon-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-goodwill-coupon",
+          "instance": "cs-goodwill-coupon-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-goodwill-coupon",
+          "instance": "cs-goodwill-coupon-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-goodwill-coupon",
+          "instance": "cs-goodwill-coupon-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-goodwill-coupon",
+          "instance": "cs-goodwill-coupon-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-goodwill-coupon",
+          "instance": "cs-goodwill-coupon-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-goodwill-coupon",
+          "instance": "cs-goodwill-coupon-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "cs-goodwill-coupon",
+          "instance": "cs-goodwill-coupon-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-vendor-onboarding",
+          "instance": "proc-vendor-onboarding-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-vendor-onboarding",
+          "instance": "proc-vendor-onboarding-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-vendor-onboarding",
+          "instance": "proc-vendor-onboarding-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-vendor-onboarding",
+          "instance": "proc-vendor-onboarding-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-vendor-onboarding",
+          "instance": "proc-vendor-onboarding-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-vendor-onboarding",
+          "instance": "proc-vendor-onboarding-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-vendor-onboarding",
+          "instance": "proc-vendor-onboarding-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-vendor-onboarding",
+          "instance": "proc-vendor-onboarding-0008",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "proc-vendor-onboarding",
+          "instance": "proc-vendor-onboarding-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "proc-vendor-onboarding",
+          "instance": "proc-vendor-onboarding-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-contract-routing",
+          "instance": "legal-contract-routing-0001",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "legal-contract-routing",
+          "instance": "legal-contract-routing-0002",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "legal-contract-routing",
+          "instance": "legal-contract-routing-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-contract-routing",
+          "instance": "legal-contract-routing-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-contract-routing",
+          "instance": "legal-contract-routing-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-contract-routing",
+          "instance": "legal-contract-routing-0006",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "legal-contract-routing",
+          "instance": "legal-contract-routing-0007",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "legal-contract-routing",
+          "instance": "legal-contract-routing-0008",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "legal-contract-routing",
+          "instance": "legal-contract-routing-0009",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "legal-contract-routing",
+          "instance": "legal-contract-routing-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-phishing-response",
+          "instance": "sec-phishing-response-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-phishing-response",
+          "instance": "sec-phishing-response-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-phishing-response",
+          "instance": "sec-phishing-response-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-phishing-response",
+          "instance": "sec-phishing-response-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-phishing-response",
+          "instance": "sec-phishing-response-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-phishing-response",
+          "instance": "sec-phishing-response-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-phishing-response",
+          "instance": "sec-phishing-response-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-phishing-response",
+          "instance": "sec-phishing-response-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-phishing-response",
+          "instance": "sec-phishing-response-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "sec-phishing-response",
+          "instance": "sec-phishing-response-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        }
+      ],
+      "holdout": [
+        "legal-contract-routing",
+        "sec-phishing-response",
+        "cs-goodwill-coupon",
+        "proc-vendor-onboarding",
+        "sales-renewal-priority"
+      ]
+    },
+    "5": {
+      "n": 50,
+      "exact": 35,
+      "verdict_ok": 43,
+      "relaxed_ok": 35,
+      "results": [
+        {
+          "case_id": "legal-nda-fastpass",
+          "instance": "legal-nda-fastpass-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-nda-fastpass",
+          "instance": "legal-nda-fastpass-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-nda-fastpass",
+          "instance": "legal-nda-fastpass-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-nda-fastpass",
+          "instance": "legal-nda-fastpass-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-nda-fastpass",
+          "instance": "legal-nda-fastpass-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-nda-fastpass",
+          "instance": "legal-nda-fastpass-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-nda-fastpass",
+          "instance": "legal-nda-fastpass-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-nda-fastpass",
+          "instance": "legal-nda-fastpass-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-nda-fastpass",
+          "instance": "legal-nda-fastpass-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "legal-nda-fastpass",
+          "instance": "legal-nda-fastpass-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-lead-scoring",
+          "instance": "mkt-lead-scoring-0001",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-lead-scoring",
+          "instance": "mkt-lead-scoring-0002",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "mkt-lead-scoring",
+          "instance": "mkt-lead-scoring-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-lead-scoring",
+          "instance": "mkt-lead-scoring-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-lead-scoring",
+          "instance": "mkt-lead-scoring-0005",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "mkt-lead-scoring",
+          "instance": "mkt-lead-scoring-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-lead-scoring",
+          "instance": "mkt-lead-scoring-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-lead-scoring",
+          "instance": "mkt-lead-scoring-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "mkt-lead-scoring",
+          "instance": "mkt-lead-scoring-0009",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "mkt-lead-scoring",
+          "instance": "mkt-lead-scoring-0010",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-reorder-point",
+          "instance": "log-reorder-point-0001",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-reorder-point",
+          "instance": "log-reorder-point-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-reorder-point",
+          "instance": "log-reorder-point-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-reorder-point",
+          "instance": "log-reorder-point-0004",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-reorder-point",
+          "instance": "log-reorder-point-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-reorder-point",
+          "instance": "log-reorder-point-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-reorder-point",
+          "instance": "log-reorder-point-0007",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-reorder-point",
+          "instance": "log-reorder-point-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-reorder-point",
+          "instance": "log-reorder-point-0009",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-reorder-point",
+          "instance": "log-reorder-point-0010",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-return-disposition",
+          "instance": "log-return-disposition-0001",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-return-disposition",
+          "instance": "log-return-disposition-0002",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-return-disposition",
+          "instance": "log-return-disposition-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-return-disposition",
+          "instance": "log-return-disposition-0004",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-return-disposition",
+          "instance": "log-return-disposition-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-return-disposition",
+          "instance": "log-return-disposition-0006",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "log-return-disposition",
+          "instance": "log-return-disposition-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-return-disposition",
+          "instance": "log-return-disposition-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-return-disposition",
+          "instance": "log-return-disposition-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "log-return-disposition",
+          "instance": "log-return-disposition-0010",
+          "ok": false,
+          "verdict_ok": true,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-donation-request",
+          "instance": "ga-donation-request-0001",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        },
+        {
+          "case_id": "ga-donation-request",
+          "instance": "ga-donation-request-0002",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-donation-request",
+          "instance": "ga-donation-request-0003",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-donation-request",
+          "instance": "ga-donation-request-0004",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-donation-request",
+          "instance": "ga-donation-request-0005",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-donation-request",
+          "instance": "ga-donation-request-0006",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-donation-request",
+          "instance": "ga-donation-request-0007",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-donation-request",
+          "instance": "ga-donation-request-0008",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-donation-request",
+          "instance": "ga-donation-request-0009",
+          "ok": true,
+          "verdict_ok": true,
+          "relaxed_ok": true
+        },
+        {
+          "case_id": "ga-donation-request",
+          "instance": "ga-donation-request-0010",
+          "ok": false,
+          "verdict_ok": false,
+          "relaxed_ok": false
+        }
+      ],
+      "holdout": [
+        "log-return-disposition",
+        "log-reorder-point",
+        "legal-nda-fastpass",
+        "ga-donation-request",
+        "mkt-lead-scoring"
+      ]
+    }
+  },
+  "summary": {
+    "folds_done": 6,
+    "cases": 34,
+    "n": 340,
+    "exact": 248,
+    "exact_pct": 72.9,
+    "verdict_pct": 87.4,
+    "relaxed_pct": 73.8,
+    "ci95_cluster": [
+      64.7,
+      80.9
+    ]
+  }
+}
