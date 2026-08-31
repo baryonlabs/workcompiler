@@ -9,6 +9,7 @@ import subprocess
 
 PARAMS = {'customer_id': 'CUST-1001', 'contract_id': 'CTR-2024-0917'}   # recorded values; override via run(**inputs)
 COMMANDS = ['cat /Users/hongmartin/orca/projects/open-workflow/examples/customer-renewal/behaviors/verify-current-contract/BEHAVIOR.md', 'cat /Users/hongmartin/orca/projects/open-workflow/examples/customer-renewal/behaviors/use-current-pricing-policy/BEHAVIOR.md']
+FORCE_COMMANDS = False   # True: always replay COMMANDS above, ignoring cmd/cmds passed in (harden lever)
 
 def _render(text, inputs):
     """Fill {param} placeholders from inputs, falling back to the recorded PARAMS."""
@@ -26,7 +27,8 @@ def run(**inputs):
     exposed to the commands as an environment variable (OW_<KEY>). LC_ALL defaults to "C"
     to match the agent sandbox so ordering-sensitive output (sort, ls) reproduces exactly.
     """
-    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS])
+    commands = ([_render(c, inputs) for c in COMMANDS] if FORCE_COMMANDS else
+                inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS]))
     env = dict(os.environ)
     env.setdefault("LC_ALL", "C")
     for key, value in inputs.items():

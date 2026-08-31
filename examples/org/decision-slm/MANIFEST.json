@@ -1,0 +1,14 @@
+{
+  "holdout_cases": [
+    "finance-budget-overrun",
+    "cs-goodwill-coupon",
+    "hr-overtime-approval",
+    "proc-price-increase",
+    "log-return-disposition",
+    "sec-sharing-exception"
+  ],
+  "train": 1120,
+  "valid": 140,
+  "eval_seen": 56,
+  "eval_unseen": 60
+}

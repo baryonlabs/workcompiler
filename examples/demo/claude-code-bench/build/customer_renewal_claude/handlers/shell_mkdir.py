@@ -9,6 +9,7 @@ import subprocess
 
 PARAMS = {'customer_id': 'CUST-1001', 'contract_id': 'CTR-2024-0917'}   # recorded values; override via run(**inputs)
 COMMANDS = ['mkdir -p build/renewal && python3 - <<\'EOF\'\nimport json, math, datetime\n\n# --- inputs (from crm.lookup_contract & usage calc, policy = pricing_v2) ---\ncontract = {"customer_id": "{customer_id}", "contract_id": "{contract_id}", "plan": "enterprise",\n            "seats": 240, "start_date": "2024-09-01", "end_date": "2026-09-30"}\npeak_seats = 262\ntoday = datetime.date(2026, 8, 29)\nstart = datetime.date.fromisoformat(contract["start_date"])\n\n# pricing_v2 policy parameters\nlist_price = {"starter": 12.0, "professional": 25.0, "enterprise": 40.0}\nvolume_bands = [(50, 5), (200, 10), (500, 15)]\nloyalty_min_years, loyalty_pct = 2, 3\nmax_total_discount_pct = 20\n\n# seat_recommendation: max(current seats, peak of last 3 months) rounded up to next 10\ncommitted = math.ceil(max(contract["seats"], peak_seats) / 10) * 10\n\nprice = list_price[contract["plan"]]\nvolume_pct = max((pct for m, pct in volume_bands if committed >= m), default=0)\n\nyears_of_service = (today - start).days / 365.25\nloyalty_applied = years_of_service >= loyalty_min_years\nloyalty = loyalty_pct if loyalty_applied else 0\n\ntotal_discount = min(volume_pct + loyalty, max_total_discount_pct)\n\nmonthly_list = committed * price\nmonthly_total = round(monthly_list * (1 - total_discount / 100), 2)\nannual_total = round(monthly_total * 12, 2)\n\nresult = {\n    "customer_id": contract["customer_id"],\n    "contract_id": contract["contract_id"],\n    "pricing_policy": "pricing_v2",\n    "as_of": today.isoformat(),\n    "plan": contract["plan"],\n    "current_contract_seats": contract["seats"],\n    "peak_seats_active_3m": peak_seats,\n    "recommended_committed_seats": committed,\n    "list_price_per_seat_month_usd": price,\n    "monthly_list_total_usd": monthly_list,\n    "volume_discount_pct": volume_pct,\n    "loyalty": {\n        "contract_start_date": contract["start_date"],\n        "years_of_continuous_service": round(years_of_service, 2),\n        "min_years_required": loyalty_min_years,\n        "applied": loyalty_applied,\n        "pct": loyalty,\n    },\n    "total_discount_pct": total_discount,\n    "max_total_discount_pct": max_total_discount_pct,\n    "monthly_total_usd": monthly_total,\n    "annual_total_usd": annual_total,\n    "renewal_term_months": 12,\n    "currency": "USD",\n}\nwith open("build/renewal/pricing-{customer_id}.json", "w") as f:\n    json.dump(result, f, indent=2)\nprint(json.dumps(result, indent=2))\nEOF']
+FORCE_COMMANDS = False   # True: always replay COMMANDS above, ignoring cmd/cmds passed in (harden lever)
 
 def _render(text, inputs):
     """Fill {param} placeholders from inputs, falling back to the recorded PARAMS."""
@@ -26,7 +27,8 @@ def run(**inputs):
     exposed to the commands as an environment variable (OW_<KEY>). LC_ALL defaults to "C"
     to match the agent sandbox so ordering-sensitive output (sort, ls) reproduces exactly.
     """
-    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS])
+    commands = ([_render(c, inputs) for c in COMMANDS] if FORCE_COMMANDS else
+                inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS]))
     env = dict(os.environ)
     env.setdefault("LC_ALL", "C")
     for key, value in inputs.items():

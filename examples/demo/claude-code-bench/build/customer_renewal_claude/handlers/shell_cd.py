@@ -9,6 +9,7 @@ import subprocess
 
 PARAMS = {'customer_id': 'CUST-1001', 'contract_id': 'CTR-2024-0917'}   # recorded values; override via run(**inputs)
 COMMANDS = ['cd /Users/hongmartin/orca/projects/open-workflow && jq \'.contracts[] | select(.customer_id == "{customer_id}" and .status == "active")\' examples/customer-renewal/data/crm/contracts.json', 'cd /Users/hongmartin/orca/projects/open-workflow && python3 - <<\'EOF\'\nimport csv\n\nrows = [r for r in csv.DictReader(open("examples/customer-renewal/data/usage/usage-2026-07.csv"))\n        if r["customer_id"] == "{customer_id}"]\nrows.sort(key=lambda r: r["month"])\nseats = [int(r["seats_active"]) for r in rows]\napi = [int(r["api_calls"]) for r in rows]\n\npeak = max(seats)\ngrowth_pct = (seats[-1] - seats[0]) / seats[0] * 100\navg_api = sum(api) / len(api)\n\nprint(f"months          : {[r[\'month\'] for r in rows]}")\nprint(f"seats_active    : {seats}")\nprint(f"peak seats      : {peak}")\nprint(f"growth (last vs first): {growth_pct:.2f}%")\nprint(f"avg api_calls   : {avg_api:,.0f}")\nEOF']
+FORCE_COMMANDS = False   # True: always replay COMMANDS above, ignoring cmd/cmds passed in (harden lever)
 
 def _render(text, inputs):
     """Fill {param} placeholders from inputs, falling back to the recorded PARAMS."""
@@ -26,7 +27,8 @@ def run(**inputs):
     exposed to the commands as an environment variable (OW_<KEY>). LC_ALL defaults to "C"
     to match the agent sandbox so ordering-sensitive output (sort, ls) reproduces exactly.
     """
-    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS])
+    commands = ([_render(c, inputs) for c in COMMANDS] if FORCE_COMMANDS else
+                inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS]))
     env = dict(os.environ)
     env.setdefault("LC_ALL", "C")
     for key, value in inputs.items():

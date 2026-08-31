@@ -397,3 +397,18 @@ def test_promote_write_step_refuses_wrong_values(tmp_path, monkeypatch):
     wrong = GOOD_1002        # CUST-1002 values offered for the CUST-1001 evaluation → exact match fails
     rep = slm.promote(root, "write_pricing", slm.SLMRuntime(model="fake-7b"), transport=_fake_transport(wrong))
     assert not rep.promoted and not slm.is_promoted(root, "write_pricing")
+
+
+def test_bench_strips_line_numbers_per_segment_in_merged_outputs():
+    from core.build.bench import _strip_read_numbers
+
+    merged = ("1\t{\n2\t  \"a\": 1\n3\t}\n"                    # Read result 1
+              "1\tcustomer,month\n2\tC1,2026-05\n"              # Read result 2 (numbered again from 1)
+              "examples/behaviors/x/BEHAVIOR.md\n"              # Glob result (plain)
+              "examples/behaviors/y/BEHAVIOR.md")
+    out = _strip_read_numbers(merged)
+    assert out.splitlines()[0] == "{" and "customer,month" in out.splitlines()
+    assert out.splitlines()[-1] == "examples/behaviors/y/BEHAVIOR.md"
+    assert "1\t" not in out
+    # data whose first column happens to be a lone numbered line is left alone (run length < 2)
+    assert _strip_read_numbers("1\tsingle numbered line\nplain") == "1\tsingle numbered line\nplain"

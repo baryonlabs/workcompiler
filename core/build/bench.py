@@ -262,11 +262,31 @@ _READ_NUMBER_RE = re.compile(r"^\s*\d+(?:→|\t)")
 
 def _strip_read_numbers(text: str) -> str:
     """Claude Code's Read tool prefixes every line with its number (``12→`` / ``12<TAB>``); the replay
-    (``cat``) does not. Strip only when every non-empty line is numbered."""
+    (``cat``) does not. A merged step (parallel Reads + a Glob) concatenates numbered and plain
+    segments, so strip per *run*: maximal stretches of consecutively numbered lines that start
+    again at 1 (two or more lines), leaving everything else untouched."""
     lines = text.splitlines()
-    if not lines or not all(_READ_NUMBER_RE.match(l) for l in lines if l.strip()):
-        return text
-    return "\n".join(_READ_NUMBER_RE.sub("", l, count=1) for l in lines)
+    out, i = [], 0
+    while i < len(lines):
+        m = _READ_NUMBER_RE.match(lines[i])
+        num = int(re.match(r"\s*(\d+)", lines[i]).group(1)) if m else None
+        if m and num == 1:
+            run = [i]
+            expect = 2
+            j = i + 1
+            while j < len(lines):
+                mj = _READ_NUMBER_RE.match(lines[j])
+                if mj and int(re.match(r"\s*(\d+)", lines[j]).group(1)) == expect:
+                    run.append(j); expect += 1; j += 1
+                else:
+                    break
+            if len(run) >= 2:
+                out.extend(_READ_NUMBER_RE.sub("", lines[k], count=1) for k in run)
+                i = j
+                continue
+        out.append(lines[i])
+        i += 1
+    return "\n".join(out)
 
 
 def _compare(recorded: str, compiled: str) -> tuple[bool, str]:

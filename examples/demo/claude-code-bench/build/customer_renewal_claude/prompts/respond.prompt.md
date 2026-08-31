@@ -13,29 +13,6 @@ Do not invent data outside the provided inputs. Escalate to a human when uncerta
 
 ## Invariants (must hold)
 
-- keep_report_evidence_auditable
-- require_quality_engineer_approval
-- gate_causation_by_calibration
-- use_authoritative_thresholds
-- bound_cause_to_trusted_evidence
-- verify_bound_mes_anomaly
-- keep_decision_artifacts_auditable
-- apply_refund_eligibility_rules
-- enforce_finance_approval_threshold
-- verify_receipt_before_decision
-- prove_duplicate_from_successful_payments
-- use_authoritative_policy_v3
-- verify_successful_payment_receipt
-- escalate_unresolved_source_conflicts
-- correlate_changes_without_causation
-- classify_signature_exactly
-- use_runbook_faithfully
-- escalate_without_remediation
-- select_exact_current_alert
-- meet_triage_sla_and_output_contract
-- enforce_discount_approval_cap
-- verify_active_contract
-- include_required_clauses_verbatim
 - use_current_pricing_policy
 - verify_current_contract
 

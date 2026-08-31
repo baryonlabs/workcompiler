@@ -209,6 +209,7 @@ def run(**inputs):
     elif cmds:
         body = f'''PARAMS = {defaults!r}   # recorded values; override via run(**inputs)
 COMMANDS = {cmds!r}
+FORCE_COMMANDS = False   # True: always replay COMMANDS above, ignoring cmd/cmds passed in (harden lever)
 {_RENDER_HELPER}
 
 def run(**inputs):
@@ -218,7 +219,8 @@ def run(**inputs):
     exposed to the commands as an environment variable (OW_<KEY>). LC_ALL defaults to "C"
     to match the agent sandbox so ordering-sensitive output (sort, ls) reproduces exactly.
     """
-    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS])
+    commands = ([_render(c, inputs) for c in COMMANDS] if FORCE_COMMANDS else
+                inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS]))
     env = dict(os.environ)
     env.setdefault("LC_ALL", "C")
     for key, value in inputs.items():

@@ -7,6 +7,7 @@
     python3 -m core.build run        build/<work> --request "..." [--param k=v] [--escalate auto|claude|codex|…] [--binder regex|agent]
     python3 -m core.build promote    build/<work> <action> [--model qwen2.5:7b] [--dry-run]   # frontier → local SLM under the quality gate
     python3 -m core.build demote     build/<work> <action>
+    python3 -m core.build harden     build/<work> [--escalate auto|…] [--budget-tokens N]   # harness loop: bench→fix→re-bench until reproducible
     python3 -m core.build cache      list|clear build/<work> [--action a]   # escalate-once replay cache
     python3 -m core.build dataset    build/<work> <action>              # recorded + cache + fleet truth → train/valid jsonl
     python3 -m core.build train      build/<work> <action> [--base-model …] [--iters N]   # mlx-lm LoRA
@@ -41,7 +42,9 @@ def cmd_from_trace(args: argparse.Namespace) -> int:
     from core.compiler import WorkCompiler
 
     payload = json.loads(Path(args.trace_json).read_text(encoding="utf-8"))
-    trace = TraceIR.model_validate(payload.get("trace", payload))
+    if isinstance(payload, dict) and "traces" in payload:      # a build's trace.json wraps a list
+        payload = payload["traces"][0]
+    trace = TraceIR.model_validate(payload.get("trace", payload) if isinstance(payload, dict) else payload)
     behaviors = []
     if args.behaviors:
         for p in sorted(Path(args.behaviors).rglob("BEHAVIOR.md")):
@@ -131,6 +134,29 @@ def cmd_demote(args) -> int:
     info = demote(args.build_dir, args.action)
     print(f"[demote] {args.action} restored to {info['restored'].get('type', 'frontier_llm')}")
     return 0
+
+
+def cmd_harden(args) -> int:
+    from core.build.harden import harden
+
+    escalator, backend_name = None, "none"
+    if args.escalate != "none":
+        from core.agents import as_escalator, resolve_backend
+        agent = resolve_backend(args.escalate)
+        escalator, backend_name = as_escalator(agent, model=getattr(args, "model", None)), agent.name
+    report = harden(args.build_dir, escalator=escalator, backend_name=backend_name,
+                    max_iters=args.max_iters, budget_tokens=args.budget_tokens)
+    print(f"[harden] {report.work}: {report.final_matched}/{report.final_checked} reproduced · "
+          f"{'converged' if report.converged else report.stopped_because} · fix tokens {report.tokens_total:,}")
+    for it in report.iterations:
+        print(f"  iter {it.number}: attempted {', '.join(it.attempted) or '-'} | accepted {', '.join(it.accepted) or '-'} | "
+              f"reverted {', '.join(it.reverted) or '-'} | {it.score_before[0]}/{it.score_before[1]} → {it.score_after[0]}/{it.score_after[1]}")
+    if report.inherent:
+        print(f"  inherent (not chased): {', '.join(report.inherent)}")
+    if report.needs_human:
+        print(f"  needs a human: {', '.join(report.needs_human)}")
+    print(f"  report: {Path(args.build_dir) / 'HARDEN.md'}")
+    return 0 if report.converged or report.final_matched == report.final_checked else 1
 
 
 def cmd_cache(args) -> int:
@@ -278,6 +304,15 @@ def main(argv=None) -> int:
     g.add_argument("build_dir")
     g.add_argument("action")
     g.set_defaults(func=cmd_demote)
+
+    m = sub.add_parser("harden", help="Compile-time harness loop: bench → agent fixes build artifacts → re-bench, until reproducible")
+    m.add_argument("build_dir")
+    from core.agents import REGISTRY as _REG
+    m.add_argument("--escalate", choices=["none", "auto", *_REG], default="none", help="Fix backend (producer); reviewer is the deterministic bench")
+    m.add_argument("--model", help="Model for the fix backend")
+    m.add_argument("--max-iters", type=int, default=3)
+    m.add_argument("--budget-tokens", type=int, default=0, help="Stop when fix-token spend reaches this (0 = unlimited)")
+    m.set_defaults(func=cmd_harden)
 
     h = sub.add_parser("cache", help="Escalation cache of a build: list entries or clear them")
     h.add_argument("op", choices=["list", "clear"])

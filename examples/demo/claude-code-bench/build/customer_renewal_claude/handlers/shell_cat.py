@@ -9,6 +9,7 @@ import subprocess
 
 PARAMS = {'customer_id': 'CUST-1001', 'contract_id': 'CTR-2024-0917'}   # recorded values; override via run(**inputs)
 COMMANDS = ["cat > build/renewal/proposal-{customer_id}.md <<'EOF'\n# Annual Renewal Proposal — ACME Manufacturing Co. ({customer_id})\n\n**Proposal date:** 2026-08-29 · **Pricing policy:** pricing_v2 (effective 2026-01-01) · **Currency:** USD\n\n## Customer & Contract Summary\n\n| Field | Value |\n|---|---|\n| Customer | ACME Manufacturing Co. ({customer_id}) |\n| Active contract | {contract_id} |\n| Plan | Enterprise |\n| Current committed seats | 240 |\n| Contract term | 2024-09-01 → 2026-09-30 |\n| Billing | Annual |\n| Account owner | j.park@example.com |\n\n## Usage Summary (May–Jul 2026)\n\n| Metric | Value |\n|---|---|\n| seats_active by month | 238 (May) → 247 (Jun) → 262 (Jul) |\n| Peak seats_active (3 months) | **262** |\n| seats_active growth (Jul vs May) | **+10.08%** |\n| Average api_calls / month | **2,038,333** |\n\nUsage exceeds the current 240-seat commitment; we recommend a right-sized commitment for the renewal term.\n\n## Pricing (per pricing_v2)\n\nRecommended committed seats: **270** = max(current 240, 3-month peak 262) rounded up to the next 10.\n\n| Item | Detail | Amount (USD) |\n|---|---|---:|\n| List price | 270 seats × $40.00 /seat/month (enterprise) | $10,800.00 /mo |\n| Volume discount | 270 seats ≥ 200 → −10% | −$1,080.00 /mo |\n| Loyalty discount | 1.99 years of continuous service on active contract (< 2 years required) → not applied | $0.00 |\n| **Monthly total** | total discount 10% (cap 20%) | **$9,720.00 /mo** |\n| **Annual total** | 12-month term | **$116,640.00 /yr** |\n\n## Terms & Required Clauses\n\n- 12-month term with 60-day auto-renewal notice\n- Data Processing Addendum v3 attached\n- Price valid for 30 days from proposal date\nEOF\nls -la build/renewal/"]
+FORCE_COMMANDS = False   # True: always replay COMMANDS above, ignoring cmd/cmds passed in (harden lever)
 
 def _render(text, inputs):
     """Fill {param} placeholders from inputs, falling back to the recorded PARAMS."""
@@ -26,7 +27,8 @@ def run(**inputs):
     exposed to the commands as an environment variable (OW_<KEY>). LC_ALL defaults to "C"
     to match the agent sandbox so ordering-sensitive output (sort, ls) reproduces exactly.
     """
-    commands = inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS])
+    commands = ([_render(c, inputs) for c in COMMANDS] if FORCE_COMMANDS else
+                inputs.get("cmds") or ([inputs["cmd"]] if inputs.get("cmd") else [_render(c, inputs) for c in COMMANDS]))
     env = dict(os.environ)
     env.setdefault("LC_ALL", "C")
     for key, value in inputs.items():

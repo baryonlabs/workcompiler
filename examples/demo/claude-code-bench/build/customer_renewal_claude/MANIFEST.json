@@ -1,6 +1,6 @@
 {
   "work": "customer-renewal-claude",
-  "build_dir": "/Users/hongmartin/orca/projects/open-workflow/build/customer_renewal_claude",
+  "build_dir": "build/customer_renewal_claude",
   "artifact_count": 11,
   "by_tier": {
     "work_ir": [
