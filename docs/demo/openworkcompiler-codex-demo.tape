@@ -23,11 +23,14 @@
 # Step 5 needs a local model server: `ollama pull qwen2.5:7b` (Ollama listens on 127.0.0.1:11434). The 3B model
 # fails the gate on this session's long build-tree summary (it leaves a placeholder), so the demo promotes to 7B.
 #
-# Post-process to keep the GIF small (raw vhs output is ~36 MB; this brings it to ~8.5 MB):
+# Post-process: the fixed Sleeps above are for the *recording* only (Codex renders in the alternate
+# screen, so vhs Wait+Screen cannot see its output — do not try; it reads the primary buffer's first
+# line). The viewer never waits: mpdecimate drops the idle/spinner frames, collapsing ~8 minutes of
+# recording into ~1 minute of GIF (~3.5 MB):
 #
 #   ffmpeg -y -i docs/demo/openworkcompiler-codex-demo.gif \
-#     -vf "fps=5,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=48:stats_mode=diff[p];[b][p]paletteuse=dither=none:diff_mode=rectangle" \
-#     build/codex-demo.gif && gifsicle -O3 --lossy=140 build/codex-demo.gif -o docs/demo/openworkcompiler-codex-demo.gif
+#     -vf "mpdecimate=hi=6000:lo=2000:frac=0.5,setpts=N/6/TB,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=48:stats_mode=diff[p];[b][p]paletteuse=dither=none:diff_mode=rectangle" \
+#     -r 6 build/codex-demo.gif && gifsicle -O3 --lossy=140 build/codex-demo.gif -o docs/demo/openworkcompiler-codex-demo.gif
 
 Output docs/demo/openworkcompiler-codex-demo.gif
 
