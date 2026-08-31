@@ -31,7 +31,8 @@ rm -rf build/renewal && owc build bench build/customer_renewal_claude
 
 | | 기록된 에이전트 (Claude Code, 7 스텝) | 컴파일된 빌드 (빈 상태에서 재실행) | 차이 |
 | :-- | --: | --: | --: |
-| LLM 토큰 (캐시 읽기 포함) | 1,426,098 | 213,044 | **−85.1%** |
+| LLM 토큰 (유니크 — 누적 컨텍스트 중복 제외) | 218,118 | 213,044 | **−2.3%** |
+| LLM 토큰 (누적 합산, 참고) | 1,426,098 | 213,044 | −85.1% |
 | 벽시계 시간 | 74.1 s | 10.7 s | **6.9×** |
 | 결과 재현 (code 계층 스텝) | — | **4/6 일치** (아래 참고) | |
 | 최종 산출물 `pricing-CUST-1001.json` · `proposal-CUST-1001.md` | — | **바이트 단위 동일** ([`agent-outputs/`](agent-outputs/) vs 재실행) | |
@@ -46,7 +47,7 @@ rm -rf build/renewal && owc build bench build/customer_renewal_claude
 | `shell_cat` (cat heredoc으로 제안서 작성 + `ls -la`) | code | 212,160 → 0 | 12.5 s → 0.01 s | 불일치 — `ls -la`의 시각(12:33 vs 12:34); 파일 내용은 동일 |
 | `respond` (최종 요약) | frontier_llm | 213,044 → 213,044 | 10.6 s → 10.6 s | 에스컬레이션(기록 비용 유지) |
 
-읽는 법: Codex 벤치([`customer-renewal-bench/`](../customer-renewal-bench/), −85%, 7.4×)와 **같은 구조의 결과**입니다. 에이전트가 달라도
+읽는 법: 이 빌드는 respond가 frontier 에스컬레이션으로 남아 있어 **유니크 토큰 기준 절감은 −2.3%에 불과**합니다 — 가치는 절감이 아니라 재현·검증(그리고 하네스 수렴)에 있습니다. Codex 벤치([`customer-renewal-bench/`](../customer-renewal-bench/), 유니크 −82.2%, 7.4×)와 **같은 구조의 결과**이며, 에이전트가 달라도
 업무 자체(계약 조회·집계·산정·파일 작성)는 전부 code 계층으로 내려가 토큰 0으로 재현되고, 남는 것은 사람에게 보여줄 요약 한 스텝입니다.
 토큰 절대값이 Codex보다 큰 이유는 Claude Code가 매 턴 사용자 전역 `CLAUDE.md`와 도구 스키마를 프롬프트 캐시에서 읽기 때문이며(스텝별 `recorded_cached_tokens` 참고),
 컴파일된 빌드는 그 비용을 통째로 없앱니다.

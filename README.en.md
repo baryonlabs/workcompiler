@@ -66,7 +66,7 @@ flowchart LR
 | Hardening | confirm only what automation could not fix (needs-human gate) | **harness loop** (`owc build harden`) — a coding agent fixes, the deterministic benchmark grades |
 | Execute | handle only escalated exceptions | **efficiency** (deterministic · SLM, zero-to-few tokens) + **flexibility** (a front agent binds parameters and judges exceptions) |
 
-Measured: on the same renewal-proposal task the compiled build produced identical deliverables with **−85%** tokens, **7.4×** faster than the agent — **−97%** with zero frontier escalations once the last summary step was promoted to a local SLM — and the hybrid run for a new customer (CUST-1002) was **2.1×** faster than Codex alone with the agent's share reduced to one synthesized step ([benchmarks](#30-second-demo-use-it-from-inside-codex)).
+Measured: on the same renewal-proposal task, once the last summary step was promoted to a local SLM, the compiled build produced identical deliverables with **−82.2% unique tokens** (the honest basis that does not double-count the cumulative context each turn resends; −97% on the cumulative-sum basis), zero frontier escalations, **7.4×** faster than the agent — and the hybrid run for a new customer (CUST-1002) was **2.1×** faster than Codex alone with the agent's share reduced to one synthesized step ([benchmarks](#30-second-demo-use-it-from-inside-codex)).
 
 ---
 
@@ -101,7 +101,8 @@ The shell steps (`shell_sed`, `shell_python3`, `shell_find`, `shell_curl`) lower
 
 | | recorded agent (Codex, 8 steps) | compiled build (replayed from a clean state) | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 139,437 | 20,545 → **4,208** after promotion | **−85% → −97%** |
+| LLM tokens (unique) | 23,614 | **4,208** after promotion (all local, $0) | **−82.2%** |
+| LLM tokens (cumulative sum, reference) | 139,437 | 20,545 → 4,208 | −85% → −97% |
 | wall time | 82.6 s | 11.2 s | **7.4×** |
 | outputs reproduced | — | **7/7** (8/8 after promotion) | |
 | deliverables `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **byte-identical** | |
@@ -112,7 +113,8 @@ Contract lookup (`jq`), data reads, pricing and writing the proposal (`apply_pat
 
 | | recorded agent (Claude Code, 7 steps) | compiled build (replayed from a clean state) | delta |
 | :-- | --: | --: | --: |
-| LLM tokens (incl. cache reads) | 1,426,098 | 213,044 | **−85%** |
+| LLM tokens (unique) | 218,118 | 213,044 | **−2.3%** — respond stays a frontier escalation here, so this build is a **reproduction/verification** case, not a savings case |
+| LLM tokens (cumulative sum, reference) | 1,426,098 | 213,044 | −85% |
 | wall time | 74.1 s | 10.7 s | **6.9×** |
 | outputs reproduced | — | **4/6** (the other two: `ls -la` timestamps, Glob path prefix) | |
 | deliverables `proposal-CUST-1001.md` · `pricing-CUST-1001.json` | — | **byte-identical** | |
@@ -179,7 +181,7 @@ owc build demote  build/customer_renewal_codex respond                      # ro
 
 | customer-renewal after promotion | recorded agent (Codex) | compiled build (code 6 + SLM 1) | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 139,437 | **4,208** (all on the local SLM, $0) | **−97.0%** |
+| LLM tokens (unique) | 23,614 | **4,208** (all on the local SLM, $0) | **−82.2%** (−97.0% on the cumulative-sum basis) |
 | wall time | 82.6 s | 17.2 s | **4.8×** |
 | outputs reproduced | — | **8/8** | |
 | frontier-LLM escalations | 1 step | **0** | |
@@ -194,9 +196,9 @@ A **complete beginner** holding nothing but work materials (a lead's memo, their
 
 | Case | What the beginner had | `$ow-define` produced | Agent's first run (gpt-5.6-sol) | Compiled build replay |
 | :-- | :-- | :-- | --: | --: |
-| Contract renewal proposal | sales lead's memo · previous proposal · CRM/usage/pricing files | TASK 9 steps · 4 BEHAVIORs | 160,876 tokens · 134 s | 24,819 (−85%) · 7.1 s · 7/7 reproduced |
+| Contract renewal proposal | sales lead's memo · previous proposal · CRM/usage/pricing files | TASK 9 steps · 4 BEHAVIORs | 160,876 tokens · 134 s | 24,819 (−85%, cumulative-sum basis) · 7.1 s · 7/7 reproduced |
 | Invoice / refund approval | CS lead's memo · previous decision · orders/payments/policy v3 | TASK 10 steps · 6 BEHAVIORs | 280,023 tokens · 114 s | 21,999 (−92%) · 6.0 s · same decision |
-| Manufacturing quality anomaly | quality lead's memo · previous report · MES/sensor/calibration logs | TASK 8 steps · 6 BEHAVIORs | 138,200 tokens · 142 s | 32,661 (−76%) · 12.7 s · 5/5 reproduced |
+| Manufacturing quality anomaly | quality lead's memo · previous report · MES/sensor/calibration logs | TASK 8 steps · 6 BEHAVIORs | 138,200 tokens · 142 s | 32,661 (−76%, cumulative-sum basis) · 12.7 s · 5/5 reproduced |
 | Security / ops incident triage | on-call lead's memo · previous note · alerts/signatures/runbooks | TASK 10 steps · 6 BEHAVIORs | 159,640 tokens · 88 s | 21,081 (−87%) · 5.3 s · same classification |
 
 Every build's `BENCHMARK.md` carries a **token ledger**: per step, which model spent how many prompt (cached) + completion tokens when recorded, and what (code / rule / a model) spends how many after compilation, plus per-model totals; each run appends to `ledger.jsonl`, so the effect of swapping models (frontier → SLM → code) can be tracked over time.
