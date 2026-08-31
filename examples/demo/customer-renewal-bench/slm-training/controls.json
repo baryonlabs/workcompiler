@@ -1,0 +1,211 @@
+[
+  {
+    "label": "cot-tuned-7b",
+    "at": "2026-09-01T00:27:42",
+    "passed": 0,
+    "n": 6,
+    "field_accuracy_pct": 86.4,
+    "fields": "114/132",
+    "results": [
+      {
+        "customer": "CUST-2007",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2007.md: numbers not in JSON/context/derived: ['1440', '2400'])",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2007.json": {
+            "ok": 21,
+            "total": 22,
+            "wrong_fields": [
+              "usage.average_api_calls"
+            ]
+          }
+        },
+        "latency_s": 29.7
+      },
+      {
+        "customer": "CUST-2010",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2010.md: numbers not in JSON/context/derived: ['1530', '2550'])",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2010.json": {
+            "ok": 20,
+            "total": 22,
+            "wrong_fields": [
+              "usage.average_api_calls",
+              "usage.seats_active_growth_pct"
+            ]
+          }
+        },
+        "latency_s": 30.0
+      },
+      {
+        "customer": "CUST-2015",
+        "passed": false,
+        "gate": "FAIL (json_values)",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2015.json": {
+            "ok": 21,
+            "total": 22,
+            "wrong_fields": [
+              "usage.average_api_calls"
+            ]
+          }
+        },
+        "latency_s": 30.7
+      },
+      {
+        "customer": "CUST-2017",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2017.md: numbers not in JSON/context/derived: ['15360', '4608'])",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2017.json": {
+            "ok": 21,
+            "total": 22,
+            "wrong_fields": [
+              "usage.average_api_calls"
+            ]
+          }
+        },
+        "latency_s": 30.8
+      },
+      {
+        "customer": "CUST-2022",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2022.md: numbers not in JSON/context/derived: ['22500'])",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2022.json": {
+            "ok": 11,
+            "total": 22,
+            "wrong_fields": [
+              "annual_total_usd",
+              "discounts.monthly_discount_usd",
+              "discounts.total_discount_pct",
+              "discounts.uncapped_total_discount_pct",
+              "discounts.volume_band_min_seats",
+              "discounts.volume_discount_pct",
+              "gross_monthly_usd",
+              "monthly_total_usd"
+            ]
+          }
+        },
+        "latency_s": 30.8
+      },
+      {
+        "customer": "CUST-2030",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2030.md: numbers not in JSON/context/derived: ['2250', '7500'])",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2030.json": {
+            "ok": 20,
+            "total": 22,
+            "wrong_fields": [
+              "usage.average_api_calls",
+              "usage.seats_active_growth_pct"
+            ]
+          }
+        },
+        "latency_s": 30.3
+      }
+    ]
+  },
+  {
+    "label": "frontier-sonnet-compiled-prompt",
+    "at": "2026-09-01T00:33:21",
+    "passed": 0,
+    "n": 6,
+    "field_accuracy_pct": 93.6,
+    "fields": "103/110",
+    "results": [
+      {
+        "customer": "CUST-2007",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2007.md: numbers not in JSON/context/derived: ['1440', '2400'])",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2007.json": {
+            "ok": 21,
+            "total": 22,
+            "wrong_fields": [
+              "usage.seats_active_growth_pct"
+            ]
+          }
+        },
+        "latency_s": 46.7
+      },
+      {
+        "customer": "CUST-2010",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2010.md: numbers not in JSON/context/derived: ['1530', '2550'])",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2010.json": {
+            "ok": 21,
+            "total": 22,
+            "wrong_fields": [
+              "usage.seats_active_growth_pct"
+            ]
+          }
+        },
+        "latency_s": 42.3
+      },
+      {
+        "customer": "CUST-2015",
+        "passed": false,
+        "gate": "FAIL (json_values)",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2015.json": {
+            "ok": 20,
+            "total": 22,
+            "wrong_fields": [
+              "usage.average_api_calls",
+              "usage.seats_active_growth_pct"
+            ]
+          }
+        },
+        "latency_s": 57.2
+      },
+      {
+        "customer": "CUST-2017",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2017.md: numbers not in JSON/context/derived: ['15360', '4608'])",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2017.json": {
+            "ok": 21,
+            "total": 22,
+            "wrong_fields": [
+              "usage.seats_active_growth_pct"
+            ]
+          }
+        },
+        "latency_s": 57.7
+      },
+      {
+        "customer": "CUST-2022",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2022.md: numbers not in JSON/context/derived: ['14700', '4410'])",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2022.json": {
+            "ok": 0,
+            "total": null,
+            "note": "unparseable"
+          }
+        },
+        "latency_s": 73.2
+      },
+      {
+        "customer": "CUST-2030",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2030.md: numbers not in JSON/context/derived: ['2250', '7500'])",
+        "field_accuracy": {
+          "build/renewal/pricing-CUST-2030.json": {
+            "ok": 20,
+            "total": 22,
+            "wrong_fields": [
+              "usage.average_api_calls",
+              "usage.seats_active_growth_pct"
+            ]
+          }
+        },
+        "latency_s": 51.7
+      }
+    ]
+  }
+]

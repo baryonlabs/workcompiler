@@ -43,7 +43,7 @@ linux-builder의 RTX 4090(TRL QLoRA, completion-only loss)에서 훈련하고, `
 ## 대조군 2종 — "0/6"의 진짜 의미 (`tools/remote-train/run_controls.py`)
 
 같은 컴파일 프롬프트로 두 대조군을 돌리고, 게이트 판정 옆에 **필드 단위 부분점수**(truth pricing
-JSON의 수치 리프 일치율)를 병기했습니다 (원자료: `models/slm/write_pricing_cust_1001/controls.json`):
+JSON의 수치 리프 일치율)를 병기했습니다 (원자료: [controls.json](controls.json)):
 
 | 팔 | 게이트 (exact) | 수치 필드 정확도 | 틀리는 곳 |
 | :-- | --: | --: | :-- |
