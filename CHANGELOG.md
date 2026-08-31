@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.5.0 — 2026-08-31
+
+Escalate once, replay forever — and a gate honest enough to refuse.
 
 - **Escalate once, replay forever** (`core/build/cache.py`): a successful escalation or SLM result of a run is cached inside the build keyed by the bound parameters (files a derivation step wrote are captured too); a later run with the same parameters replays it locally. Measured on the promoted customer-renewal build for CUST-1002: cold run 184,454 tokens · 58.9 s (Claude writes the files once, the SLM answers) → **repeat run 0 LLM tokens · 0.1 s**, all 8 steps local (6 code + 2 cache), deliverables identical.
 - **Derivation (file-writing) steps on the SLM tier, gated** (`slm.execute_files` / `gate_files`): the model regenerates the recorded files for new parameters from a masked template; the gate checks the file set, JSON key tree, parameter substitution, mined arithmetic identities (a+b, a−b, a×b, %, ×12) and **sibling-pair grounding** — number pairs that were jointly grounded in the recording (a discount band's min-seats↔pct) must co-occur in this run's inputs, which catches a wrong band choice that every self-consistency check would pass. `owc build promote <build> <action>` evaluates derivation steps by exact reproduction of the recorded files.
