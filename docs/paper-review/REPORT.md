@@ -13,7 +13,7 @@ claims-map(주장-증거 대응) — 의 종합. 판정은 이 커밋 시점의 
 | C3b escalate-once 캐시 + 상류 지문 무효화 | 약한 novel-combination | 발표 시스템 부재는 맞으나(Agentic Plan Caching 2506.14852는 무효화 미다룸) Nix/Bazel provenance 이식이라 수치 없이는 엔지니어링으로 읽힘 |
 | C3c 정책-인-컨텍스트 SFT → unseen 정책 일반화 | **novel-combination — 유일하게 출판 가능한 본체** | 정반대 설계(TriMPI 2510.09474: 정책을 가중치로 내재화)는 있어도 "정책 적용 기술을 학습시키고 미학습 정책 전이를 측정"하는 프레이밍은 비어 있음 |
 | C4 결정론 벤치가 리뷰어인 harden 루프 | novel-combination (여유 급감) | HarnessFix(2606.06324)·FlowFixer(2607.02882)·DGM이 동시기 근접. 루프가 아니라 **inherent 분류(비결정성을 거짓말로 패치하지 못하게 막음)** 를 앞세울 것 — 그건 미발표 |
-| C5 정책-as-데이터 결정 카탈로그 | incremental | EntCollabBench(2605.08761)가 ~70% 독립 구축, DMN v1.5가 10년째 표준(우리 DSL=S-FEEL 재발명). 남는 것: `defer:` 선언적 재량 밴드 하나 |
+| C5 정책-as-데이터 결정 카탈로그 | incremental | "Beyond the All-in-One Agent"(2605.08761, 가칭 EntCollabBench로 조사됨)가 ~70% 독립 구축, DMN v1.5가 10년째 표준(우리 DSL=S-FEEL 재발명). 남는 것: `defer:` 선언적 재량 밴드 하나 |
 
 **출판 전략**: ① C3c 본체 + C3a 음성 대조군 → EMNLP/ACL Industry, ② C2 게이트 단독 → MLSys 또는 ASE/FSE,
 ③ C1+C4 시스템 → ICSE/FSE Demo·SEIP. **단일 최대 리스크**: 헤드라인 C1이 선점되어 신규성이 C2/C3c로
@@ -106,7 +106,7 @@ cost-quality Pareto + FAR/FRR 곡선.
   FuzzerAid 2209.01244 · Patch Overfitting(FSE'24) · More Convincing Not More Correct 2607.05904(최강 논거) ·
   Huang et al. 2310.01798 · AgentRR 2505.17716 · ExpeL 2308.10144 · Token-Budget-Aware 2412.18547 ·
   SWT-Bench 2406.12952 · CodeT(ICLR'23) · Weaver 2506.18203
-- **C5**: EntCollabBench 2605.08761 · DMN v1.5(OMG 2024) · GuardSet-X 2506.19054 · PolicyGuard 2606.32004 ·
+- **C5**: Beyond the All-in-One Agent 2605.08761 · DMN v1.5(OMG 2024) · GuardSet-X 2506.19054 · PolicyGuard 2606.32004 ·
   PSEBench 2606.05463 · Compass 2601.01836 · Snorkel 1711.10160(`defer`의 구조적 조상) ·
   Internalizing Policy Documents 2510.11588 · Teaching AI to Handle Exceptions(PNAS Nexus 2026,
   2503.02976 — `defer`의 최강 동기이자 최강 위협) · NL Policies to Executable Decisions 2608.26124 ·
