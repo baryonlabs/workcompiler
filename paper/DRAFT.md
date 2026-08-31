@@ -43,6 +43,18 @@ weights*. This paper measures whether that skill is actually learnable by superv
 fine-tuning of a small model — and, critically, whether it transfers to documents the model has
 never seen.
 
+In practice the decomposition plays out like this. The people who own these tasks are not
+programmers or model experts. At first they simply do their job — quotes, refund approvals,
+incident triage — in conversation with an agent. Those working sessions already contain the
+job's policies, its calculations, and its way of judging. Expressed in a declarative work
+language (OpenWorkLang) and run through its compiler (OpenWorkCompiler), the policies become an
+ontology with rules, the calculations become programs, and the judgment goes to a trained small
+model — yielding a task-specific execution-and-decision tool that runs on a local GPU, without
+a frontier LLM, at a fraction of the tokens. This paper puts the most doubtful link of that
+chain to the test — is judgment actually learnable by a small model? — and backs the other
+links with controls and measurements (calculation belongs to programs, §5.3; the token
+economics, §5.4).
+
 We study the cleanest instance of this class that still admits a deterministic grader:
 organizational decision policies. When an employee asks "can I give this customer a 12%
 discount?", the organization does not want an oracle's opinion. It wants *its own policy
@@ -343,6 +355,7 @@ generator and stored model outputs.
 
 ### TODO before submission
 - [ ] Related-work prose (§2 is currently a positioning skeleton).
+- [ ] Decide whether naming OpenWorkLang/OpenWorkCompiler in §1 must be anonymized for review.
 - [x] refs.bib authors completed from arXiv pages (four highly-cited entries kept as first-author + others).
 - [ ] Decide the venue and convert to its LaTeX template (ACL style files).
 - [ ] Limitations section as a separate ACL-required section (lift from §3.4/§6).
