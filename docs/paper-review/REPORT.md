@@ -79,9 +79,11 @@ claims-map(주장-증거 대응) — 의 종합. 판정은 이 커밋 시점의 
 | 9 | 부분점수 채점(fleet 필드 단위, decision 완화 지표 병기) | 2h | 0/6의 해상도 |
 
 착수 묶음 권고: **10 → 1 → 2 → 6 (6.5h)** 이 최대 공격 3개를 막고, 8·5는 발표 전 필수,
-3·4는 CI를 실제로 좁히는 유일한 수단. related-work의 추가 요구: C3c unseen 정책 6→30개
-(leave-case-out이 부분 해결), C2에는 self-consistency·LLM-judge·RAGAS·embedding-유사도·oracle
-skyline 베이스라인과 cost-quality Pareto + FAR/FRR 곡선.
+3·4는 CI를 실제로 좁히는 유일한 수단. related-work의 추가 요구: C3c는 unseen 정책을 6→20–50개로
+확대(정책 **계열** 단위 홀드아웃, 3+ seed — leave-case-out이 부분 해결)하고, **적대적·반사실 정책
+통제와 k-shot ICL 베이스라인**으로 "모델이 정책을 무시하고 상식적 사전지식으로 맞혔을 가능성"을
+배제할 것; C2에는 self-consistency·LLM-judge·RAGAS·embedding-유사도·oracle skyline 베이스라인과
+cost-quality Pareto + FAR/FRR 곡선.
 
 ## 4. 필수 인용 목록 (신규 추가분)
 
