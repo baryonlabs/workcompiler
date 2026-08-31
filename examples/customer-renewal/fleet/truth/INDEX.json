@@ -1,0 +1,2702 @@
+[
+  {
+    "customer_id": "CUST-2001",
+    "plan": "starter",
+    "seats": 38,
+    "recommended": 40,
+    "volume_pct": 0,
+    "loyalty_pct": 3,
+    "annual_total_usd": 5587.2
+  },
+  {
+    "customer_id": "CUST-2002",
+    "plan": "professional",
+    "seats": 45,
+    "recommended": 70,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 19320.0
+  },
+  {
+    "customer_id": "CUST-2003",
+    "plan": "professional",
+    "seats": 49,
+    "recommended": 70,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 19320.0
+  },
+  {
+    "customer_id": "CUST-2004",
+    "plan": "professional",
+    "seats": 50,
+    "recommended": 50,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 14250.0
+  },
+  {
+    "customer_id": "CUST-2005",
+    "plan": "starter",
+    "seats": 55,
+    "recommended": 80,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 10944.0
+  },
+  {
+    "customer_id": "CUST-2006",
+    "plan": "professional",
+    "seats": 60,
+    "recommended": 80,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 22800.0
+  },
+  {
+    "customer_id": "CUST-2007",
+    "plan": "enterprise",
+    "seats": 80,
+    "recommended": 100,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 44160.0
+  },
+  {
+    "customer_id": "CUST-2008",
+    "plan": "professional",
+    "seats": 110,
+    "recommended": 130,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 35880.0
+  },
+  {
+    "customer_id": "CUST-2009",
+    "plan": "enterprise",
+    "seats": 140,
+    "recommended": 160,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 72960.0
+  },
+  {
+    "customer_id": "CUST-2010",
+    "plan": "professional",
+    "seats": 170,
+    "recommended": 170,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 46920.0
+  },
+  {
+    "customer_id": "CUST-2011",
+    "plan": "enterprise",
+    "seats": 190,
+    "recommended": 210,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 87696.0
+  },
+  {
+    "customer_id": "CUST-2012",
+    "plan": "professional",
+    "seats": 199,
+    "recommended": 210,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 54810.0
+  },
+  {
+    "customer_id": "CUST-2013",
+    "plan": "enterprise",
+    "seats": 200,
+    "recommended": 230,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 96048.0
+  },
+  {
+    "customer_id": "CUST-2014",
+    "plan": "professional",
+    "seats": 210,
+    "recommended": 230,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 62100.0
+  },
+  {
+    "customer_id": "CUST-2015",
+    "plan": "enterprise",
+    "seats": 240,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 108000.0
+  },
+  {
+    "customer_id": "CUST-2016",
+    "plan": "professional",
+    "seats": 260,
+    "recommended": 260,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 70200.0
+  },
+  {
+    "customer_id": "CUST-2017",
+    "plan": "enterprise",
+    "seats": 300,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 133632.0
+  },
+  {
+    "customer_id": "CUST-2018",
+    "plan": "enterprise",
+    "seats": 340,
+    "recommended": 360,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 150336.0
+  },
+  {
+    "customer_id": "CUST-2019",
+    "plan": "professional",
+    "seats": 380,
+    "recommended": 390,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 105300.0
+  },
+  {
+    "customer_id": "CUST-2020",
+    "plan": "enterprise",
+    "seats": 420,
+    "recommended": 420,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 175392.0
+  },
+  {
+    "customer_id": "CUST-2021",
+    "plan": "enterprise",
+    "seats": 460,
+    "recommended": 480,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 200448.0
+  },
+  {
+    "customer_id": "CUST-2022",
+    "plan": "professional",
+    "seats": 490,
+    "recommended": 490,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 127890.0
+  },
+  {
+    "customer_id": "CUST-2023",
+    "plan": "enterprise",
+    "seats": 499,
+    "recommended": 530,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 208608.0
+  },
+  {
+    "customer_id": "CUST-2024",
+    "plan": "enterprise",
+    "seats": 500,
+    "recommended": 500,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 204000.0
+  },
+  {
+    "customer_id": "CUST-2025",
+    "plan": "enterprise",
+    "seats": 510,
+    "recommended": 510,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 208080.0
+  },
+  {
+    "customer_id": "CUST-2026",
+    "plan": "enterprise",
+    "seats": 520,
+    "recommended": 540,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 220320.0
+  },
+  {
+    "customer_id": "CUST-2027",
+    "plan": "starter",
+    "seats": 65,
+    "recommended": 80,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 10598.4
+  },
+  {
+    "customer_id": "CUST-2028",
+    "plan": "professional",
+    "seats": 95,
+    "recommended": 100,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 27600.0
+  },
+  {
+    "customer_id": "CUST-2029",
+    "plan": "enterprise",
+    "seats": 150,
+    "recommended": 150,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 68400.0
+  },
+  {
+    "customer_id": "CUST-2030",
+    "plan": "professional",
+    "seats": 230,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 65250.0
+  },
+  {
+    "customer_id": "CUST-2031",
+    "plan": "professional",
+    "seats": 425,
+    "recommended": 430,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 112230.0
+  },
+  {
+    "customer_id": "CUST-2032",
+    "plan": "enterprise",
+    "seats": 216,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 104400.0
+  },
+  {
+    "customer_id": "CUST-2033",
+    "plan": "starter",
+    "seats": 195,
+    "recommended": 220,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 27561.6
+  },
+  {
+    "customer_id": "CUST-2034",
+    "plan": "starter",
+    "seats": 266,
+    "recommended": 270,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 34992.0
+  },
+  {
+    "customer_id": "CUST-2035",
+    "plan": "professional",
+    "seats": 100,
+    "recommended": 100,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 28500.0
+  },
+  {
+    "customer_id": "CUST-2036",
+    "plan": "enterprise",
+    "seats": 404,
+    "recommended": 420,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 181440.0
+  },
+  {
+    "customer_id": "CUST-2037",
+    "plan": "enterprise",
+    "seats": 103,
+    "recommended": 110,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 48576.0
+  },
+  {
+    "customer_id": "CUST-2038",
+    "plan": "starter",
+    "seats": 513,
+    "recommended": 540,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 63763.2
+  },
+  {
+    "customer_id": "CUST-2039",
+    "plan": "enterprise",
+    "seats": 443,
+    "recommended": 450,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 194400.0
+  },
+  {
+    "customer_id": "CUST-2040",
+    "plan": "professional",
+    "seats": 233,
+    "recommended": 240,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 62640.0
+  },
+  {
+    "customer_id": "CUST-2041",
+    "plan": "enterprise",
+    "seats": 409,
+    "recommended": 430,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 179568.0
+  },
+  {
+    "customer_id": "CUST-2042",
+    "plan": "starter",
+    "seats": 229,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 31320.0
+  },
+  {
+    "customer_id": "CUST-2043",
+    "plan": "enterprise",
+    "seats": 484,
+    "recommended": 500,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 196800.0
+  },
+  {
+    "customer_id": "CUST-2044",
+    "plan": "enterprise",
+    "seats": 195,
+    "recommended": 210,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 90720.0
+  },
+  {
+    "customer_id": "CUST-2045",
+    "plan": "starter",
+    "seats": 358,
+    "recommended": 370,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 47952.0
+  },
+  {
+    "customer_id": "CUST-2046",
+    "plan": "enterprise",
+    "seats": 553,
+    "recommended": 560,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 228480.0
+  },
+  {
+    "customer_id": "CUST-2047",
+    "plan": "professional",
+    "seats": 101,
+    "recommended": 120,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 33120.0
+  },
+  {
+    "customer_id": "CUST-2048",
+    "plan": "professional",
+    "seats": 335,
+    "recommended": 340,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 88740.0
+  },
+  {
+    "customer_id": "CUST-2049",
+    "plan": "professional",
+    "seats": 55,
+    "recommended": 70,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 19950.0
+  },
+  {
+    "customer_id": "CUST-2050",
+    "plan": "professional",
+    "seats": 19,
+    "recommended": 20,
+    "volume_pct": 0,
+    "loyalty_pct": 3,
+    "annual_total_usd": 5820.0
+  },
+  {
+    "customer_id": "CUST-2051",
+    "plan": "professional",
+    "seats": 220,
+    "recommended": 220,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 57420.0
+  },
+  {
+    "customer_id": "CUST-2052",
+    "plan": "starter",
+    "seats": 559,
+    "recommended": 580,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 68486.4
+  },
+  {
+    "customer_id": "CUST-2053",
+    "plan": "enterprise",
+    "seats": 485,
+    "recommended": 490,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 204624.0
+  },
+  {
+    "customer_id": "CUST-2054",
+    "plan": "enterprise",
+    "seats": 214,
+    "recommended": 220,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 95040.0
+  },
+  {
+    "customer_id": "CUST-2055",
+    "plan": "starter",
+    "seats": 485,
+    "recommended": 490,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 63504.0
+  },
+  {
+    "customer_id": "CUST-2056",
+    "plan": "starter",
+    "seats": 378,
+    "recommended": 390,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 50544.0
+  },
+  {
+    "customer_id": "CUST-2057",
+    "plan": "enterprise",
+    "seats": 233,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 104400.0
+  },
+  {
+    "customer_id": "CUST-2058",
+    "plan": "enterprise",
+    "seats": 176,
+    "recommended": 180,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 79488.0
+  },
+  {
+    "customer_id": "CUST-2059",
+    "plan": "enterprise",
+    "seats": 464,
+    "recommended": 470,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 203040.0
+  },
+  {
+    "customer_id": "CUST-2060",
+    "plan": "enterprise",
+    "seats": 193,
+    "recommended": 200,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 83520.0
+  },
+  {
+    "customer_id": "CUST-2061",
+    "plan": "starter",
+    "seats": 192,
+    "recommended": 200,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 25056.0
+  },
+  {
+    "customer_id": "CUST-2062",
+    "plan": "starter",
+    "seats": 124,
+    "recommended": 130,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 17222.4
+  },
+  {
+    "customer_id": "CUST-2063",
+    "plan": "professional",
+    "seats": 187,
+    "recommended": 190,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 52440.0
+  },
+  {
+    "customer_id": "CUST-2064",
+    "plan": "starter",
+    "seats": 441,
+    "recommended": 480,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 62208.0
+  },
+  {
+    "customer_id": "CUST-2065",
+    "plan": "enterprise",
+    "seats": 447,
+    "recommended": 450,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 194400.0
+  },
+  {
+    "customer_id": "CUST-2066",
+    "plan": "starter",
+    "seats": 100,
+    "recommended": 120,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 16416.0
+  },
+  {
+    "customer_id": "CUST-2067",
+    "plan": "enterprise",
+    "seats": 329,
+    "recommended": 340,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 141984.0
+  },
+  {
+    "customer_id": "CUST-2068",
+    "plan": "professional",
+    "seats": 17,
+    "recommended": 50,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 13800.0
+  },
+  {
+    "customer_id": "CUST-2069",
+    "plan": "starter",
+    "seats": 349,
+    "recommended": 350,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 45360.0
+  },
+  {
+    "customer_id": "CUST-2070",
+    "plan": "professional",
+    "seats": 547,
+    "recommended": 570,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 140220.0
+  },
+  {
+    "customer_id": "CUST-2071",
+    "plan": "starter",
+    "seats": 217,
+    "recommended": 230,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 28814.4
+  },
+  {
+    "customer_id": "CUST-2072",
+    "plan": "professional",
+    "seats": 228,
+    "recommended": 230,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 60030.0
+  },
+  {
+    "customer_id": "CUST-2073",
+    "plan": "enterprise",
+    "seats": 275,
+    "recommended": 280,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 116928.0
+  },
+  {
+    "customer_id": "CUST-2074",
+    "plan": "starter",
+    "seats": 425,
+    "recommended": 430,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 55728.0
+  },
+  {
+    "customer_id": "CUST-2075",
+    "plan": "enterprise",
+    "seats": 374,
+    "recommended": 390,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 168480.0
+  },
+  {
+    "customer_id": "CUST-2076",
+    "plan": "starter",
+    "seats": 499,
+    "recommended": 500,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 61200.0
+  },
+  {
+    "customer_id": "CUST-2077",
+    "plan": "enterprise",
+    "seats": 146,
+    "recommended": 170,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 75072.0
+  },
+  {
+    "customer_id": "CUST-2078",
+    "plan": "enterprise",
+    "seats": 166,
+    "recommended": 180,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 79488.0
+  },
+  {
+    "customer_id": "CUST-2079",
+    "plan": "starter",
+    "seats": 430,
+    "recommended": 430,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 55728.0
+  },
+  {
+    "customer_id": "CUST-2080",
+    "plan": "starter",
+    "seats": 110,
+    "recommended": 110,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 14572.8
+  },
+  {
+    "customer_id": "CUST-2081",
+    "plan": "professional",
+    "seats": 159,
+    "recommended": 160,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 44160.0
+  },
+  {
+    "customer_id": "CUST-2082",
+    "plan": "starter",
+    "seats": 190,
+    "recommended": 200,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 25056.0
+  },
+  {
+    "customer_id": "CUST-2083",
+    "plan": "starter",
+    "seats": 431,
+    "recommended": 440,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 55123.2
+  },
+  {
+    "customer_id": "CUST-2084",
+    "plan": "enterprise",
+    "seats": 224,
+    "recommended": 230,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 99360.0
+  },
+  {
+    "customer_id": "CUST-2085",
+    "plan": "professional",
+    "seats": 338,
+    "recommended": 360,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 97200.0
+  },
+  {
+    "customer_id": "CUST-2086",
+    "plan": "professional",
+    "seats": 251,
+    "recommended": 260,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 70200.0
+  },
+  {
+    "customer_id": "CUST-2087",
+    "plan": "professional",
+    "seats": 132,
+    "recommended": 140,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 38640.0
+  },
+  {
+    "customer_id": "CUST-2088",
+    "plan": "enterprise",
+    "seats": 202,
+    "recommended": 210,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 87696.0
+  },
+  {
+    "customer_id": "CUST-2089",
+    "plan": "enterprise",
+    "seats": 86,
+    "recommended": 90,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 41040.0
+  },
+  {
+    "customer_id": "CUST-2090",
+    "plan": "starter",
+    "seats": 306,
+    "recommended": 330,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 41342.4
+  },
+  {
+    "customer_id": "CUST-2091",
+    "plan": "professional",
+    "seats": 60,
+    "recommended": 60,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 16560.0
+  },
+  {
+    "customer_id": "CUST-2092",
+    "plan": "professional",
+    "seats": 233,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 65250.0
+  },
+  {
+    "customer_id": "CUST-2093",
+    "plan": "professional",
+    "seats": 420,
+    "recommended": 420,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 109620.0
+  },
+  {
+    "customer_id": "CUST-2094",
+    "plan": "professional",
+    "seats": 420,
+    "recommended": 460,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 124200.0
+  },
+  {
+    "customer_id": "CUST-2095",
+    "plan": "professional",
+    "seats": 436,
+    "recommended": 480,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 129600.0
+  },
+  {
+    "customer_id": "CUST-2096",
+    "plan": "starter",
+    "seats": 559,
+    "recommended": 580,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 70992.0
+  },
+  {
+    "customer_id": "CUST-2097",
+    "plan": "starter",
+    "seats": 197,
+    "recommended": 220,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 27561.6
+  },
+  {
+    "customer_id": "CUST-2098",
+    "plan": "enterprise",
+    "seats": 393,
+    "recommended": 410,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 171216.0
+  },
+  {
+    "customer_id": "CUST-2099",
+    "plan": "professional",
+    "seats": 420,
+    "recommended": 420,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 113400.0
+  },
+  {
+    "customer_id": "CUST-2100",
+    "plan": "professional",
+    "seats": 247,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 65250.0
+  },
+  {
+    "customer_id": "CUST-2101",
+    "plan": "enterprise",
+    "seats": 243,
+    "recommended": 260,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 108576.0
+  },
+  {
+    "customer_id": "CUST-2102",
+    "plan": "starter",
+    "seats": 330,
+    "recommended": 340,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 42595.2
+  },
+  {
+    "customer_id": "CUST-2103",
+    "plan": "starter",
+    "seats": 333,
+    "recommended": 340,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 42595.2
+  },
+  {
+    "customer_id": "CUST-2104",
+    "plan": "professional",
+    "seats": 267,
+    "recommended": 280,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 75600.0
+  },
+  {
+    "customer_id": "CUST-2105",
+    "plan": "professional",
+    "seats": 315,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 86400.0
+  },
+  {
+    "customer_id": "CUST-2106",
+    "plan": "professional",
+    "seats": 94,
+    "recommended": 110,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 31350.0
+  },
+  {
+    "customer_id": "CUST-2107",
+    "plan": "professional",
+    "seats": 443,
+    "recommended": 450,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 117450.0
+  },
+  {
+    "customer_id": "CUST-2108",
+    "plan": "enterprise",
+    "seats": 83,
+    "recommended": 90,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 39744.0
+  },
+  {
+    "customer_id": "CUST-2109",
+    "plan": "enterprise",
+    "seats": 312,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 138240.0
+  },
+  {
+    "customer_id": "CUST-2110",
+    "plan": "professional",
+    "seats": 340,
+    "recommended": 360,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 93960.0
+  },
+  {
+    "customer_id": "CUST-2111",
+    "plan": "starter",
+    "seats": 558,
+    "recommended": 570,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 67305.6
+  },
+  {
+    "customer_id": "CUST-2112",
+    "plan": "professional",
+    "seats": 274,
+    "recommended": 300,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 78300.0
+  },
+  {
+    "customer_id": "CUST-2113",
+    "plan": "professional",
+    "seats": 309,
+    "recommended": 330,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 86130.0
+  },
+  {
+    "customer_id": "CUST-2114",
+    "plan": "professional",
+    "seats": 175,
+    "recommended": 180,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 51300.0
+  },
+  {
+    "customer_id": "CUST-2115",
+    "plan": "enterprise",
+    "seats": 400,
+    "recommended": 430,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 185760.0
+  },
+  {
+    "customer_id": "CUST-2116",
+    "plan": "starter",
+    "seats": 462,
+    "recommended": 480,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 62208.0
+  },
+  {
+    "customer_id": "CUST-2117",
+    "plan": "professional",
+    "seats": 400,
+    "recommended": 400,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 104400.0
+  },
+  {
+    "customer_id": "CUST-2118",
+    "plan": "professional",
+    "seats": 214,
+    "recommended": 240,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 62640.0
+  },
+  {
+    "customer_id": "CUST-2119",
+    "plan": "enterprise",
+    "seats": 16,
+    "recommended": 30,
+    "volume_pct": 0,
+    "loyalty_pct": 0,
+    "annual_total_usd": 14400.0
+  },
+  {
+    "customer_id": "CUST-2120",
+    "plan": "enterprise",
+    "seats": 375,
+    "recommended": 380,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 158688.0
+  },
+  {
+    "customer_id": "CUST-2121",
+    "plan": "starter",
+    "seats": 314,
+    "recommended": 350,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 43848.0
+  },
+  {
+    "customer_id": "CUST-2122",
+    "plan": "enterprise",
+    "seats": 187,
+    "recommended": 190,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 83904.0
+  },
+  {
+    "customer_id": "CUST-2123",
+    "plan": "enterprise",
+    "seats": 279,
+    "recommended": 280,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 116928.0
+  },
+  {
+    "customer_id": "CUST-2124",
+    "plan": "enterprise",
+    "seats": 438,
+    "recommended": 450,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 194400.0
+  },
+  {
+    "customer_id": "CUST-2125",
+    "plan": "professional",
+    "seats": 248,
+    "recommended": 270,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 72900.0
+  },
+  {
+    "customer_id": "CUST-2126",
+    "plan": "enterprise",
+    "seats": 365,
+    "recommended": 370,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 159840.0
+  },
+  {
+    "customer_id": "CUST-2127",
+    "plan": "starter",
+    "seats": 421,
+    "recommended": 430,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 53870.4
+  },
+  {
+    "customer_id": "CUST-2128",
+    "plan": "enterprise",
+    "seats": 127,
+    "recommended": 150,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 66240.0
+  },
+  {
+    "customer_id": "CUST-2129",
+    "plan": "starter",
+    "seats": 556,
+    "recommended": 570,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 69768.0
+  },
+  {
+    "customer_id": "CUST-2130",
+    "plan": "enterprise",
+    "seats": 13,
+    "recommended": 20,
+    "volume_pct": 0,
+    "loyalty_pct": 3,
+    "annual_total_usd": 9312.0
+  },
+  {
+    "customer_id": "CUST-2131",
+    "plan": "enterprise",
+    "seats": 329,
+    "recommended": 350,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 146160.0
+  },
+  {
+    "customer_id": "CUST-2132",
+    "plan": "enterprise",
+    "seats": 183,
+    "recommended": 190,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 83904.0
+  },
+  {
+    "customer_id": "CUST-2133",
+    "plan": "starter",
+    "seats": 466,
+    "recommended": 470,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 58881.6
+  },
+  {
+    "customer_id": "CUST-2134",
+    "plan": "enterprise",
+    "seats": 282,
+    "recommended": 300,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 129600.0
+  },
+  {
+    "customer_id": "CUST-2135",
+    "plan": "professional",
+    "seats": 438,
+    "recommended": 460,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 124200.0
+  },
+  {
+    "customer_id": "CUST-2136",
+    "plan": "enterprise",
+    "seats": 555,
+    "recommended": 560,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 228480.0
+  },
+  {
+    "customer_id": "CUST-2137",
+    "plan": "starter",
+    "seats": 306,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 40089.6
+  },
+  {
+    "customer_id": "CUST-2138",
+    "plan": "starter",
+    "seats": 33,
+    "recommended": 60,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 7948.8
+  },
+  {
+    "customer_id": "CUST-2139",
+    "plan": "starter",
+    "seats": 326,
+    "recommended": 350,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 45360.0
+  },
+  {
+    "customer_id": "CUST-2140",
+    "plan": "starter",
+    "seats": 44,
+    "recommended": 50,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 6624.0
+  },
+  {
+    "customer_id": "CUST-2141",
+    "plan": "professional",
+    "seats": 438,
+    "recommended": 460,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 120060.0
+  },
+  {
+    "customer_id": "CUST-2142",
+    "plan": "enterprise",
+    "seats": 390,
+    "recommended": 410,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 171216.0
+  },
+  {
+    "customer_id": "CUST-2143",
+    "plan": "starter",
+    "seats": 314,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 40089.6
+  },
+  {
+    "customer_id": "CUST-2144",
+    "plan": "professional",
+    "seats": 114,
+    "recommended": 130,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 37050.0
+  },
+  {
+    "customer_id": "CUST-2145",
+    "plan": "starter",
+    "seats": 420,
+    "recommended": 420,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 54432.0
+  },
+  {
+    "customer_id": "CUST-2146",
+    "plan": "professional",
+    "seats": 283,
+    "recommended": 290,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 78300.0
+  },
+  {
+    "customer_id": "CUST-2147",
+    "plan": "starter",
+    "seats": 348,
+    "recommended": 350,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 43848.0
+  },
+  {
+    "customer_id": "CUST-2148",
+    "plan": "professional",
+    "seats": 145,
+    "recommended": 150,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 41400.0
+  },
+  {
+    "customer_id": "CUST-2149",
+    "plan": "professional",
+    "seats": 410,
+    "recommended": 430,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 116100.0
+  },
+  {
+    "customer_id": "CUST-2150",
+    "plan": "professional",
+    "seats": 195,
+    "recommended": 200,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 52200.0
+  },
+  {
+    "customer_id": "CUST-2151",
+    "plan": "starter",
+    "seats": 268,
+    "recommended": 270,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 33825.6
+  },
+  {
+    "customer_id": "CUST-2152",
+    "plan": "professional",
+    "seats": 292,
+    "recommended": 300,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 78300.0
+  },
+  {
+    "customer_id": "CUST-2153",
+    "plan": "starter",
+    "seats": 403,
+    "recommended": 410,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 51364.8
+  },
+  {
+    "customer_id": "CUST-2154",
+    "plan": "enterprise",
+    "seats": 502,
+    "recommended": 510,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 208080.0
+  },
+  {
+    "customer_id": "CUST-2155",
+    "plan": "enterprise",
+    "seats": 499,
+    "recommended": 500,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 204000.0
+  },
+  {
+    "customer_id": "CUST-2156",
+    "plan": "starter",
+    "seats": 185,
+    "recommended": 210,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 27216.0
+  },
+  {
+    "customer_id": "CUST-2157",
+    "plan": "starter",
+    "seats": 556,
+    "recommended": 580,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 68486.4
+  },
+  {
+    "customer_id": "CUST-2158",
+    "plan": "enterprise",
+    "seats": 482,
+    "recommended": 510,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 200736.0
+  },
+  {
+    "customer_id": "CUST-2159",
+    "plan": "starter",
+    "seats": 27,
+    "recommended": 40,
+    "volume_pct": 0,
+    "loyalty_pct": 0,
+    "annual_total_usd": 5760.0
+  },
+  {
+    "customer_id": "CUST-2160",
+    "plan": "professional",
+    "seats": 349,
+    "recommended": 370,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 96570.0
+  },
+  {
+    "customer_id": "CUST-2161",
+    "plan": "professional",
+    "seats": 85,
+    "recommended": 110,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 30360.0
+  },
+  {
+    "customer_id": "CUST-2162",
+    "plan": "enterprise",
+    "seats": 16,
+    "recommended": 20,
+    "volume_pct": 0,
+    "loyalty_pct": 3,
+    "annual_total_usd": 9312.0
+  },
+  {
+    "customer_id": "CUST-2163",
+    "plan": "professional",
+    "seats": 557,
+    "recommended": 560,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 137760.0
+  },
+  {
+    "customer_id": "CUST-2164",
+    "plan": "enterprise",
+    "seats": 24,
+    "recommended": 30,
+    "volume_pct": 0,
+    "loyalty_pct": 0,
+    "annual_total_usd": 14400.0
+  },
+  {
+    "customer_id": "CUST-2165",
+    "plan": "professional",
+    "seats": 338,
+    "recommended": 340,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 91800.0
+  },
+  {
+    "customer_id": "CUST-2166",
+    "plan": "starter",
+    "seats": 279,
+    "recommended": 280,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 36288.0
+  },
+  {
+    "customer_id": "CUST-2167",
+    "plan": "enterprise",
+    "seats": 151,
+    "recommended": 170,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 75072.0
+  },
+  {
+    "customer_id": "CUST-2168",
+    "plan": "professional",
+    "seats": 60,
+    "recommended": 80,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 22080.0
+  },
+  {
+    "customer_id": "CUST-2169",
+    "plan": "starter",
+    "seats": 49,
+    "recommended": 80,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 10944.0
+  },
+  {
+    "customer_id": "CUST-2170",
+    "plan": "enterprise",
+    "seats": 362,
+    "recommended": 370,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 154512.0
+  },
+  {
+    "customer_id": "CUST-2171",
+    "plan": "enterprise",
+    "seats": 247,
+    "recommended": 260,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 108576.0
+  },
+  {
+    "customer_id": "CUST-2172",
+    "plan": "starter",
+    "seats": 311,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 40089.6
+  },
+  {
+    "customer_id": "CUST-2173",
+    "plan": "starter",
+    "seats": 461,
+    "recommended": 470,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 58881.6
+  },
+  {
+    "customer_id": "CUST-2174",
+    "plan": "starter",
+    "seats": 439,
+    "recommended": 440,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 57024.0
+  },
+  {
+    "customer_id": "CUST-2175",
+    "plan": "starter",
+    "seats": 205,
+    "recommended": 210,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 27216.0
+  },
+  {
+    "customer_id": "CUST-2176",
+    "plan": "starter",
+    "seats": 508,
+    "recommended": 530,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 64872.0
+  },
+  {
+    "customer_id": "CUST-2177",
+    "plan": "professional",
+    "seats": 291,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 83520.0
+  },
+  {
+    "customer_id": "CUST-2178",
+    "plan": "starter",
+    "seats": 385,
+    "recommended": 390,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 48859.2
+  },
+  {
+    "customer_id": "CUST-2179",
+    "plan": "enterprise",
+    "seats": 214,
+    "recommended": 220,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 95040.0
+  },
+  {
+    "customer_id": "CUST-2180",
+    "plan": "enterprise",
+    "seats": 189,
+    "recommended": 190,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 83904.0
+  },
+  {
+    "customer_id": "CUST-2181",
+    "plan": "enterprise",
+    "seats": 374,
+    "recommended": 390,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 162864.0
+  },
+  {
+    "customer_id": "CUST-2182",
+    "plan": "starter",
+    "seats": 559,
+    "recommended": 560,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 66124.8
+  },
+  {
+    "customer_id": "CUST-2183",
+    "plan": "enterprise",
+    "seats": 128,
+    "recommended": 130,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 57408.0
+  },
+  {
+    "customer_id": "CUST-2184",
+    "plan": "starter",
+    "seats": 140,
+    "recommended": 140,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 19152.0
+  },
+  {
+    "customer_id": "CUST-2185",
+    "plan": "enterprise",
+    "seats": 165,
+    "recommended": 190,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 86640.0
+  },
+  {
+    "customer_id": "CUST-2186",
+    "plan": "starter",
+    "seats": 100,
+    "recommended": 100,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 13680.0
+  },
+  {
+    "customer_id": "CUST-2187",
+    "plan": "enterprise",
+    "seats": 537,
+    "recommended": 540,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 212544.0
+  },
+  {
+    "customer_id": "CUST-2188",
+    "plan": "starter",
+    "seats": 400,
+    "recommended": 400,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 50112.0
+  },
+  {
+    "customer_id": "CUST-2189",
+    "plan": "enterprise",
+    "seats": 374,
+    "recommended": 390,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 168480.0
+  },
+  {
+    "customer_id": "CUST-2190",
+    "plan": "enterprise",
+    "seats": 249,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 104400.0
+  },
+  {
+    "customer_id": "CUST-2191",
+    "plan": "professional",
+    "seats": 176,
+    "recommended": 200,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 52200.0
+  },
+  {
+    "customer_id": "CUST-2192",
+    "plan": "professional",
+    "seats": 66,
+    "recommended": 70,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 19320.0
+  },
+  {
+    "customer_id": "CUST-2193",
+    "plan": "starter",
+    "seats": 458,
+    "recommended": 460,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 57628.8
+  },
+  {
+    "customer_id": "CUST-2194",
+    "plan": "starter",
+    "seats": 326,
+    "recommended": 340,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 44064.0
+  },
+  {
+    "customer_id": "CUST-2195",
+    "plan": "starter",
+    "seats": 125,
+    "recommended": 130,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 17784.0
+  },
+  {
+    "customer_id": "CUST-2196",
+    "plan": "enterprise",
+    "seats": 520,
+    "recommended": 530,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 216240.0
+  },
+  {
+    "customer_id": "CUST-2197",
+    "plan": "enterprise",
+    "seats": 545,
+    "recommended": 550,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 216480.0
+  },
+  {
+    "customer_id": "CUST-2198",
+    "plan": "starter",
+    "seats": 24,
+    "recommended": 30,
+    "volume_pct": 0,
+    "loyalty_pct": 3,
+    "annual_total_usd": 4190.4
+  },
+  {
+    "customer_id": "CUST-2199",
+    "plan": "enterprise",
+    "seats": 397,
+    "recommended": 400,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 172800.0
+  },
+  {
+    "customer_id": "CUST-2200",
+    "plan": "starter",
+    "seats": 111,
+    "recommended": 130,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 17222.4
+  },
+  {
+    "customer_id": "CUST-2201",
+    "plan": "enterprise",
+    "seats": 466,
+    "recommended": 470,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 196272.0
+  },
+  {
+    "customer_id": "CUST-2202",
+    "plan": "starter",
+    "seats": 94,
+    "recommended": 110,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 14572.8
+  },
+  {
+    "customer_id": "CUST-2203",
+    "plan": "professional",
+    "seats": 182,
+    "recommended": 190,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 52440.0
+  },
+  {
+    "customer_id": "CUST-2204",
+    "plan": "professional",
+    "seats": 394,
+    "recommended": 400,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 108000.0
+  },
+  {
+    "customer_id": "CUST-2205",
+    "plan": "enterprise",
+    "seats": 332,
+    "recommended": 340,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 146880.0
+  },
+  {
+    "customer_id": "CUST-2206",
+    "plan": "enterprise",
+    "seats": 58,
+    "recommended": 80,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 36480.0
+  },
+  {
+    "customer_id": "CUST-2207",
+    "plan": "starter",
+    "seats": 418,
+    "recommended": 420,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 52617.6
+  },
+  {
+    "customer_id": "CUST-2208",
+    "plan": "starter",
+    "seats": 319,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 40089.6
+  },
+  {
+    "customer_id": "CUST-2209",
+    "plan": "starter",
+    "seats": 147,
+    "recommended": 150,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 20520.0
+  },
+  {
+    "customer_id": "CUST-2210",
+    "plan": "enterprise",
+    "seats": 304,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 133632.0
+  },
+  {
+    "customer_id": "CUST-2211",
+    "plan": "professional",
+    "seats": 314,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 83520.0
+  },
+  {
+    "customer_id": "CUST-2212",
+    "plan": "professional",
+    "seats": 138,
+    "recommended": 140,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 38640.0
+  },
+  {
+    "customer_id": "CUST-2213",
+    "plan": "starter",
+    "seats": 449,
+    "recommended": 460,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 57628.8
+  },
+  {
+    "customer_id": "CUST-2214",
+    "plan": "professional",
+    "seats": 53,
+    "recommended": 80,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 22800.0
+  },
+  {
+    "customer_id": "CUST-2215",
+    "plan": "enterprise",
+    "seats": 179,
+    "recommended": 180,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 82080.0
+  },
+  {
+    "customer_id": "CUST-2216",
+    "plan": "professional",
+    "seats": 336,
+    "recommended": 340,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 91800.0
+  },
+  {
+    "customer_id": "CUST-2217",
+    "plan": "starter",
+    "seats": 346,
+    "recommended": 350,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 43848.0
+  },
+  {
+    "customer_id": "CUST-2218",
+    "plan": "professional",
+    "seats": 397,
+    "recommended": 410,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 107010.0
+  },
+  {
+    "customer_id": "CUST-2219",
+    "plan": "enterprise",
+    "seats": 244,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 108000.0
+  },
+  {
+    "customer_id": "CUST-2220",
+    "plan": "enterprise",
+    "seats": 166,
+    "recommended": 190,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 83904.0
+  },
+  {
+    "customer_id": "CUST-2221",
+    "plan": "professional",
+    "seats": 30,
+    "recommended": 30,
+    "volume_pct": 0,
+    "loyalty_pct": 3,
+    "annual_total_usd": 8730.0
+  },
+  {
+    "customer_id": "CUST-2222",
+    "plan": "professional",
+    "seats": 421,
+    "recommended": 430,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 112230.0
+  },
+  {
+    "customer_id": "CUST-2223",
+    "plan": "enterprise",
+    "seats": 536,
+    "recommended": 550,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 216480.0
+  },
+  {
+    "customer_id": "CUST-2224",
+    "plan": "starter",
+    "seats": 245,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 32400.0
+  },
+  {
+    "customer_id": "CUST-2225",
+    "plan": "professional",
+    "seats": 548,
+    "recommended": 570,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 145350.0
+  },
+  {
+    "customer_id": "CUST-2226",
+    "plan": "starter",
+    "seats": 67,
+    "recommended": 80,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 10944.0
+  },
+  {
+    "customer_id": "CUST-2227",
+    "plan": "enterprise",
+    "seats": 259,
+    "recommended": 260,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 108576.0
+  },
+  {
+    "customer_id": "CUST-2228",
+    "plan": "starter",
+    "seats": 278,
+    "recommended": 300,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 37584.0
+  },
+  {
+    "customer_id": "CUST-2229",
+    "plan": "professional",
+    "seats": 108,
+    "recommended": 110,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 31350.0
+  },
+  {
+    "customer_id": "CUST-2230",
+    "plan": "enterprise",
+    "seats": 16,
+    "recommended": 30,
+    "volume_pct": 0,
+    "loyalty_pct": 3,
+    "annual_total_usd": 13968.0
+  },
+  {
+    "customer_id": "CUST-2231",
+    "plan": "starter",
+    "seats": 41,
+    "recommended": 50,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 6624.0
+  },
+  {
+    "customer_id": "CUST-2232",
+    "plan": "starter",
+    "seats": 146,
+    "recommended": 150,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 19872.0
+  },
+  {
+    "customer_id": "CUST-2233",
+    "plan": "starter",
+    "seats": 319,
+    "recommended": 330,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 41342.4
+  },
+  {
+    "customer_id": "CUST-2234",
+    "plan": "starter",
+    "seats": 272,
+    "recommended": 280,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 36288.0
+  },
+  {
+    "customer_id": "CUST-2235",
+    "plan": "starter",
+    "seats": 452,
+    "recommended": 460,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 59616.0
+  },
+  {
+    "customer_id": "CUST-2236",
+    "plan": "enterprise",
+    "seats": 15,
+    "recommended": 20,
+    "volume_pct": 0,
+    "loyalty_pct": 0,
+    "annual_total_usd": 9600.0
+  },
+  {
+    "customer_id": "CUST-2237",
+    "plan": "enterprise",
+    "seats": 48,
+    "recommended": 60,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 26496.0
+  },
+  {
+    "customer_id": "CUST-2238",
+    "plan": "professional",
+    "seats": 417,
+    "recommended": 420,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 109620.0
+  },
+  {
+    "customer_id": "CUST-2239",
+    "plan": "starter",
+    "seats": 87,
+    "recommended": 90,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 12312.0
+  },
+  {
+    "customer_id": "CUST-2240",
+    "plan": "professional",
+    "seats": 250,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 65250.0
+  },
+  {
+    "customer_id": "CUST-2241",
+    "plan": "starter",
+    "seats": 457,
+    "recommended": 460,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 57628.8
+  },
+  {
+    "customer_id": "CUST-2242",
+    "plan": "enterprise",
+    "seats": 501,
+    "recommended": 510,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 200736.0
+  },
+  {
+    "customer_id": "CUST-2243",
+    "plan": "professional",
+    "seats": 105,
+    "recommended": 110,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 30360.0
+  },
+  {
+    "customer_id": "CUST-2244",
+    "plan": "starter",
+    "seats": 526,
+    "recommended": 540,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 66096.0
+  },
+  {
+    "customer_id": "CUST-2245",
+    "plan": "enterprise",
+    "seats": 250,
+    "recommended": 270,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 116640.0
+  },
+  {
+    "customer_id": "CUST-2246",
+    "plan": "starter",
+    "seats": 508,
+    "recommended": 530,
+    "volume_pct": 15,
+    "loyalty_pct": 0,
+    "annual_total_usd": 64872.0
+  },
+  {
+    "customer_id": "CUST-2247",
+    "plan": "professional",
+    "seats": 114,
+    "recommended": 120,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 33120.0
+  },
+  {
+    "customer_id": "CUST-2248",
+    "plan": "starter",
+    "seats": 218,
+    "recommended": 240,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 30067.2
+  },
+  {
+    "customer_id": "CUST-2249",
+    "plan": "professional",
+    "seats": 149,
+    "recommended": 150,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 42750.0
+  },
+  {
+    "customer_id": "CUST-2250",
+    "plan": "starter",
+    "seats": 266,
+    "recommended": 280,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 35078.4
+  },
+  {
+    "customer_id": "CUST-2251",
+    "plan": "starter",
+    "seats": 274,
+    "recommended": 310,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 38836.8
+  },
+  {
+    "customer_id": "CUST-2252",
+    "plan": "enterprise",
+    "seats": 540,
+    "recommended": 540,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 212544.0
+  },
+  {
+    "customer_id": "CUST-2253",
+    "plan": "enterprise",
+    "seats": 528,
+    "recommended": 530,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 208608.0
+  },
+  {
+    "customer_id": "CUST-2254",
+    "plan": "starter",
+    "seats": 91,
+    "recommended": 100,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 13680.0
+  },
+  {
+    "customer_id": "CUST-2255",
+    "plan": "enterprise",
+    "seats": 258,
+    "recommended": 260,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 112320.0
+  },
+  {
+    "customer_id": "CUST-2256",
+    "plan": "enterprise",
+    "seats": 244,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 108000.0
+  },
+  {
+    "customer_id": "CUST-2257",
+    "plan": "professional",
+    "seats": 443,
+    "recommended": 470,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 122670.0
+  },
+  {
+    "customer_id": "CUST-2258",
+    "plan": "enterprise",
+    "seats": 548,
+    "recommended": 550,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 216480.0
+  },
+  {
+    "customer_id": "CUST-2259",
+    "plan": "starter",
+    "seats": 86,
+    "recommended": 90,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 12312.0
+  },
+  {
+    "customer_id": "CUST-2260",
+    "plan": "professional",
+    "seats": 268,
+    "recommended": 280,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 73080.0
+  },
+  {
+    "customer_id": "CUST-2261",
+    "plan": "professional",
+    "seats": 354,
+    "recommended": 360,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 93960.0
+  },
+  {
+    "customer_id": "CUST-2262",
+    "plan": "starter",
+    "seats": 205,
+    "recommended": 230,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 28814.4
+  },
+  {
+    "customer_id": "CUST-2263",
+    "plan": "starter",
+    "seats": 42,
+    "recommended": 50,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 6624.0
+  },
+  {
+    "customer_id": "CUST-2264",
+    "plan": "starter",
+    "seats": 459,
+    "recommended": 460,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 59616.0
+  },
+  {
+    "customer_id": "CUST-2265",
+    "plan": "starter",
+    "seats": 334,
+    "recommended": 350,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 45360.0
+  },
+  {
+    "customer_id": "CUST-2266",
+    "plan": "enterprise",
+    "seats": 63,
+    "recommended": 70,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 31920.0
+  },
+  {
+    "customer_id": "CUST-2267",
+    "plan": "starter",
+    "seats": 311,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 40089.6
+  },
+  {
+    "customer_id": "CUST-2268",
+    "plan": "enterprise",
+    "seats": 286,
+    "recommended": 320,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 133632.0
+  },
+  {
+    "customer_id": "CUST-2269",
+    "plan": "starter",
+    "seats": 273,
+    "recommended": 290,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 37584.0
+  },
+  {
+    "customer_id": "CUST-2270",
+    "plan": "professional",
+    "seats": 555,
+    "recommended": 570,
+    "volume_pct": 15,
+    "loyalty_pct": 3,
+    "annual_total_usd": 140220.0
+  },
+  {
+    "customer_id": "CUST-2271",
+    "plan": "enterprise",
+    "seats": 212,
+    "recommended": 220,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 91872.0
+  },
+  {
+    "customer_id": "CUST-2272",
+    "plan": "starter",
+    "seats": 385,
+    "recommended": 390,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 48859.2
+  },
+  {
+    "customer_id": "CUST-2273",
+    "plan": "professional",
+    "seats": 175,
+    "recommended": 180,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 49680.0
+  },
+  {
+    "customer_id": "CUST-2274",
+    "plan": "starter",
+    "seats": 410,
+    "recommended": 420,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 54432.0
+  },
+  {
+    "customer_id": "CUST-2275",
+    "plan": "enterprise",
+    "seats": 324,
+    "recommended": 330,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 142560.0
+  },
+  {
+    "customer_id": "CUST-2276",
+    "plan": "starter",
+    "seats": 278,
+    "recommended": 280,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 36288.0
+  },
+  {
+    "customer_id": "CUST-2277",
+    "plan": "starter",
+    "seats": 475,
+    "recommended": 480,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 60134.4
+  },
+  {
+    "customer_id": "CUST-2278",
+    "plan": "professional",
+    "seats": 39,
+    "recommended": 60,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 16560.0
+  },
+  {
+    "customer_id": "CUST-2279",
+    "plan": "starter",
+    "seats": 249,
+    "recommended": 250,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 32400.0
+  },
+  {
+    "customer_id": "CUST-2280",
+    "plan": "professional",
+    "seats": 92,
+    "recommended": 110,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 30360.0
+  },
+  {
+    "customer_id": "CUST-2281",
+    "plan": "professional",
+    "seats": 30,
+    "recommended": 50,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 13800.0
+  },
+  {
+    "customer_id": "CUST-2282",
+    "plan": "professional",
+    "seats": 337,
+    "recommended": 350,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 91350.0
+  },
+  {
+    "customer_id": "CUST-2283",
+    "plan": "enterprise",
+    "seats": 262,
+    "recommended": 270,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 112752.0
+  },
+  {
+    "customer_id": "CUST-2284",
+    "plan": "starter",
+    "seats": 169,
+    "recommended": 170,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 23256.0
+  },
+  {
+    "customer_id": "CUST-2285",
+    "plan": "starter",
+    "seats": 34,
+    "recommended": 40,
+    "volume_pct": 0,
+    "loyalty_pct": 0,
+    "annual_total_usd": 5760.0
+  },
+  {
+    "customer_id": "CUST-2286",
+    "plan": "starter",
+    "seats": 192,
+    "recommended": 200,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 25920.0
+  },
+  {
+    "customer_id": "CUST-2287",
+    "plan": "professional",
+    "seats": 239,
+    "recommended": 270,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 70470.0
+  },
+  {
+    "customer_id": "CUST-2288",
+    "plan": "starter",
+    "seats": 274,
+    "recommended": 280,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 35078.4
+  },
+  {
+    "customer_id": "CUST-2289",
+    "plan": "professional",
+    "seats": 12,
+    "recommended": 30,
+    "volume_pct": 0,
+    "loyalty_pct": 0,
+    "annual_total_usd": 9000.0
+  },
+  {
+    "customer_id": "CUST-2290",
+    "plan": "enterprise",
+    "seats": 128,
+    "recommended": 160,
+    "volume_pct": 5,
+    "loyalty_pct": 3,
+    "annual_total_usd": 70656.0
+  },
+  {
+    "customer_id": "CUST-2291",
+    "plan": "starter",
+    "seats": 458,
+    "recommended": 460,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 57628.8
+  },
+  {
+    "customer_id": "CUST-2292",
+    "plan": "professional",
+    "seats": 390,
+    "recommended": 410,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 107010.0
+  },
+  {
+    "customer_id": "CUST-2293",
+    "plan": "enterprise",
+    "seats": 445,
+    "recommended": 460,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 192096.0
+  },
+  {
+    "customer_id": "CUST-2294",
+    "plan": "enterprise",
+    "seats": 396,
+    "recommended": 400,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 172800.0
+  },
+  {
+    "customer_id": "CUST-2295",
+    "plan": "professional",
+    "seats": 281,
+    "recommended": 310,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 83700.0
+  },
+  {
+    "customer_id": "CUST-2296",
+    "plan": "starter",
+    "seats": 365,
+    "recommended": 370,
+    "volume_pct": 10,
+    "loyalty_pct": 0,
+    "annual_total_usd": 47952.0
+  },
+  {
+    "customer_id": "CUST-2297",
+    "plan": "enterprise",
+    "seats": 291,
+    "recommended": 300,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 125280.0
+  },
+  {
+    "customer_id": "CUST-2298",
+    "plan": "starter",
+    "seats": 261,
+    "recommended": 270,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 33825.6
+  },
+  {
+    "customer_id": "CUST-2299",
+    "plan": "starter",
+    "seats": 46,
+    "recommended": 80,
+    "volume_pct": 5,
+    "loyalty_pct": 0,
+    "annual_total_usd": 10944.0
+  },
+  {
+    "customer_id": "CUST-2300",
+    "plan": "professional",
+    "seats": 285,
+    "recommended": 300,
+    "volume_pct": 10,
+    "loyalty_pct": 3,
+    "annual_total_usd": 78300.0
+  }
+]

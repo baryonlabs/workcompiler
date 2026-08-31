@@ -8,6 +8,9 @@
     python3 -m core.build promote    build/<work> <action> [--model qwen2.5:7b] [--dry-run]   # frontier → local SLM under the quality gate
     python3 -m core.build demote     build/<work> <action>
     python3 -m core.build cache      list|clear build/<work> [--action a]   # escalate-once replay cache
+    python3 -m core.build dataset    build/<work> <action>              # recorded + cache + fleet truth → train/valid jsonl
+    python3 -m core.build train      build/<work> <action> [--base-model …] [--iters N]   # mlx-lm LoRA
+    python3 -m core.build fleet-eval build/<work> <action> --model M [--base-url U]       # held-out gate pass rate
 """
 
 from __future__ import annotations
@@ -148,6 +151,78 @@ def cmd_cache(args) -> int:
     return 0
 
 
+def cmd_dataset(args) -> int:
+    from core.build.dataset import build_dataset
+
+    rep = build_dataset(args.build_dir, args.action,
+                        holdout_customers=args.holdout.split(",") if args.holdout else None)
+    print(f"[dataset] {args.action} ({rep.mode}): {rep.rows} rows "
+          f"({', '.join(f'{k} {v}' for k, v in rep.sources.items())}); held out: {', '.join(rep.eval_customers) or '-'}")
+    print(f"  train: {rep.train_path}\n  valid: {rep.valid_path}")
+    return 0
+
+
+def cmd_train(args) -> int:
+    import subprocess
+
+    from core.build.dataset import build_dataset
+    from core.build.slm import slm_dir
+
+    rep = build_dataset(args.build_dir, args.action)
+    data_dir = Path(rep.train_path).parent
+    adapter = slm_dir(args.build_dir, args.action) / "adapter"
+    argv = ["mlx_lm.lora", "--model", args.base_model, "--train", "--data", str(data_dir),
+            "--adapter-path", str(adapter), "--iters", str(args.iters), "--batch-size", str(args.batch_size),
+            "--num-layers", str(args.num_layers), "--max-seq-length", "4096",
+            "--mask-prompt", "--learning-rate", str(args.learning_rate)]
+    print(f"[train] {args.action}: {rep.rows} rows → LoRA on {args.base_model} ({args.iters} iters)")
+    print("  $ " + " ".join(argv))
+    proc = subprocess.run(argv)
+    if proc.returncode:
+        return proc.returncode
+    meta = {"base_model": args.base_model, "adapter": str(adapter), "iters": args.iters,
+            "rows": rep.rows, "sources": rep.sources, "holdout": rep.eval_customers,
+            "at": __import__("time").strftime("%Y-%m-%dT%H:%M:%S")}
+    (adapter.parent / "training.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    print(f"[train] adapter: {adapter}\n  serve: mlx_lm.server --model {args.base_model} --adapter-path {adapter} --port 8080")
+    return 0
+
+
+def cmd_fleet_eval(args) -> int:
+    from core.build.dataset import DatasetReport, eval_markdown, evaluate_fleet, fleet_dir
+    from core.build.slm import SLMRuntime, slm_dir
+
+    root = Path(args.build_dir)
+    data_dir = slm_dir(root, args.action) / "data"
+    eval_info = json.loads((data_dir / "eval.json").read_text(encoding="utf-8"))
+    customers = args.customers.split(",") if args.customers else eval_info["holdout_customers"]
+    rt = SLMRuntime.defaults(model=args.model, base_url=args.base_url)
+    rt.max_tokens = 3600
+    ev = evaluate_fleet(root, args.action, rt, customers)
+    t = ev.totals()
+    print(f"[fleet-eval] {args.action} · {t['model']}: {t['passed']}/{t['customers']} pass ({t['pass_rate']:.0%}), "
+          f"avg {t['avg_tokens']:,} tokens · {t['avg_latency_ms']/1000:.1f}s")
+    for r in ev.results:
+        print(f"  {r['customer']}: {r['gate']}")
+    history_path = slm_dir(root, args.action) / "fleet_evals.json"
+    history = json.loads(history_path.read_text(encoding="utf-8")) if history_path.exists() else []
+    history = [h for h in history if h["totals"]["model"] != (args.label or t["model"])]
+    t["model"] = args.label or t["model"]
+    history.append({"totals": t, "results": ev.results})
+    history_path.write_text(json.dumps(history, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    rep = DatasetReport(action=args.action, mode="", rows=sum(eval_info.get("sources", {}).values()), sources=eval_info.get("sources", {}))
+
+    class _E:
+        def __init__(self, h): self._t, self.results = h["totals"], h["results"]
+        def totals(self): return self._t
+        model = property(lambda self: self._t["model"])
+
+    md = eval_markdown(args.action, [_E(h) for h in history], customers, rep)
+    (slm_dir(root, args.action) / "TRAINING.md").write_text(md, encoding="utf-8")
+    print(f"  report: {slm_dir(root, args.action) / 'TRAINING.md'}")
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="python3 -m core.build", description="OpenWorkCompiler build backend")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -209,6 +284,28 @@ def main(argv=None) -> int:
     h.add_argument("build_dir")
     h.add_argument("--action", help="clear only this action's entries")
     h.set_defaults(func=cmd_cache)
+
+    i = sub.add_parser("dataset", help="Build the action's supervised dataset (recorded + cache + fleet truth)")
+    i.add_argument("build_dir"); i.add_argument("action")
+    i.add_argument("--holdout", help="Comma-separated customers to pin as the held-out evaluation set")
+    i.set_defaults(func=cmd_dataset)
+
+    j = sub.add_parser("train", help="LoRA-train a local base model on the action's dataset (mlx-lm, Apple Silicon)")
+    j.add_argument("build_dir"); j.add_argument("action")
+    j.add_argument("--base-model", default="mlx-community/Qwen2.5-3B-Instruct-4bit")
+    j.add_argument("--iters", type=int, default=400)
+    j.add_argument("--batch-size", type=int, default=1)
+    j.add_argument("--num-layers", type=int, default=8)
+    j.add_argument("--learning-rate", type=float, default=1e-4)
+    j.set_defaults(func=cmd_train)
+
+    k = sub.add_parser("fleet-eval", help="Gate a candidate model against held-out fleet customers (deterministic answer key)")
+    k.add_argument("build_dir"); k.add_argument("action")
+    k.add_argument("--model", required=True)
+    k.add_argument("--base-url", help="OpenAI-compatible endpoint (default: Ollama)")
+    k.add_argument("--customers", help="Comma-separated override of the held-out set")
+    k.add_argument("--label", help="Name for the report row (default: model id)")
+    k.set_defaults(func=cmd_fleet_eval)
 
     args = parser.parse_args(argv)
     from core import telemetry

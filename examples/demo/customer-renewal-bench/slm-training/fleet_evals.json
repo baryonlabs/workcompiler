@@ -1,0 +1,512 @@
+[
+  {
+    "totals": {
+      "model": "qwen2.5:3b (raw)",
+      "customers": 6,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "avg_tokens": 2710,
+      "avg_latency_ms": 14019.9
+    },
+    "results": [
+      {
+        "customer": "CUST-2007",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; no_placeholder; proposal-CUST-2007.md: numbers not in JSON/context/derived: ['427256.1', '431698.8', '4502.4', '7454.7'])",
+        "tokens": 2683,
+        "latency_ms": 14986.6,
+        "files": [
+          "pricing-CUST-2007.json",
+          "proposal-CUST-2007.md"
+        ]
+      },
+      {
+        "customer": "CUST-2010",
+        "passed": false,
+        "gate": "FAIL (json_values; md_anchors; cross_file_grounded; no_placeholder; proposal-CUST-2010.md: numbers not in JSON/context/derived: ['1000', '2028', '2480', '3140'])",
+        "tokens": 2726,
+        "latency_ms": 13566.3,
+        "files": [
+          "pricing-CUST-2010.json",
+          "proposal-CUST-2010.md"
+        ]
+      },
+      {
+        "customer": "CUST-2015",
+        "passed": false,
+        "gate": "FAIL (json_values; md_anchors; cross_file_grounded; no_placeholder; proposal-CUST-2015.md: numbers not in JSON/context/derived: ['2028'])",
+        "tokens": 2740,
+        "latency_ms": 14149.6,
+        "files": [
+          "pricing-CUST-2015.json",
+          "proposal-CUST-2015.md"
+        ]
+      },
+      {
+        "customer": "CUST-2017",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; no_placeholder; proposal-CUST-2017.md: numbers not in JSON/context/derived: ['120528'])",
+        "tokens": 2728,
+        "latency_ms": 14213.5,
+        "files": [
+          "pricing-CUST-2017.json",
+          "proposal-CUST-2017.md"
+        ]
+      },
+      {
+        "customer": "CUST-2022",
+        "passed": false,
+        "gate": "FAIL (json_values; md_anchors; no_placeholder)",
+        "tokens": 2701,
+        "latency_ms": 13713.8,
+        "files": [
+          "pricing-CUST-2022.json",
+          "proposal-CUST-2022.md"
+        ]
+      },
+      {
+        "customer": "CUST-2030",
+        "passed": false,
+        "gate": "FAIL (json_values; md_anchors; cross_file_grounded; no_placeholder; proposal-CUST-2030.md: numbers not in JSON/context/derived: ['2027'])",
+        "tokens": 2686,
+        "latency_ms": 13489.7,
+        "files": [
+          "pricing-CUST-2030.json",
+          "proposal-CUST-2030.md"
+        ]
+      }
+    ]
+  },
+  {
+    "totals": {
+      "model": "qwen2.5-3b + LoRA (fleet-trained, 200 iters)",
+      "customers": 6,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "avg_tokens": 2621,
+      "avg_latency_ms": 10749.4
+    },
+    "results": [
+      {
+        "customer": "CUST-2007",
+        "passed": false,
+        "gate": "FAIL (json_parses)",
+        "tokens": 2712,
+        "latency_ms": 13799.3,
+        "files": [
+          "build/renewal/pricing-CUST-2007.json",
+          "build/renewal/proposal-CUST-2007.md"
+        ]
+      },
+      {
+        "customer": "CUST-2010",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; param_customer_id; files [] != expected ['build/renewal/pricing-CUST-2010.json', 'build/renewal/proposal-CUST-2010.md'])",
+        "tokens": 2380,
+        "latency_ms": 7502.3,
+        "files": []
+      },
+      {
+        "customer": "CUST-2015",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; param_customer_id; files [] != expected ['build/renewal/pricing-CUST-2015.json', 'build/renewal/proposal-CUST-2015.md'])",
+        "tokens": 2787,
+        "latency_ms": 12164.0,
+        "files": []
+      },
+      {
+        "customer": "CUST-2017",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; cross_file_grounded; files ['pricing_CUST-2017.json', 'proposal_CUST-2017.md'] != expected ['build/renewal/pricing-CUST-2017.json', 'build/renewal/proposal-CUST-2017.md']; proposal_CUST-2017.md: numbers not in JSON/context/derived: ['116796', '12560', '170844', '178477'])",
+        "tokens": 2345,
+        "latency_ms": 7125.4,
+        "files": [
+          "pricing_CUST-2017.json",
+          "proposal_CUST-2017.md"
+        ]
+      },
+      {
+        "customer": "CUST-2022",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; param_customer_id; files [] != expected ['build/renewal/pricing-CUST-2022.json', 'build/renewal/proposal-CUST-2022.md'])",
+        "tokens": 2762,
+        "latency_ms": 11979.6,
+        "files": []
+      },
+      {
+        "customer": "CUST-2030",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; param_customer_id; files [] != expected ['build/renewal/pricing-CUST-2030.json', 'build/renewal/proposal-CUST-2030.md'])",
+        "tokens": 2744,
+        "latency_ms": 11925.5,
+        "files": []
+      }
+    ]
+  },
+  {
+    "totals": {
+      "model": "qwen2.5-3b + LoRA (fleet-trained)",
+      "customers": 6,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "avg_tokens": 2778,
+      "avg_latency_ms": 14281.5
+    },
+    "results": [
+      {
+        "customer": "CUST-2007",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2007.md: numbers not in JSON/context/derived: ['1440', '2400', '3780', '45600'])",
+        "tokens": 2740,
+        "latency_ms": 13876.7,
+        "files": [
+          "build/renewal/pricing-CUST-2007.json",
+          "build/renewal/proposal-CUST-2007.md"
+        ]
+      },
+      {
+        "customer": "CUST-2010",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2010.md: numbers not in JSON/context/derived: ['1050', '212.5', '2125', '3930'])",
+        "tokens": 2781,
+        "latency_ms": 13822.1,
+        "files": [
+          "build/renewal/pricing-CUST-2010.json",
+          "build/renewal/proposal-CUST-2010.md"
+        ]
+      },
+      {
+        "customer": "CUST-2015",
+        "passed": false,
+        "gate": "FAIL (json_values)",
+        "tokens": 2794,
+        "latency_ms": 14397.9,
+        "files": [
+          "build/renewal/pricing-CUST-2015.json",
+          "build/renewal/proposal-CUST-2015.md"
+        ]
+      },
+      {
+        "customer": "CUST-2017",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2017.md: numbers not in JSON/context/derived: ['15648', '158400', '381.6', '4891.2'])",
+        "tokens": 2787,
+        "latency_ms": 14569.3,
+        "files": [
+          "build/renewal/pricing-CUST-2017.json",
+          "build/renewal/proposal-CUST-2017.md"
+        ]
+      },
+      {
+        "customer": "CUST-2022",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2022.md: numbers not in JSON/context/derived: ['123000', '12500', '150000', '325'])",
+        "tokens": 2796,
+        "latency_ms": 14529.1,
+        "files": [
+          "build/renewal/pricing-CUST-2022.json",
+          "build/renewal/proposal-CUST-2022.md"
+        ]
+      },
+      {
+        "customer": "CUST-2030",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2030.md: numbers not in JSON/context/derived: ['2100', '65500', '7500'])",
+        "tokens": 2772,
+        "latency_ms": 14493.8,
+        "files": [
+          "build/renewal/pricing-CUST-2030.json",
+          "build/renewal/proposal-CUST-2030.md"
+        ]
+      }
+    ]
+  },
+  {
+    "totals": {
+      "model": "qwen2.5:7b (raw)",
+      "customers": 6,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "avg_tokens": 2754,
+      "avg_latency_ms": 29948.1
+    },
+    "results": [
+      {
+        "customer": "CUST-2007",
+        "passed": false,
+        "gate": "FAIL (file_set; json_values; md_present; md_anchors; files ['build/renewal/pricing-CUST-2007.json'] != expected ['build/renewal/pricing-CUST-2007.json', 'build/renewal/proposal-CUST-2007.md'])",
+        "tokens": 2710,
+        "latency_ms": 29874.5,
+        "files": [
+          "build/renewal/pricing-CUST-2007.json"
+        ]
+      },
+      {
+        "customer": "CUST-2010",
+        "passed": false,
+        "gate": "FAIL (file_set; json_values; md_present; md_anchors; files ['build/renewal/pricing-CUST-2010.json'] != expected ['build/renewal/pricing-CUST-2010.json', 'build/renewal/proposal-CUST-2010.md'])",
+        "tokens": 2747,
+        "latency_ms": 26844.3,
+        "files": [
+          "build/renewal/pricing-CUST-2010.json"
+        ]
+      },
+      {
+        "customer": "CUST-2015",
+        "passed": false,
+        "gate": "FAIL (file_set; json_values; md_present; md_anchors; files ['build/renewal/pricing-CUST-2015.json'] != expected ['build/renewal/pricing-CUST-2015.json', 'build/renewal/proposal-CUST-2015.md'])",
+        "tokens": 2791,
+        "latency_ms": 29441.7,
+        "files": [
+          "build/renewal/pricing-CUST-2015.json"
+        ]
+      },
+      {
+        "customer": "CUST-2017",
+        "passed": false,
+        "gate": "FAIL (file_set; json_values; md_present; md_anchors; files ['build/renewal/pricing-CUST-2017.json'] != expected ['build/renewal/pricing-CUST-2017.json', 'build/renewal/proposal-CUST-2017.md'])",
+        "tokens": 2765,
+        "latency_ms": 29253.9,
+        "files": [
+          "build/renewal/pricing-CUST-2017.json"
+        ]
+      },
+      {
+        "customer": "CUST-2022",
+        "passed": false,
+        "gate": "FAIL (file_set; json_values; md_present; md_anchors; files ['build/renewal/pricing-CUST-2022.json'] != expected ['build/renewal/pricing-CUST-2022.json', 'build/renewal/proposal-CUST-2022.md'])",
+        "tokens": 2762,
+        "latency_ms": 30786.8,
+        "files": [
+          "build/renewal/pricing-CUST-2022.json"
+        ]
+      },
+      {
+        "customer": "CUST-2030",
+        "passed": false,
+        "gate": "FAIL (file_set; json_values; md_present; md_anchors; files ['build/renewal/pricing-CUST-2030.json'] != expected ['build/renewal/pricing-CUST-2030.json', 'build/renewal/proposal-CUST-2030.md'])",
+        "tokens": 2749,
+        "latency_ms": 33487.6,
+        "files": [
+          "build/renewal/pricing-CUST-2030.json"
+        ]
+      }
+    ]
+  },
+  {
+    "totals": {
+      "model": "qwen2.5-7b + LoRA (fleet-trained)",
+      "customers": 6,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "avg_tokens": 5325,
+      "avg_latency_ms": 88932.1
+    },
+    "results": [
+      {
+        "customer": "CUST-2007",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; param_customer_id; files [] != expected ['build/renewal/pricing-CUST-2007.json', 'build/renewal/proposal-CUST-2007.md'])",
+        "tokens": 5311,
+        "latency_ms": 85230.8,
+        "files": []
+      },
+      {
+        "customer": "CUST-2010",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; param_customer_id; files [] != expected ['build/renewal/pricing-CUST-2010.json', 'build/renewal/proposal-CUST-2010.md'])",
+        "tokens": 5333,
+        "latency_ms": 83878.2,
+        "files": []
+      },
+      {
+        "customer": "CUST-2015",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; param_customer_id; files [] != expected ['build/renewal/pricing-CUST-2015.json', 'build/renewal/proposal-CUST-2015.md'])",
+        "tokens": 5333,
+        "latency_ms": 84012.3,
+        "files": []
+      },
+      {
+        "customer": "CUST-2017",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; param_customer_id; files [] != expected ['build/renewal/pricing-CUST-2017.json', 'build/renewal/proposal-CUST-2017.md'])",
+        "tokens": 5325,
+        "latency_ms": 88194.7,
+        "files": []
+      },
+      {
+        "customer": "CUST-2022",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; param_customer_id; files [] != expected ['build/renewal/pricing-CUST-2022.json', 'build/renewal/proposal-CUST-2022.md'])",
+        "tokens": 5331,
+        "latency_ms": 96867.0,
+        "files": []
+      },
+      {
+        "customer": "CUST-2030",
+        "passed": false,
+        "gate": "FAIL (file_set; json_parses; md_present; md_anchors; param_customer_id; files [] != expected ['build/renewal/pricing-CUST-2030.json', 'build/renewal/proposal-CUST-2030.md'])",
+        "tokens": 5320,
+        "latency_ms": 95409.8,
+        "files": []
+      }
+    ]
+  },
+  {
+    "totals": {
+      "model": "qwen2.5-7b + QLoRA (4090-trained, 12 epochs)",
+      "customers": 6,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "avg_tokens": 2782,
+      "avg_latency_ms": 23974.2
+    },
+    "results": [
+      {
+        "customer": "CUST-2007",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2007.md: numbers not in JSON/context/derived: ['1440', '2400'])",
+        "tokens": 2740,
+        "latency_ms": 23490.1,
+        "files": [
+          "build/renewal/pricing-CUST-2007.json",
+          "build/renewal/proposal-CUST-2007.md"
+        ]
+      },
+      {
+        "customer": "CUST-2010",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2010.md: numbers not in JSON/context/derived: ['1530', '2550'])",
+        "tokens": 2798,
+        "latency_ms": 24156.0,
+        "files": [
+          "build/renewal/pricing-CUST-2010.json",
+          "build/renewal/proposal-CUST-2010.md"
+        ]
+      },
+      {
+        "customer": "CUST-2015",
+        "passed": false,
+        "gate": "FAIL (json_values)",
+        "tokens": 2797,
+        "latency_ms": 24085.4,
+        "files": [
+          "build/renewal/pricing-CUST-2015.json",
+          "build/renewal/proposal-CUST-2015.md"
+        ]
+      },
+      {
+        "customer": "CUST-2017",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2017.md: numbers not in JSON/context/derived: ['11136', '133632', '15360', '4608'])",
+        "tokens": 2789,
+        "latency_ms": 24083.2,
+        "files": [
+          "build/renewal/pricing-CUST-2017.json",
+          "build/renewal/proposal-CUST-2017.md"
+        ]
+      },
+      {
+        "customer": "CUST-2022",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2022.md: numbers not in JSON/context/derived: ['14700', '4410'])",
+        "tokens": 2799,
+        "latency_ms": 24255.4,
+        "files": [
+          "build/renewal/pricing-CUST-2022.json",
+          "build/renewal/proposal-CUST-2022.md"
+        ]
+      },
+      {
+        "customer": "CUST-2030",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2030.md: numbers not in JSON/context/derived: ['2250', '7500'])",
+        "tokens": 2771,
+        "latency_ms": 23775.0,
+        "files": [
+          "build/renewal/pricing-CUST-2030.json",
+          "build/renewal/proposal-CUST-2030.md"
+        ]
+      }
+    ]
+  },
+  {
+    "totals": {
+      "model": "qwen2.5-7b + QLoRA (300 cases, 3 epochs)",
+      "customers": 6,
+      "passed": 0,
+      "pass_rate": 0.0,
+      "avg_tokens": 2779,
+      "avg_latency_ms": 23738.2
+    },
+    "results": [
+      {
+        "customer": "CUST-2007",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2007.md: numbers not in JSON/context/derived: ['1440', '2400'])",
+        "tokens": 2739,
+        "latency_ms": 23164.1,
+        "files": [
+          "build/renewal/pricing-CUST-2007.json",
+          "build/renewal/proposal-CUST-2007.md"
+        ]
+      },
+      {
+        "customer": "CUST-2010",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2010.md: numbers not in JSON/context/derived: ['1620', '2700'])",
+        "tokens": 2779,
+        "latency_ms": 23638.6,
+        "files": [
+          "build/renewal/pricing-CUST-2010.json",
+          "build/renewal/proposal-CUST-2010.md"
+        ]
+      },
+      {
+        "customer": "CUST-2015",
+        "passed": false,
+        "gate": "FAIL (json_values)",
+        "tokens": 2797,
+        "latency_ms": 23928.4,
+        "files": [
+          "build/renewal/pricing-CUST-2015.json",
+          "build/renewal/proposal-CUST-2015.md"
+        ]
+      },
+      {
+        "customer": "CUST-2017",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2017.md: numbers not in JSON/context/derived: ['15360', '4608'])",
+        "tokens": 2789,
+        "latency_ms": 23993.8,
+        "files": [
+          "build/renewal/pricing-CUST-2017.json",
+          "build/renewal/proposal-CUST-2017.md"
+        ]
+      },
+      {
+        "customer": "CUST-2022",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2022.md: numbers not in JSON/context/derived: ['22500'])",
+        "tokens": 2799,
+        "latency_ms": 24057.0,
+        "files": [
+          "build/renewal/pricing-CUST-2022.json",
+          "build/renewal/proposal-CUST-2022.md"
+        ]
+      },
+      {
+        "customer": "CUST-2030",
+        "passed": false,
+        "gate": "FAIL (json_values; cross_file_grounded; proposal-CUST-2030.md: numbers not in JSON/context/derived: ['2250', '7500'])",
+        "tokens": 2772,
+        "latency_ms": 23647.4,
+        "files": [
+          "build/renewal/pricing-CUST-2030.json",
+          "build/renewal/proposal-CUST-2030.md"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "customer_id": "CUST-2211",
+  "contract_id": "CTR-2023-1210",
+  "contract_status": "active",
+  "plan": "professional",
+  "proposal_date": "2026-08-29",
+  "policy": "pricing_v2",
+  "policy_effective_from": "2026-01-01",
+  "currency": "USD",
+  "renewal_term_months": 12,
+  "usage": {
+    "period_first_month": "2026-05",
+    "period_last_month": "2026-07",
+    "first_month_seats_active": 319,
+    "last_month_seats_active": 320,
+    "peak_seats_active": 320,
+    "seats_active_growth_pct": 0.3135,
+    "average_api_calls": 1386562.0
+  },
+  "seat_recommendation": {
+    "current_contract_seats": 314,
+    "peak_seats_active": 320,
+    "base_seats": 320,
+    "rounding": "up to next 10",
+    "recommended_committed_seats": 320
+  },
+  "list_price_per_seat_month_usd": 25.0,
+  "gross_monthly_usd": 8000.0,
+  "discounts": {
+    "volume_band_min_seats": 200,
+    "volume_discount_pct": 10,
+    "loyalty_min_years": 2,
+    "continuous_service_start_date": "2023-04-10",
+    "loyalty_eligibility_date": "2025-04-10",
+    "loyalty_eligible_on_proposal_date": true,
+    "loyalty_discount_pct": 3,
+    "uncapped_total_discount_pct": 13,
+    "max_total_discount_pct": 20,
+    "total_discount_pct": 13,
+    "monthly_discount_usd": 1040.0
+  },
+  "monthly_total_usd": 6960.0,
+  "annual_total_usd": 83520.0
+}

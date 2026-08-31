@@ -314,7 +314,7 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
                                                write_to=".")
                 tspan.update({"tokens": fdone.result.tokens, "passed": fdone.verdict.passed})
             if fdone.result.ok and fdone.verdict.passed:
-                cache_store(root, action, cache_key_params, output="", source=f"slm:{runtime_files.model}", files=fdone.files, upstream_sha=upstream_sha)
+                cache_store(root, action, cache_key_params, output="", source=f"slm:{runtime_files.model}", files=fdone.files, upstream_sha=upstream_sha, upstream=_context_so_far())
                 listing = "\n".join(f"A {p} (written)" for p in sorted(fdone.files))
                 report.steps.append(RunStep(step.step_id, action, f"slm:{runtime_files.model}", fdone.result.tokens,
                                             fdone.result.latency_ms, True, listing, "gate " + fdone.verdict.summary(),
@@ -338,7 +338,7 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
                                         min_facts=slm_tier.expected_fact_count(trace, idx, work_ir.actions, norm))
                 tspan.update({"tokens": done.result.tokens, "passed": done.verdict.passed})
             if done.result.ok and done.verdict.passed:
-                cache_store(root, action, cache_key_params, output=done.result.output, source=f"slm:{runtime.model}", upstream_sha=upstream_sha)
+                cache_store(root, action, cache_key_params, output=done.result.output, source=f"slm:{runtime.model}", upstream_sha=upstream_sha, upstream=_context_so_far())
                 report.steps.append(RunStep(step.step_id, action, f"slm:{runtime.model}", done.result.tokens, done.result.latency_ms, True,
                                             done.result.output, "gate " + done.verdict.summary(), model=runtime.model,
                                             recorded_model=str(getattr(step, "model", "") or ""),
@@ -367,7 +367,7 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
                               "exit_code": res.get("exit_code", 0)})
             ok = res.get("exit_code", 0) == 0
             if ok:
-                cache_store(root, action, cache_key_params, output=str(res.get("output", "")), source=backend_name, upstream_sha=upstream_sha,
+                cache_store(root, action, cache_key_params, output=str(res.get("output", "")), source=backend_name, upstream_sha=upstream_sha, upstream=_context_so_far(),
                             recorded_patch=recorded_patch, recorded_params={p["name"]: p["recorded_value"] for p in
                                 json.loads((root / "PARAMS.json").read_text(encoding="utf-8")).get("params", [])} if (root / "PARAMS.json").exists() else {})
             report.steps.append(RunStep(step.step_id, action, f"escalated:{backend_name}", int(res.get("tokens", 0)),

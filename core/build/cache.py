@@ -88,7 +88,8 @@ def lookup(build_dir: Path | str, action: str, params: Dict[str, Any],
 
 def store(build_dir: Path | str, action: str, params: Dict[str, Any], *, output: str, source: str,
           files: Optional[Dict[str, str]] = None, recorded_patch: Optional[str] = None,
-          recorded_params: Optional[Dict[str, Any]] = None, upstream_sha: str = "") -> Optional[Path]:
+          recorded_params: Optional[Dict[str, Any]] = None, upstream_sha: str = "",
+          upstream: Optional[list] = None) -> Optional[Path]:
     """Persist a successful escalation/SLM result. When the recorded step wrote files (``recorded_patch``)
     and the escalating agent wrote them to disk itself, the current on-disk content of the
     parameter-substituted paths is captured."""
@@ -116,7 +117,8 @@ def store(build_dir: Path | str, action: str, params: Dict[str, Any], *, output:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"action": action, "params": {k: str(v) for k, v in (params or {}).items()},
                                 "source": source, "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                                "upstream_sha": upstream_sha, "output": output, "files": captured},
+                                "upstream_sha": upstream_sha, "output": output, "files": captured,
+                                "upstream": [(a, str(o)[:4000]) for a, o in (upstream or [])]},
                                indent=2, ensure_ascii=False) + "\n",
                     encoding="utf-8")
     return path

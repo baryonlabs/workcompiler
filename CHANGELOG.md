@@ -4,6 +4,12 @@
 
 - **Cache freshness**: every cache entry now stores a fingerprint of the upstream step outputs it was computed from; a run whose replayed code outputs differ (the CRM record changed, the policy was replaced) skips the entry as *stale* and escalates again, noting why in the report. `owc build run --no-cache` bypasses the cache; `owc build cache list|clear <build> [--action a]` inspects and prunes it. Entries written before v0.5.1 carry no fingerprint and stay valid until refreshed.
 
+## Unreleased
+
+- **Training loop, measured** (`core/build/dataset.py`, `owc build dataset|train|fleet-eval`): a fleet corpus generator scales a work to 300 deterministic, policy-true cases; datasets merge the recorded trace + cache entries (every escalation is a training example) + fleet truth using the runtime's own prompt builders; `train` runs mlx-lm LoRA locally (`--mask-prompt`, tuned defaults) and the same dataset trains on CUDA via TRL/QLoRA; `fleet-eval` scores any candidate on pinned held-out customers with the promotion gate. Cache entries now store their upstream context.
+- **Replicated negative result** (kept in `examples/demo/customer-renewal-bench/slm-training/`): SFT (3b/7b × 24/300 examples, up to 99.4% token accuracy) fixes format and lookup patterns completely but does not generalize multi-step arithmetic — held-out gate 0/6 in every configuration, with the residual errors being exactly the computed numbers (e.g. one large-number mean). Derivation steps therefore lower to the code tier or the escalate-once cache, never to an SLM; restatement (`respond`) needs no training at all (raw 3b 6/6 held-out).
+- Demo GIF condensed with mpdecimate (487 s → ~67 s viewing; vhs cannot wait on the Codex alt-screen).
+
 ## v0.5.0 — 2026-08-31
 
 Escalate once, replay forever — and a gate honest enough to refuse.
