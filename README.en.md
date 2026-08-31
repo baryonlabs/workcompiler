@@ -95,7 +95,7 @@ A **real interactive Codex session**, not a mock-up. Install `owc` with one line
 
 The shell steps (`shell_sed`, `shell_python3`, `shell_find`, `shell_curl`) lowered to the code tier and replayed with zero tokens in tens of milliseconds (compile and search output identical; the proxy trace-list `curl` differs per session and is reported as a mismatch); the remaining cost is the final summary (`respond`), which steps 5–6 of the recording **promote to a local `qwen2.5:7b`** (6,551 tokens, $0, gate 2/2 PASS) — on the same session `qwen2.5:3b` left a placeholder and was rejected by the gate.
 
-<p align="center"><img src="docs/images/case-renewal.png" alt="Case — customer renewal proposal: −97% cost, 7× faster, identical outputs" width="840"></p>
+<p align="center"><img src="docs/images/case-renewal.png" alt="Case — customer renewal proposal: −82% unique tokens, 7.4× faster, identical outputs (7/7 reproduced), all on a local SLM at $0" width="840"></p>
 
 **A real business task — customer contract renewal proposal** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): verify the active CRM contract → aggregate 3 months of usage → price with the current policy → write the proposal and pricing JSON; artifacts in [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
 

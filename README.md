@@ -95,7 +95,7 @@ flowchart LR
 
 셸 스텝(`shell_sed`, `shell_python3`, `shell_find`, `shell_curl`)은 code 계층으로 내려가 토큰 0·수십 ms에 재실행됐고(컴파일·탐색 출력은 그대로 일치, 프록시 트레이스 목록 `curl`은 세션마다 내용이 달라 불일치로 표시), 남은 비용은 최종 요약(`respond`)뿐인데, 이 스텝은 녹화의 5–6단계에서 **로컬 `qwen2.5:7b`로 승격**되어 실행됩니다(6,551 토큰, $0, 게이트 2/2 PASS) — 같은 세션에서 `qwen2.5:3b`는 자리표시자를 남겨 게이트에 거부됐습니다.
 
-<p align="center"><img src="docs/images/case-renewal.png" alt="사례 — 고객 계약 갱신 제안서: 비용 −97%, 속도 7배, 결과 동일" width="840"></p>
+<p align="center"><img src="docs/images/case-renewal.png" alt="사례 — 고객 계약 갱신 제안서: 유니크 토큰 −82%, 7.4× 빠름, 결과 동일(7/7 재현), 전부 로컬 SLM $0" width="840"></p>
 
 **실제 업무 작업 — 고객 계약 갱신 제안서** ([`examples/customer-renewal/TASK.md`](examples/customer-renewal/TASK.md): CRM 활성 계약 확인 → 3개월 사용량 집계 → 현행 가격정책으로 산정 → 제안서·가격 JSON 작성; 원본은 [`examples/demo/customer-renewal-bench/`](examples/demo/customer-renewal-bench/)):
 
