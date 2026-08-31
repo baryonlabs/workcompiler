@@ -711,6 +711,13 @@ Every piece of verification evidence lives in files (JSON/YAML). `go run ./tools
 and renders seven layers — capture → tier map → reproduction matrix → SLM gates → cache freshness → harness
 loop → ledger — each led by "what verified this". Read-only, single binary, no external services.
 
+An **ontology view** (`-catalog examples/org/catalog.yaml`, the default) renders the decision catalog itself —
+a grid of the 34 cases by organization; opening a case shows its entities and attributes, relations
+(condition → consequence), and the ordered policy rules with verdict colors, with the **policy-declared
+discretion bands (`defer`) highlighted in purple**. Deep-linkable via `#catalog` and `#case/<id>`.
+
+<p align="center"><img src="docs/images/owc-inspect-ontology.png" alt="owc-inspect ontology view — entities, relations, ordered policy rules and discretion bands" width="840"></p>
+
 ## Usage & Demonstration
 
 ### Install (one line)

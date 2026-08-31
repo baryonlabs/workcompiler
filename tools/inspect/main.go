@@ -23,6 +23,7 @@ var static embed.FS
 
 func main() {
 	dir := flag.String("dir", "build", "directory containing the compiled builds")
+	catalog := flag.String("catalog", "examples/org/catalog.yaml", "decision catalog for the ontology view (optional)")
 	port := flag.Int("port", 8890, "port to listen on")
 	flag.Parse()
 
@@ -31,9 +32,14 @@ func main() {
 		log.Fatalf("build directory not found: %s", *dir)
 	}
 
+	catalogPath, _ := filepath.Abs(*catalog)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/builds", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, ListBuilds(base))
+	})
+	mux.HandleFunc("/api/catalog", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, LoadCatalog(catalogPath))
 	})
 	mux.HandleFunc("/api/build/", func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimPrefix(r.URL.Path, "/api/build/")

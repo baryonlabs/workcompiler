@@ -103,6 +103,37 @@ details.doc pre{padding:12px;border-top:1px solid var(--line);overflow-x:auto;fo
 .chk{font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:5px}
 .chk.pass{color:var(--ok);background:rgba(61,220,132,.08)}
 .chk.fail{color:var(--bad);background:rgba(255,107,107,.1)}
+/* ── ontology view ── */
+.railhead{font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.14em;text-transform:uppercase;padding:14px 20px 4px}
+.casegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:16px}
+.casecard{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:12px 14px;cursor:pointer;transition:.15s;text-align:left;color:var(--fg);font:inherit}
+.casecard:hover{border-color:var(--line2);background:var(--panel2)}
+.casecard .corg{font-family:var(--mono);font-size:10.5px;color:var(--info);letter-spacing:.06em}
+.casecard .cdec{font-weight:600;font-size:13px;margin-top:3px}
+.casecard .cmeta{font-size:11px;color:var(--dim);margin-top:5px;display:flex;gap:6px;flex-wrap:wrap}
+.entgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.ent{border:1px solid var(--line2);border-radius:10px;background:var(--panel2);overflow:hidden}
+.ent .ename{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--info);padding:8px 12px;border-bottom:1px solid var(--line)}
+.ent ul{list-style:none;padding:8px 12px}
+.ent li{font-family:var(--mono);font-size:11px;color:var(--dim);padding:2px 0}
+.rel{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(35,43,54,.5);font-size:12.5px}
+.rel:last-child{border-bottom:0}
+.rel .cond{font-family:var(--mono);font-size:11.5px;color:var(--fg)}
+.rel .arrow{color:var(--faint)}
+.rel .eff{color:var(--dim)}
+.rule{display:grid;grid-template-columns:26px 1fr;gap:12px;padding:11px 0;border-bottom:1px solid rgba(35,43,54,.5)}
+.rule:last-child{border-bottom:0}
+.rule .ord{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line2);border-radius:5px;height:22px;display:flex;align-items:center;justify-content:center}
+.rule .rname{font-family:var(--mono);font-size:12px;font-weight:600}
+.rule .rwhen{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin-top:2px}
+.rule .rwhy{font-size:12px;color:var(--dim);margin-top:3px}
+.vtag{font-family:var(--mono);font-size:10px;padding:1px 8px;border-radius:99px;font-weight:600;margin-left:8px}
+.vtag.approve{color:#08130c;background:var(--ok)}
+.vtag.reject{color:#190808;background:var(--bad)}
+.vtag.escalate{color:#1c1204;background:var(--warn)}
+.vtag.defer{color:#0c0f13;background:#c39bff}
+.vtag.route{color:var(--dim);border:1px solid var(--line2);background:none;font-weight:400}
+.rule.deferband{background:linear-gradient(90deg,rgba(195,155,255,.06),transparent);border-left:2px solid #c39bff;padding-left:10px;margin-left:-12px}
 .loading{padding:60px;text-align:center;color:var(--faint);font-family:var(--mono);font-size:12px;letter-spacing:.2em;animation:blink 1.2s infinite}
 @keyframes blink{50%{opacity:.35}}
 @media(max-width:900px){.shell{grid-template-columns:1fr}.rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}}
@@ -115,6 +146,8 @@ details.doc pre{padding:12px;border-top:1px solid var(--line);overflow-x:auto;fo
       <h1>owc<b>-inspect</b></h1>
       <div class="sub">layer verification console</div>
     </div>
+    <div id="catnav"></div>
+    <div class="railhead">builds</div>
     <div class="builds" id="builds"><div class="loading">SCANNING</div></div>
   </nav>
   <main class="main" id="main"><div class="loading">SELECT A BUILD</div></main>
@@ -125,13 +158,14 @@ const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const fmt=n=>Number(n||0).toLocaleString("ko-KR");
 const sec=ms=>(Number(ms||0)/1000).toFixed(1)+"s";
 
-async function loadBuilds(){
+async function loadBuilds(autoselect=true){
   const builds=await (await fetch("/api/builds")).json();
   $("#builds").innerHTML=builds.map(b=>{
     const t=b.bench||{};
     const pills=[
       b.has_trace?'<span class="pill ok">trace</span>':'',
-      t.token_savings_pct!=null?`<span class="pill ok">−${t.token_savings_pct}%</span>`:'',
+      t.savings_unique_pct!=null?`<span class="pill ok">−${t.savings_unique_pct}% u</span>`
+        :(t.token_savings_pct!=null?`<span class="pill">−${t.token_savings_pct}%</span>`:''),
       b.slm_promoted?`<span class="pill">slm×${b.slm_promoted}</span>`:'',
       b.cache_entries?`<span class="pill">cache×${b.cache_entries}</span>`:'',
       b.has_harden?'<span class="pill warn">harden</span>':''
@@ -144,7 +178,7 @@ async function loadBuilds(){
     document.querySelectorAll(".build").forEach(x=>x.classList.remove("active"));
     el.classList.add("active"); loadBuild(el.dataset.name);
   });
-  if(builds.length){document.querySelector(".build").click();}
+  if(autoselect&&builds.length){document.querySelector("#builds .build").click();}
 }
 
 const V=(cls,txt)=>`<span class="verdict ${cls}">${txt}</span>`;
@@ -195,7 +229,7 @@ function renderBench(b){
   const inh=b.steps.filter(s=>s.status==="inherent").length;
   const mm=b.steps.filter(s=>s.status==="mismatch").length;
   return layer(3,"벤치 — 재현 매트릭스",
-    `검증: 기록된 세션을 컴파일된 계층으로 재실행해 출력 동일성·토큰·지연을 실측 — <b>${t.outputs_matched}/${t.outputs_checked} 재현</b>${inh?` (그중 본질적 비재현 ${inh}건 분리)`:""}, 토큰 <b>−${t.token_savings_pct}%</b>, <b>${t.speedup_x}×</b>`,
+    `검증: 기록된 세션을 컴파일된 계층으로 재실행해 출력 동일성·토큰·지연을 실측 — <b>${t.outputs_matched}/${t.outputs_checked} 재현</b>${inh?` (그중 본질적 비재현 ${inh}건 분리)`:""}, 토큰 <b>−${t.savings_unique_pct??t.token_savings_pct}%${t.savings_unique_pct!=null?" (유니크)":""}</b>, <b>${t.speedup_x}×</b>`,
     V(mm===0?"ok":"warn",`${t.outputs_matched}/${t.outputs_checked}`),
     `<table><tr><th>step</th><th>action</th><th>tier</th><th class="r">tokens</th><th class="r">latency</th><th>note</th></tr>${rows}</table>`);
 }
@@ -276,7 +310,7 @@ async function loadBuild(name){
     <div class="title">${esc((d.compile&&d.compile.work)||name)}<span class="mono">${esc(name)}</span></div>
     <div class="strip">
       <div class="stat"><div class="k">재현</div><div class="v ${t.outputs_matched===t.outputs_checked?"ok":"warn"}">${t.outputs_matched??"–"}<small>/${t.outputs_checked??"–"}</small></div></div>
-      <div class="stat"><div class="k">토큰 절감</div><div class="v ok">−${t.token_savings_pct??"–"}<small>%</small></div></div>
+      <div class="stat"><div class="k">토큰 절감 (유니크)</div><div class="v ok">−${t.savings_unique_pct??t.token_savings_pct??"–"}<small>%${t.savings_unique_pct!=null?` · 누적 −${t.token_savings_pct}%`:""}</small></div></div>
       <div class="stat"><div class="k">속도</div><div class="v">${t.speedup_x??"–"}<small>×</small></div></div>
       <div class="stat"><div class="k">에스컬레이션 잔여</div><div class="v ${t.escalated_actions?"warn":"ok"}">${t.escalated_actions??"–"}</div></div>
       <div class="stat"><div class="k">캐시</div><div class="v">${(d.cache.entries||[]).length}</div></div>
@@ -287,7 +321,98 @@ async function loadBuild(name){
     ${renderSLM(d.slm)}${renderCache(d.cache)}${renderHarden(d.harden)}${renderLedger(d.ledger)}
     ${docs?`<section class="layer" style="animation-delay:520ms"><div class="lhead"><span class="lnum">DOC</span><span class="lname">원문 리포트</span></div><div class="lbody">${docs}</div></section>`:""}`;
 }
-loadBuilds();
+/* ── ontology catalog view ── */
+let CATALOG=null;
+async function loadCatalog(){
+  try{CATALOG=await (await fetch("/api/catalog")).json();}catch(e){return;}
+  if(!CATALOG||!CATALOG.present||!(CATALOG.cases||[]).length) return;
+  $("#catnav").innerHTML=`<div class="railhead">decision catalog</div><div class="builds">
+    <button class="build" id="catbtn"><div class="bname">온톨로지 카탈로그</div>
+    <div class="bmeta">${CATALOG.cases.length} cases <span class="pill">ontology</span><span class="pill">rules</span></div></button></div>`;
+  $("#catbtn").onclick=()=>{
+    document.querySelectorAll(".build").forEach(x=>x.classList.remove("active"));
+    $("#catbtn").classList.add("active"); renderCatalog();
+  };
+}
+function verdictOf(r){return r.defer?"defer":(r.verdict||"defer");}
+function ruleRow(r,i){
+  const v=verdictOf(r);
+  const label=r.defer?`AI 추천 (${esc(r.defer)})`:esc(r.verdict);
+  return `<div class="rule ${r.defer?"deferband":""}">
+    <div class="ord">${i+1}</div>
+    <div><span class="rname">${esc(r.name)}</span><span class="vtag ${v}">${label}</span>
+      ${r.route?`<span class="vtag route">→ ${esc(r.route)}</span>`:""}
+      ${r.set?`<span class="vtag route">${esc(Object.entries(r.set).map(([k,x])=>k+"="+JSON.stringify(x)).join(" · "))}</span>`:""}
+      <div class="rwhen">when ${esc(r.when||"(항상)")}</div>
+      ${r.why?`<div class="rwhy">${esc(r.why)}</div>`:""}</div></div>`;
+}
+function renderCase(c){
+  const ont=c.ontology||{};
+  const ents=Object.entries(ont.entities||{}).map(([name,attrs])=>`<div class="ent">
+    <div class="ename">${esc(name)}</div><ul>${(attrs||[]).map(a=>`<li>${esc(a)}</li>`).join("")}</ul></div>`).join("");
+  const rels=(ont.relations||[]).map(r=>{
+    const parts=String(r).split("→");
+    return `<div class="rel"><span class="cond">${esc(parts[0].trim())}</span>
+      <span class="arrow">→</span><span class="eff">${esc((parts[1]||"").trim())}</span></div>`;
+  }).join("");
+  const rules=(c.rules||[]).map(ruleRow).join("");
+  const fb=c.fallback?`<div class="rule"><div class="ord">FB</div><div><span class="rname">fallback</span>
+    <span class="vtag ${esc(c.fallback.verdict||"escalate")}">${esc(c.fallback.verdict||"")}</span>
+    ${c.fallback.route?`<span class="vtag route">→ ${esc(c.fallback.route)}</span>`:""}
+    <div class="rwhy">어떤 규칙도 성립하지 않을 때</div></div></div>`:"";
+  const nDefer=(c.rules||[]).filter(r=>r.defer).length;
+  $("#main").innerHTML=`
+    <div class="crumb">DECISION CATALOG / ${esc(c.id)}</div>
+    <div class="title">${esc(c.decision)}<span class="mono">${esc(c.id)}</span></div>
+    <div class="strip">
+      <div class="stat"><div class="k">조직</div><div class="v" style="font-size:16px">${esc(c.org)}</div></div>
+      <div class="stat"><div class="k">담당</div><div class="v" style="font-size:16px">${esc(c.role)}</div></div>
+      <div class="stat"><div class="k">규칙</div><div class="v">${(c.rules||[]).length}</div></div>
+      <div class="stat"><div class="k">재량 밴드 (AI 추천)</div><div class="v ${nDefer?"warn":""}">${nDefer}</div></div>
+      <div class="stat"><div class="k">개체</div><div class="v">${Object.keys(ont.entities||{}).length}</div></div>
+    </div>
+    <a href="#" onclick="renderCatalog();return false" class="small">← 카탈로그 전체</a>
+    ${layer(1,"온톨로지 — 개체와 속성","이 결정이 다루는 대상들과 그 의미 구조 (데이터를 '의미'로 해석하는 층)","",`<div class="entgrid">${ents}</div>`)}
+    ${layer(2,"관계 — 의미가 만드는 결론","개체 간 관계가 결정에 미치는 영향 (조건 → 귀결)","",rels||'<div class="empty">선언된 관계 없음</div>')}
+    ${layer(3,"정책 규칙 — 위에서부터 첫 일치 적용","명문 규칙은 결정론으로, <b>보라색 재량 밴드만 AI가 추천</b>하고 지정 승인자가 결정 · 모든 판정에 인용 규칙이 남음",V("ok",`${(c.rules||[]).length} rules`),rules+fb)}`;
+}
+function renderCatalog(){
+  const byOrg={};
+  CATALOG.cases.forEach(c=>{(byOrg[c.org]=byOrg[c.org]||[]).push(c);});
+  const groups=Object.entries(byOrg).map(([org,cs])=>`
+    <div class="crumb" style="margin-top:22px">${esc(org)} · ${cs.length}</div>
+    <div class="casegrid">${cs.map(c=>{
+      const nDefer=(c.rules||[]).filter(r=>r.defer).length;
+      return `<button class="casecard" data-id="${esc(c.id)}">
+        <div class="corg">${esc(c.role)}</div><div class="cdec">${esc(c.decision)}</div>
+        <div class="cmeta"><span class="pill">rules ${(c.rules||[]).length}</span>
+        ${nDefer?`<span class="pill" style="color:#c39bff;border-color:#4a3a66">재량 ${nDefer}</span>`:""}</div></button>`;
+    }).join("")}</div>`).join("");
+  const report=CATALOG.eval_report?`<details class="doc" style="margin-top:24px"><summary>결정-SLM 평가 리포트 (eval_report.md)</summary><pre>${esc(CATALOG.eval_report)}</pre></details>`:"";
+  $("#main").innerHTML=`
+    <div class="crumb">DECISION CATALOG</div>
+    <div class="title">조직의 판단하는 방법<span class="mono">catalog.yaml</span></div>
+    <div class="how" style="margin-top:8px">사례마다 온톨로지(개체·관계) · 순서 있는 정책 규칙 · 정책이 열어둔 재량 밴드(<span style="color:#c39bff">defer</span>)가 선언됩니다 — 명문 규칙은 결정론, 재량 밴드만 AI 추천 + 사람 승인.</div>
+    ${groups}${report}`;
+  document.querySelectorAll(".casecard").forEach(el=>el.onclick=()=>{
+    renderCase(CATALOG.cases.find(c=>c.id===el.dataset.id));
+  });
+}
+async function boot(){
+  const h=location.hash;
+  if(h==="#catalog"||h.startsWith("#case/")){
+    await loadCatalog(); loadBuilds(false);
+    if(CATALOG&&CATALOG.present){
+      const id=h.startsWith("#case/")?decodeURIComponent(h.slice(6)):null;
+      const c=id&&CATALOG.cases.find(c=>c.id===id);
+      c?renderCase(c):renderCatalog();
+      const btn=$("#catbtn"); if(btn) btn.classList.add("active");
+      return;
+    }
+  }
+  loadBuilds(); loadCatalog();
+}
+boot();
 </script>
 </body>
 </html>
