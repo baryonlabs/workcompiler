@@ -1,8 +1,9 @@
 # Learning to Apply, Not to Memorize: Policy-in-Context Fine-Tuning Generalizes to Unseen Organizational Policies
 
-> **Draft v0.2 (2026-09-01)** — target: EMNLP/ACL Industry track. All numbers are measured and
-> reproducible from this repository (pointers in §7). Citations marked ⚠ have not yet been
-> re-verified against the original papers and must be checked before submission.
+> **Draft v0.3 (2026-09-01)** — target: EMNLP/ACL Industry track. All numbers are measured and
+> reproducible from this repository (pointers in §7). All arXiv IDs and titles below were
+> verified against the abstract pages; claims marked ⚠body rest on paper bodies not yet read
+> and must be confirmed (or kept in their current abstract-safe wording) before submission.
 
 ## Abstract
 
@@ -44,9 +45,9 @@ band — filled by a recommendation. Three properties follow that shape the ML p
 3. **Discretion is declared, not inferred.** The policy says where the model may recommend;
    confidence thresholds do not.
 
-Prior work internalizes policies into weights (⚠ TriMPI, arXiv:2510.09474), benchmarks
-policy-following of frontier models with the policy in prose (⚠ τ-bench, 2406.12045; ⚠ RuleArena,
-2412.08972), or measures robustness to rule updates (⚠ GuideBench, 2505.11368). What is missing
+Prior work internalizes policies into weights (Multimodal Policy Internalization / TriMPI,
+arXiv:2510.09474), benchmarks agents given domain policy guidelines (τ-bench, 2406.12045;
+RuleArena, 2412.08972), or measures robustness to rule updates (GuideBench, 2505.11368). What is missing
 is the combination that deployment actually needs: **fine-tune a small, locally-servable model on
 the *transferable skill* of applying an arbitrary in-context policy, and measure transfer to
 policies never seen in training.**
@@ -74,29 +75,35 @@ We contribute:
 
 *To be expanded; verified positioning from our survey:*
 
-**Policy internalization vs. policy-in-context.** ⚠ TriMPI (2510.09474) trains policies *into*
-weights and treats an unseen policy given at inference ("policy override") as a robustness probe;
-we make that the training objective itself. ⚠ Policy Reasoning Traces (2509.23291) builds
-per-policy test sets, not held-out policies. ⚠ GuideBench (2505.11368) benchmarks rule updates
-without fine-tuning for them.
+**Policy internalization vs. policy-in-context.** Multimodal Policy Internalization (TriMPI,
+2510.09474) trains policies *into* model parameters so the policy need not be in context at
+inference — the exact opposite maintenance bet from ours (⚠body: its "policy override" probe,
+an unseen policy supplied at inference, would make the contrast sharper if confirmed in the
+body). Policy Reasoning Traces (2509.23291) improves compliance assessment on specific policies
+such as HIPAA and GDPR (⚠body: whether its splits hold out entire policies). GuideBench
+(2505.11368) benchmarks robustness to rule updates for LLM agents.
 
-**Policy-following benchmarks.** ⚠ τ-bench (2406.12045), ⚠ RuleArena (2412.08972), ⚠
-CRMArena-Pro (2505.18878) evaluate frontier agents on prose policies; RuleArena in particular
-separates rule application from computation, anticipating our boundary result. EntCollabBench
+**Policy-following benchmarks.** τ-bench (2406.12045) evaluates state-of-the-art agents given
+domain-specific policy guidelines; RuleArena's (2412.08972) findings distinguish failures of
+rule identification from failures of the computations the rules require — directly anticipating
+our §5.3 boundary; CRMArena-Pro (2505.18878) assesses LLM agents across enterprise scenarios,
+including confidentiality awareness under prompted policies. EntCollabBench
 (2605.08761, *abstract verified*) independently builds a rule-engine-judged enterprise decision
 benchmark; it is evaluation-only and has no discretion bands. DMN (OMG standard) has long
 standardized ordered decision rules with FIRST-hit semantics; our DSL is deliberately in that
 family — the ML contribution is the transfer measurement, not the rule language.
 
-**SFT and arithmetic.** ⚠ Faith and Fate (2305.18654) and ⚠ "SFT Memorizes, RL Generalizes"
-(2501.17161) establish that SFT struggles to teach algorithmic computation; ⚠ PAL (2211.10435)
-and program-of-thought lines route computation to code. Our contribution here is not the negative
+**SFT and arithmetic.** Faith and Fate (2305.18654) shows Transformers fail at compositional
+multi-step arithmetic, reducing reasoning to linearized pattern matching; "SFT Memorizes, RL
+Generalizes" (2501.17161) shows SFT tends to memorize and struggles out-of-distribution; PAL
+(2211.10435) offloads the solution step to a Python interpreter, the ancestral form of routing
+computation to code. Our contribution here is not the negative
 result itself but its *pairing*: the same recipe, corpus scale, and gate that fail on arithmetic
 succeed on rule application — and a tool-less frontier model fails the same arithmetic gate,
 sharpening "small models can't compute" into "inference can't compute."
 
-**Small-model deployment.** ⚠ NVIDIA's SLM position paper (2506.02153) argues small models are
-the future of agentic AI with offline evaluation gates; we supply a trained-skill recipe and a
+**Small-model deployment.** The SLM position paper of Belcak et al. (2506.02153) argues small
+models are the future of agentic AI and outlines an LLM-to-SLM agent conversion algorithm; we supply a trained-skill recipe and a
 transfer measurement for one high-value slot (policy application) and a deterministic gate that
 even frontier models fail for another (derivation), yielding a placement rule rather than a
 preference.
@@ -256,8 +263,9 @@ run consumes **0 frontier tokens** (4,208 tokens on a local model at $0 marginal
 faster, outputs reproduced 7/7 under a deterministic benchmark). Because the compiler's input
 is a work session the organization had to run once anyway, and compilation itself is
 deterministic local computation, the frontier-token **break-even is the second run** — compared
-with the ≈17-transaction break-even reported for optimization-heavy compilation (⚠ Compiled AI,
-2604.05150), where the compiler spends LLM tokens searching. Escalations for genuinely new
+with the ≈17-transaction break-even reported for optimization-heavy compilation (Compiled AI,
+2604.05150 — "breaking even with runtime inference at approximately 17 transactions"), where
+the compiler spends LLM tokens searching. Escalations for genuinely new
 parameter values each cost one frontier call, are cached with upstream-output fingerprints, and
 amortize to zero on repeats. The hidden denominator is the human cost of declaring the ontology
 and policy; the pipeline therefore pays off in proportion to a decision's repetition frequency,
@@ -296,8 +304,8 @@ generator and stored model outputs.
 ---
 
 ### TODO before submission
-- [ ] Verify every ⚠ citation against the original paper (only Progressive Crystallization,
-      HarnessFix, EntCollabBench abstracts were directly verified during the survey).
+- [ ] ⚠body items (TriMPI policy-override probe; PRT split design): read the paper bodies, then
+      either restore the sharper claims or keep the abstract-safe wording.
 - [ ] Related-work prose (§2 is currently a positioning skeleton).
 - [ ] Decide the venue and convert to its LaTeX template (ACL style files).
 - [ ] Limitations section as a separate ACL-required section (lift from §3.4/§6).
