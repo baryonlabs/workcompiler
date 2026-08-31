@@ -4,20 +4,23 @@ Recorded agent session `01a05282-99e6-73d3-8279-7025e4645a95` (`codex-cli`) vs. 
 
 | | recorded (agent) | compiled (build) | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 147,288 | 6,551 | −95.6% |
+| LLM tokens (unique) | 20,506 | 6,551 | −68.1% |
+| LLM tokens (cumulative-context sum; reference) | 147,288 | 6,551 | −95.6% |
 | wall time | 106.1 s | 31.61 s | 3.4× faster |
 | outputs reproduced | — | 6/8 | |
 | actions compiled / escalated | — | 5 / 0 | |
 
+**Unique** is the headline metric: each token counted once — the first request's full prompt, then only each later request's prompt growth, plus every completion. The cumulative-context sum adds up every request's usage as reported by the provider — an agent session re-sends its whole context every turn, so that sum counts the same tokens once per turn and overstates the cost of the agent path. Escalated steps keep their full recorded per-request cost on the compiled side (conservative: a real escalation would send a smaller, rebuilt prompt).
+
 ## Per action
 
-| action | tier | executor used | tokens rec → comp | latency rec → comp | output match |
+| action | tier | executor used | tokens rec (unique) → comp | latency rec → comp | output match |
 | :-- | :-- | :-- | --: | --: | :-- |
-| `shell_sed` | code | code:codex_session/handlers | 30,463 → 0 | 9.4 s → 0.01 s | 2/2 |
-| `shell_python3` | code | code:codex_session/handlers | 14,252 → 0 | 3.5 s → 0.12 s | 1/1 |
-| `shell_find` | code | code:codex_session/handlers | 15,004 → 0 | 8.6 s → 0.03 s | 1/1 |
-| `respond` | slm | slm:qwen2.5:7b | 34,038 → 6,551 | 65.7 s → 31.40 s | 2/2 |
-| `shell_curl` | code | code (skipped), code:codex_session/handlers | 53,531 → 0 | 18.9 s → 0.04 s | 0/2 |
+| `shell_sed` | code | code:codex_session/handlers | 14,815 → 0 | 9.4 s → 0.01 s | 2/2 |
+| `shell_python3` | code | code:codex_session/handlers | 641 → 0 | 3.5 s → 0.12 s | 1/1 |
+| `shell_find` | code | code:codex_session/handlers | 842 → 0 | 8.6 s → 0.03 s | 1/1 |
+| `respond` | slm | slm:qwen2.5:7b | 2,486 → 6,551 | 65.7 s → 31.40 s | 2/2 |
+| `shell_curl` | code | code (skipped), code:codex_session/handlers | 1,722 → 0 | 18.9 s → 0.04 s | 0/2 |
 
 ## SLM tier — small local model instead of the frontier LLM
 
@@ -30,17 +33,17 @@ Recorded agent session `01a05282-99e6-73d3-8279-7025e4645a95` (`codex-cli`) vs. 
 
 Every recorded step, the model that produced it, and what runs it in the compiled build.
 
-| step | action | recorded model | prompt (cached) + completion = total | compiled executor | compiled tokens |
-| :-- | :-- | :-- | --: | :-- | --: |
-| step_1 | `shell_sed` | gpt-5.6-sol | 13,611 (0) + 154 = 13,765 | code | 0 |
-| step_5 | `shell_sed` | gpt-5.6-sol | 16,570 (15,104) + 128 = 16,698 | code | 0 |
-| step_2 | `shell_python3` | gpt-5.6-sol | 14,162 (13,056) + 90 = 14,252 | code | 0 |
-| step_3 | `shell_find` | gpt-5.6-sol | 14,635 (13,056) + 369 = 15,004 | code | 0 |
-| step_4 | `respond` | gpt-5.6-sol | 15,648 (14,080) + 912 = 16,560 | qwen2.5:7b | 3,181 |
-| step_7 | `respond` | gpt-5.6-sol | 17,345 (16,128) + 133 = 17,478 | qwen2.5:7b | 3,370 |
-| step_6 | `shell_curl` | gpt-5.6-sol | 16,917 (16,128) + 79 = 16,996 | code | 0 |
-| step_8 | `shell_curl` | gpt-5.6-sol | 17,894 (17,152) + 152 = 18,046 | code | 0 |
-| step_9 | `shell_curl` | gpt-5.6-sol | 18,332 (17,152) + 157 = 18,489 | skipped | 0 |
+| step | action | recorded model | prompt (cached) + completion = total | unique | compiled executor | compiled tokens |
+| :-- | :-- | :-- | --: | --: | :-- | --: |
+| step_1 | `shell_sed` | gpt-5.6-sol | 13,611 (0) + 154 = 13,765 | 13,765 | code | 0 |
+| step_5 | `shell_sed` | gpt-5.6-sol | 16,570 (15,104) + 128 = 16,698 | 1,050 | code | 0 |
+| step_2 | `shell_python3` | gpt-5.6-sol | 14,162 (13,056) + 90 = 14,252 | 641 | code | 0 |
+| step_3 | `shell_find` | gpt-5.6-sol | 14,635 (13,056) + 369 = 15,004 | 842 | code | 0 |
+| step_4 | `respond` | gpt-5.6-sol | 15,648 (14,080) + 912 = 16,560 | 1,925 | qwen2.5:7b | 3,181 |
+| step_7 | `respond` | gpt-5.6-sol | 17,345 (16,128) + 133 = 17,478 | 561 | qwen2.5:7b | 3,370 |
+| step_6 | `shell_curl` | gpt-5.6-sol | 16,917 (16,128) + 79 = 16,996 | 426 | code | 0 |
+| step_8 | `shell_curl` | gpt-5.6-sol | 17,894 (17,152) + 152 = 18,046 | 701 | code | 0 |
+| step_9 | `shell_curl` | gpt-5.6-sol | 18,332 (17,152) + 157 = 18,489 | 595 | skipped | 0 |
 
 | model / executor | recorded tokens | compiled tokens |
 | :-- | --: | --: |
@@ -49,8 +52,8 @@ Every recorded step, the model that produced it, and what runs it in the compile
 | qwen2.5:7b | 0 | 6,551 |
 | skipped | 0 | 0 |
 
-Recorded prompt tokens served from the provider cache: 121,856 (counted in the totals above; billed at the cached rate).
-Totals are the sum of every request's usage as reported by the provider — each agent turn re-sends its whole context, which is why they exceed the agent CLI's own 'tokens used' figure.
+Recorded prompt tokens served from the provider cache: 121,856 (counted in the cumulative totals above; billed at the cached rate).
+The per-model table sums every request's usage as reported by the provider (cumulative-context basis) — each agent turn re-sends its whole context, which is why it exceeds the agent CLI's own 'tokens used' figure. The *unique* column of the ledger counts each token once.
 
 ## Outputs
 

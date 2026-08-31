@@ -3427,5 +3427,1327 @@
         ]
       }
     }
+  },
+  {
+    "model": "qwen2.5-7b-raw-bf16",
+    "at": "2026-08-31T17:24:26",
+    "splits": {
+      "eval_seen": {
+        "n": 56,
+        "exact": 18,
+        "exact_pct": 32.1,
+        "verdict_pct": 66.1,
+        "relaxed_pct": 33.9,
+        "ci95": [
+          19.6,
+          44.6
+        ],
+        "avg_tokens": 572,
+        "results": [
+          {
+            "instance": "sales-discount-approval-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "sales-discount-approval-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "sales-quote-expedite-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "sales-quote-expedite-0092",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "params"
+            ]
+          },
+          {
+            "instance": "sales-renewal-priority-0091",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "sales-renewal-priority-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "finance-expense-approval-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-expense-approval-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "finance-payment-extension-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-payment-extension-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "cs-refund-decision-0091",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "cs-refund-decision-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "cs-ticket-tiering-0091",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "cs-ticket-tiering-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-leave-approval-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-leave-approval-0092",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-resume-screening-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict"
+            ]
+          },
+          {
+            "instance": "hr-resume-screening-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "proc-po-approval-0091",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "proc-po-approval-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "proc-vendor-onboarding-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "proc-vendor-onboarding-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route"
+            ]
+          },
+          {
+            "instance": "legal-contract-routing-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "legal-contract-routing-0092",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "legal-nda-fastpass-0091",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "legal-nda-fastpass-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "legal-privacy-incident-0091",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params"
+            ]
+          },
+          {
+            "instance": "legal-privacy-incident-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": [
+              "cited_rule"
+            ]
+          },
+          {
+            "instance": "it-incident-priority-0091",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "it-incident-priority-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "it-access-request-0091",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "it-access-request-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "it-change-approval-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule"
+            ]
+          },
+          {
+            "instance": "it-change-approval-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "mkt-lead-scoring-0091",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "mkt-lead-scoring-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "mkt-campaign-topup-0091",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "mkt-campaign-topup-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "mkt-influencer-vetting-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule"
+            ]
+          },
+          {
+            "instance": "mkt-influencer-vetting-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route"
+            ]
+          },
+          {
+            "instance": "log-delay-compensation-0091",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "log-delay-compensation-0092",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "log-reorder-point-0091",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "log-reorder-point-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "sec-phishing-response-0091",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params"
+            ]
+          },
+          {
+            "instance": "sec-phishing-response-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params"
+            ]
+          },
+          {
+            "instance": "ga-travel-approval-0091",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "ga-travel-approval-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "ga-asset-disposal-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "ga-asset-disposal-0092",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "ga-donation-request-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "ga-donation-request-0092",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route"
+            ]
+          },
+          {
+            "instance": "pq-feature-flag-rollout-0091",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "pq-feature-flag-rollout-0092",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "pq-defect-batch-hold-0091",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "pq-defect-batch-hold-0092",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          }
+        ]
+      },
+      "eval_unseen": {
+        "n": 60,
+        "exact": 9,
+        "exact_pct": 15.0,
+        "verdict_pct": 53.3,
+        "relaxed_pct": 15.0,
+        "ci95": [
+          3.3,
+          26.7
+        ],
+        "avg_tokens": 540,
+        "results": [
+          {
+            "instance": "finance-budget-overrun-0001",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-budget-overrun-0002",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-budget-overrun-0003",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-budget-overrun-0004",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-budget-overrun-0005",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-budget-overrun-0006",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-budget-overrun-0007",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-budget-overrun-0008",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-budget-overrun-0009",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "finance-budget-overrun-0010",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "cs-goodwill-coupon-0001",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "cs-goodwill-coupon-0002",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "cs-goodwill-coupon-0003",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "cs-goodwill-coupon-0004",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route"
+            ]
+          },
+          {
+            "instance": "cs-goodwill-coupon-0005",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "cs-goodwill-coupon-0006",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "cs-goodwill-coupon-0007",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "cs-goodwill-coupon-0008",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "cited_rule"
+            ]
+          },
+          {
+            "instance": "cs-goodwill-coupon-0009",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "cs-goodwill-coupon-0010",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-overtime-approval-0001",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-overtime-approval-0002",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-overtime-approval-0003",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-overtime-approval-0004",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-overtime-approval-0005",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-overtime-approval-0006",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-overtime-approval-0007",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route"
+            ]
+          },
+          {
+            "instance": "hr-overtime-approval-0008",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-overtime-approval-0009",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "hr-overtime-approval-0010",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "proc-price-increase-0001",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "proc-price-increase-0002",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "params"
+            ]
+          },
+          {
+            "instance": "proc-price-increase-0003",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params"
+            ]
+          },
+          {
+            "instance": "proc-price-increase-0004",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params"
+            ]
+          },
+          {
+            "instance": "proc-price-increase-0005",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "proc-price-increase-0006",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "params"
+            ]
+          },
+          {
+            "instance": "proc-price-increase-0007",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "params"
+            ]
+          },
+          {
+            "instance": "proc-price-increase-0008",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "proc-price-increase-0009",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "params"
+            ]
+          },
+          {
+            "instance": "proc-price-increase-0010",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "log-return-disposition-0001",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "log-return-disposition-0002",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "log-return-disposition-0003",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params"
+            ]
+          },
+          {
+            "instance": "log-return-disposition-0004",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "log-return-disposition-0005",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params"
+            ]
+          },
+          {
+            "instance": "log-return-disposition-0006",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "log-return-disposition-0007",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "log-return-disposition-0008",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "log-return-disposition-0009",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "params"
+            ]
+          },
+          {
+            "instance": "log-return-disposition-0010",
+            "ok": false,
+            "verdict_ok": true,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "sec-sharing-exception-0001",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "sec-sharing-exception-0002",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "sec-sharing-exception-0003",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "sec-sharing-exception-0004",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "sec-sharing-exception-0005",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "sec-sharing-exception-0006",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "sec-sharing-exception-0007",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "sec-sharing-exception-0008",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          },
+          {
+            "instance": "sec-sharing-exception-0009",
+            "ok": false,
+            "verdict_ok": false,
+            "relaxed_ok": false,
+            "why": "",
+            "failed": [
+              "verdict",
+              "route",
+              "params",
+              "cited_rule",
+              "grounds_hold"
+            ]
+          },
+          {
+            "instance": "sec-sharing-exception-0010",
+            "ok": true,
+            "verdict_ok": true,
+            "relaxed_ok": true,
+            "why": "",
+            "failed": []
+          }
+        ]
+      }
+    }
   }
 ]

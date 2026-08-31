@@ -5,15 +5,19 @@
   "source_agent": "claude-code",
   "totals": {
     "recorded_tokens": 1426098,
+    "recorded_tokens_unique": 218118,
     "compiled_tokens": 213044,
     "token_savings_pct": 85.1,
+    "savings_unique_pct": 2.3,
+    "unique_token_basis": "prompt_delta",
     "recorded_latency_ms": 74053.0,
     "compiled_latency_ms": 10716.3,
     "speedup_x": 6.9,
     "outputs_checked": 6,
     "outputs_matched": 4,
     "compiled_actions": 6,
-    "escalated_actions": 1
+    "escalated_actions": 1,
+    "slm_actions": 0
   },
   "by_model": {
     "claude-fable-5": {
@@ -34,6 +38,7 @@
       "recorded_cached_tokens": 0,
       "recorded_completion_tokens": 107,
       "recorded_tokens": 170135,
+      "recorded_tokens_unique": 170135,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -45,6 +50,7 @@
       "recorded_cached_tokens": 143438,
       "recorded_completion_tokens": 413,
       "recorded_tokens": 204588,
+      "recorded_tokens_unique": 34560,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -56,6 +62,7 @@
       "recorded_cached_tokens": 203941,
       "recorded_completion_tokens": 327,
       "recorded_tokens": 206473,
+      "recorded_tokens_unique": 2298,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -67,6 +74,7 @@
       "recorded_cached_tokens": 206010,
       "recorded_completion_tokens": 1638,
       "recorded_tokens": 208933,
+      "recorded_tokens_unique": 2787,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -78,6 +86,7 @@
       "recorded_cached_tokens": 207159,
       "recorded_completion_tokens": 1551,
       "recorded_tokens": 210765,
+      "recorded_tokens_unique": 3470,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -89,6 +98,7 @@
       "recorded_cached_tokens": 209078,
       "recorded_completion_tokens": 1038,
       "recorded_tokens": 212160,
+      "recorded_tokens_unique": 2946,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -100,6 +110,7 @@
       "recorded_cached_tokens": 210986,
       "recorded_completion_tokens": 709,
       "recorded_tokens": 213044,
+      "recorded_tokens_unique": 1922,
       "compiled_executor": "claude-fable-5",
       "compiled_tokens": 213044
     }
@@ -109,6 +120,7 @@
       "action": "read_task",
       "tier": "code",
       "recorded_tokens": 170135,
+      "recorded_tokens_unique": 170135,
       "compiled_tokens": 0,
       "recorded_latency_ms": 4116.4,
       "compiled_latency_ms": 5.2,
@@ -129,7 +141,10 @@
           "compiled_model": "code",
           "recorded_prompt_tokens": 170028,
           "recorded_completion_tokens": 107,
-          "recorded_cached_tokens": 0
+          "recorded_cached_tokens": 0,
+          "recorded_tokens_unique": 170135,
+          "unique_basis": "prompt_delta",
+          "quality": null
         }
       ]
     },
@@ -137,6 +152,7 @@
       "action": "read_contracts",
       "tier": "code",
       "recorded_tokens": 204588,
+      "recorded_tokens_unique": 34560,
       "compiled_tokens": 0,
       "recorded_latency_ms": 6729.8,
       "compiled_latency_ms": 51.9,
@@ -157,7 +173,10 @@
           "compiled_model": "code",
           "recorded_prompt_tokens": 204175,
           "recorded_completion_tokens": 413,
-          "recorded_cached_tokens": 143438
+          "recorded_cached_tokens": 143438,
+          "recorded_tokens_unique": 34560,
+          "unique_basis": "prompt_delta",
+          "quality": null
         }
       ]
     },
@@ -165,6 +184,7 @@
       "action": "read_behavior",
       "tier": "code",
       "recorded_tokens": 206473,
+      "recorded_tokens_unique": 2298,
       "compiled_tokens": 0,
       "recorded_latency_ms": 4381.6,
       "compiled_latency_ms": 8.9,
@@ -185,7 +205,10 @@
           "compiled_model": "code",
           "recorded_prompt_tokens": 206146,
           "recorded_completion_tokens": 327,
-          "recorded_cached_tokens": 203941
+          "recorded_cached_tokens": 203941,
+          "recorded_tokens_unique": 2298,
+          "unique_basis": "prompt_delta",
+          "quality": null
         }
       ]
     },
@@ -193,6 +216,7 @@
       "action": "shell_cd",
       "tier": "code",
       "recorded_tokens": 208933,
+      "recorded_tokens_unique": 2787,
       "compiled_tokens": 0,
       "recorded_latency_ms": 19072.7,
       "compiled_latency_ms": 28.0,
@@ -213,7 +237,10 @@
           "compiled_model": "code",
           "recorded_prompt_tokens": 207295,
           "recorded_completion_tokens": 1638,
-          "recorded_cached_tokens": 206010
+          "recorded_cached_tokens": 206010,
+          "recorded_tokens_unique": 2787,
+          "unique_basis": "prompt_delta",
+          "quality": null
         }
       ]
     },
@@ -221,6 +248,7 @@
       "action": "shell_mkdir",
       "tier": "code",
       "recorded_tokens": 210765,
+      "recorded_tokens_unique": 3470,
       "compiled_tokens": 0,
       "recorded_latency_ms": 16663.1,
       "compiled_latency_ms": 24.4,
@@ -241,7 +269,10 @@
           "compiled_model": "code",
           "recorded_prompt_tokens": 209214,
           "recorded_completion_tokens": 1551,
-          "recorded_cached_tokens": 207159
+          "recorded_cached_tokens": 207159,
+          "recorded_tokens_unique": 3470,
+          "unique_basis": "prompt_delta",
+          "quality": null
         }
       ]
     },
@@ -249,6 +280,7 @@
       "action": "shell_cat",
       "tier": "code",
       "recorded_tokens": 212160,
+      "recorded_tokens_unique": 2946,
       "compiled_tokens": 0,
       "recorded_latency_ms": 12500.0,
       "compiled_latency_ms": 8.3,
@@ -269,7 +301,10 @@
           "compiled_model": "code",
           "recorded_prompt_tokens": 211122,
           "recorded_completion_tokens": 1038,
-          "recorded_cached_tokens": 209078
+          "recorded_cached_tokens": 209078,
+          "recorded_tokens_unique": 2946,
+          "unique_basis": "prompt_delta",
+          "quality": null
         }
       ]
     },
@@ -277,6 +312,7 @@
       "action": "respond",
       "tier": "frontier_llm",
       "recorded_tokens": 213044,
+      "recorded_tokens_unique": 1922,
       "compiled_tokens": 213044,
       "recorded_latency_ms": 10589.6,
       "compiled_latency_ms": 10589.6,
@@ -297,7 +333,10 @@
           "compiled_model": "claude-fable-5",
           "recorded_prompt_tokens": 212335,
           "recorded_completion_tokens": 709,
-          "recorded_cached_tokens": 210986
+          "recorded_cached_tokens": 210986,
+          "recorded_tokens_unique": 1922,
+          "unique_basis": "prompt_delta",
+          "quality": null
         }
       ]
     }

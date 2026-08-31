@@ -3,8 +3,19 @@
 import json
 from pathlib import Path
 
-from core.build.harden import harden
+from core.build.harden import _INHERENT_RE, harden
 from tests.test_slm import _build  # build whose shell_cat handler replays `cat examples/contract.json`
+
+
+def test_inherent_re_does_not_misclassify_month_lookalikes():
+    # regression: month abbreviations must not fire inside ordinary words
+    for text in ["Decision: approve", "profit Margin 12%", "September report", "Marker set",
+                 "Junction table", "AugmentedReality", "Decades of data", "MARGIN", "Decoder"]:
+        assert not _INHERENT_RE.search(text), text
+    # genuinely run-dependent outputs still detected
+    for text in ["-rw-r--r--  1 u  staff  42 Aug 31 15:29 f.txt", "Sep 3 backup", "total 648",
+                 "last run at 12:30", "Dec 25", "Jan  1 00:00"]:
+        assert _INHERENT_RE.search(text), text
 
 
 def _break_handler(root: Path) -> Path:

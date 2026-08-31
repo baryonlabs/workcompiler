@@ -39,7 +39,10 @@ from core.work_ir import TraceIR, load_work_ir
 
 Escalator = Callable[[str, Dict[str, Any]], Dict[str, Any]]
 
-_INHERENT_RE = re.compile(r"\b\d{2}:\d{2}\b|\btotal \d+\b|Aug|Jan|Feb|Mar|Apr|May|Jun|Jul|Sep|Oct|Nov|Dec")
+# month abbreviations need a word boundary on the left and no letter on the right — otherwise
+# "Decision"/"Margin" (substring) and "September" ("Sep" prefix) get misclassified as run-dependent
+_INHERENT_RE = re.compile(
+    r"\b\d{2}:\d{2}\b|\btotal \d+\b|\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)(?![A-Za-z])")
 
 
 @dataclass

@@ -58,14 +58,19 @@ def target_for(decision: dict) -> str:
                        "rationale": decision.get("rationale", "")}, ensure_ascii=False)
 
 
-def main() -> dict:
-    OUT.mkdir(parents=True, exist_ok=True)
+def main(holdout: list[str] | None = None, out: Path | None = None) -> dict:
+    holdout = holdout or HOLDOUT_CASES
+    out = out or OUT
+    out.mkdir(parents=True, exist_ok=True)
     catalog = yaml.safe_load((HERE / "catalog.yaml").read_text(encoding="utf-8"))
     cases = {c["id"]: c for c in catalog["cases"]}
+    unknown = set(holdout) - set(cases)
+    if unknown:
+        raise SystemExit(f"unknown holdout case ids: {sorted(unknown)}")
     rows = {"train": [], "valid": [], "eval_seen": [], "eval_unseen": []}
     for case_id, case in cases.items():
         lines = [json.loads(l) for l in (CORPUS / case_id / "cases.jsonl").read_text(encoding="utf-8").splitlines()]
-        held = case_id in HOLDOUT_CASES
+        held = case_id in holdout
         for i, row in enumerate(lines, start=1):
             system, user = prompt_for(case, row["record"])
             item = {"case_id": case_id, "instance_id": row["instance_id"], "system": system, "user": user,
@@ -84,18 +89,24 @@ def main() -> dict:
                                                    {"role": "assistant", "content": target_for(row["decision"])}]})
             elif i in (91, 92):
                 rows["eval_seen"].append(item)
-    (OUT / "data").mkdir(exist_ok=True)
+    (out / "data").mkdir(exist_ok=True)
     for name in ("train", "valid"):
-        (OUT / "data" / f"{name}.jsonl").write_text(
+        (out / "data" / f"{name}.jsonl").write_text(
             "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows[name]), encoding="utf-8")
     for name in ("eval_seen", "eval_unseen"):
-        (OUT / f"{name}.jsonl").write_text(
+        (out / f"{name}.jsonl").write_text(
             "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows[name]), encoding="utf-8")
     stats = {k: len(v) for k, v in rows.items()}
-    (OUT / "MANIFEST.json").write_text(json.dumps({"holdout_cases": HOLDOUT_CASES, **stats}, indent=2,
+    (out / "MANIFEST.json").write_text(json.dumps({"holdout_cases": holdout, **stats}, indent=2,
                                                   ensure_ascii=False) + "\n", encoding="utf-8")
     return stats
 
 
 if __name__ == "__main__":
-    print(json.dumps(main(), ensure_ascii=False))
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--holdout", default=None, help="comma-separated case ids to hold out (default: the pinned 6)")
+    ap.add_argument("--out", default=None, help="output directory (default: examples/org/decision-slm)")
+    args = ap.parse_args()
+    print(json.dumps(main(holdout=args.holdout.split(",") if args.holdout else None,
+                          out=Path(args.out) if args.out else None), ensure_ascii=False))

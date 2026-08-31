@@ -58,7 +58,8 @@ def cmd_from_trace(args: argparse.Namespace) -> int:
 
 def cmd_bench(args: argparse.Namespace) -> int:
     import os
-    from core.build.bench import BENCH_ACTIVE_ENV, run_benchmark, write_report
+    from core.build.bench import (BENCH_ACTIVE_ENV, attach_unique_tokens, report_from_dict,
+                                  run_benchmark, write_report)
 
     if os.environ.get(BENCH_ACTIVE_ENV):
         print("[bench] nested benchmark call skipped (a benchmark is already replaying this build)")
@@ -69,16 +70,24 @@ def cmd_bench(args: argparse.Namespace) -> int:
     if "traces" in payload:
         payload = payload["traces"][0]
     trace = TraceIR.model_validate(payload.get("trace", payload))
-    report = run_benchmark(args.build_dir, trace, replay=not args.no_replay)
-    paths = write_report(report, args.out or args.build_dir)
+    if args.recompute_totals:
+        # No replay: rebuild the report from the existing benchmark.json, refresh the
+        # unique-token columns from the trace, and rewrite BENCHMARK.md / benchmark.json.
+        bench_path = Path(args.build_dir) / "benchmark.json"
+        report = attach_unique_tokens(report_from_dict(json.loads(bench_path.read_text(encoding="utf-8"))), trace)
+        paths = write_report(report, args.out or args.build_dir, append_to_ledger=False)
+    else:
+        report = run_benchmark(args.build_dir, trace, replay=not args.no_replay)
+        paths = write_report(report, args.out or args.build_dir)
     t = report.totals()
-    print(f"[bench] {report.work}: tokens {t['recorded_tokens']:,} -> {t['compiled_tokens']:,} "
-          f"(-{t['token_savings_pct']}%), wall {t['recorded_latency_ms']/1000:.1f}s -> {t['compiled_latency_ms']/1000:.2f}s"
+    print(f"[bench] {report.work}: unique tokens {t['recorded_tokens_unique']:,} -> {t['compiled_tokens']:,} "
+          f"(-{t['savings_unique_pct']}%; cumulative-context sum {t['recorded_tokens']:,}, -{t['token_savings_pct']}%), "
+          f"wall {t['recorded_latency_ms']/1000:.1f}s -> {t['compiled_latency_ms']/1000:.2f}s"
           + (f" ({t['speedup_x']}x)" if t['speedup_x'] else "")
           + f", outputs reproduced {t['outputs_matched']}/{t['outputs_checked']}, "
           f"compiled/escalated actions {t['compiled_actions']}/{t['escalated_actions']}")
     for a in report.actions:
-        print(f"  {a.action:20s} {a.tier:13s} tokens {a.recorded_tokens:>7,} -> {a.compiled_tokens:<6,} "
+        print(f"  {a.action:20s} {a.tier:13s} tokens {a.recorded_tokens_unique:>7,} -> {a.compiled_tokens:<6,} "
               f"latency {a.recorded_latency_ms/1000:6.1f}s -> {a.compiled_latency_ms/1000:5.2f}s  match {a.matches}")
     print(f"  report: {paths['markdown']}")
     return 0
@@ -274,6 +283,8 @@ def main(argv=None) -> int:
     d.add_argument("--trace", help="TraceIR JSON (default: <build_dir>/trace.json written at compile time)")
     d.add_argument("--no-replay", action="store_true", help="Only account costs; do not execute handlers")
     d.add_argument("--out", help="Directory for BENCHMARK.md / benchmark.json (default: build dir)")
+    d.add_argument("--recompute-totals", action="store_true",
+                   help="No replay: recompute totals (incl. unique-token columns) from trace.json + the existing benchmark.json and rewrite the report")
     d.set_defaults(func=cmd_bench)
 
     e = sub.add_parser("run", help="Run the build for new inputs: front agent binds params, code runs free, rest escalates")

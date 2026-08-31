@@ -17,7 +17,7 @@ import json
 import re
 import os
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, fields as dataclass_fields, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -43,6 +43,8 @@ class StepBench:
     recorded_prompt_tokens: int = 0
     recorded_completion_tokens: int = 0
     recorded_cached_tokens: int = 0   # part of the prompt served from the provider's cache (billed cheaper)
+    recorded_tokens_unique: int = 0   # unique cost of this step: prompt growth over the previous request + completion
+    unique_basis: str = ""            # "prompt_delta" (exact split) or "total_delta" (estimated from total_tokens increments)
     quality: Optional[float] = None   # SLM tier: gate score (min of anchor recall / grounding precision)
 
 
@@ -59,6 +61,10 @@ class ActionBench:
     @property
     def compiled_tokens(self) -> int:
         return sum(s.compiled_tokens for s in self.steps)
+
+    @property
+    def recorded_tokens_unique(self) -> int:
+        return sum(s.recorded_tokens_unique for s in self.steps)
 
     @property
     def recorded_latency_ms(self) -> float:
@@ -78,7 +84,8 @@ class ActionBench:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "action": self.action, "tier": self.tier,
-            "recorded_tokens": self.recorded_tokens, "compiled_tokens": self.compiled_tokens,
+            "recorded_tokens": self.recorded_tokens, "recorded_tokens_unique": self.recorded_tokens_unique,
+            "compiled_tokens": self.compiled_tokens,
             "recorded_latency_ms": round(self.recorded_latency_ms, 1),
             "compiled_latency_ms": round(self.compiled_latency_ms, 1),
             "output_matches": self.matches,
@@ -97,13 +104,17 @@ class BenchReport:
 
     def totals(self) -> Dict[str, Any]:
         rt = sum(a.recorded_tokens for a in self.actions)
+        ru = sum(a.recorded_tokens_unique for a in self.actions)
         ct = sum(a.compiled_tokens for a in self.actions)
         rl = sum(a.recorded_latency_ms for a in self.actions)
         cl = sum(a.compiled_latency_ms for a in self.actions)
         checked = [s for a in self.actions for s in a.steps if s.output_match is not None]
+        bases = sorted({s.unique_basis for a in self.actions for s in a.steps if s.unique_basis})
         return {
-            "recorded_tokens": rt, "compiled_tokens": ct,
+            "recorded_tokens": rt, "recorded_tokens_unique": ru, "compiled_tokens": ct,
             "token_savings_pct": round(100.0 * (rt - ct) / rt, 1) if rt else 0.0,
+            "savings_unique_pct": round(100.0 * (ru - ct) / ru, 1) if ru else 0.0,
+            "unique_token_basis": "+".join(bases) or "n/a",
             "recorded_latency_ms": round(rl, 1), "compiled_latency_ms": round(cl, 1),
             "speedup_x": round(rl / cl, 1) if cl else None,
             "outputs_checked": len(checked),
@@ -128,7 +139,8 @@ class BenchReport:
         return [{"step": s.step_id, "action": a.action, "recorded_model": s.recorded_model,
                  "recorded_prompt_tokens": s.recorded_prompt_tokens, "recorded_cached_tokens": s.recorded_cached_tokens,
                  "recorded_completion_tokens": s.recorded_completion_tokens,
-                 "recorded_tokens": s.recorded_tokens, "compiled_executor": s.compiled_model, "compiled_tokens": s.compiled_tokens}
+                 "recorded_tokens": s.recorded_tokens, "recorded_tokens_unique": s.recorded_tokens_unique,
+                 "compiled_executor": s.compiled_model, "compiled_tokens": s.compiled_tokens}
                 for a in self.actions for s in a.steps]
 
     def to_dict(self) -> Dict[str, Any]:
@@ -149,21 +161,31 @@ class BenchReport:
             "",
             "| | recorded (agent) | compiled (build) | delta |",
             "| :-- | --: | --: | --: |",
-            f"| LLM tokens | {t['recorded_tokens']:,} | {t['compiled_tokens']:,} | −{t['token_savings_pct']}% |",
+            f"| LLM tokens (unique) | {t['recorded_tokens_unique']:,} | {t['compiled_tokens']:,} | −{t['savings_unique_pct']}% |",
+            f"| LLM tokens (cumulative-context sum; reference) | {t['recorded_tokens']:,} | {t['compiled_tokens']:,} | −{t['token_savings_pct']}% |",
             f"| wall time | {t['recorded_latency_ms']/1000:.1f} s | {t['compiled_latency_ms']/1000:.2f} s | "
             + (f"{t['speedup_x']}× faster" if t['speedup_x'] else "n/a") + " |",
             f"| outputs reproduced | — | {t['outputs_matched']}/{t['outputs_checked']} | |",
             f"| actions compiled / escalated | — | {t['compiled_actions']} / {t['escalated_actions']} | |",
             "",
+            "**Unique** is the headline metric: each token counted once — the first request's full prompt, "
+            "then only each later request's prompt growth, plus every completion"
+            + (" (this trace has no prompt/completion split, so unique is estimated from `total_tokens` increments)"
+               if "total_delta" in t["unique_token_basis"] else "")
+            + ". The cumulative-context sum adds up every request's usage as reported by the provider — an agent "
+            "session re-sends its whole context every turn, so that sum counts the same tokens once per turn "
+            "and overstates the cost of the agent path. Escalated steps keep their full recorded per-request "
+            "cost on the compiled side (conservative: a real escalation would send a smaller, rebuilt prompt).",
+            "",
             "## Per action",
             "",
-            "| action | tier | executor used | tokens rec → comp | latency rec → comp | output match |",
+            "| action | tier | executor used | tokens rec (unique) → comp | latency rec → comp | output match |",
             "| :-- | :-- | :-- | --: | --: | :-- |",
         ]
         for a in self.actions:
             used = ", ".join(sorted({s.executor_used for s in a.steps}))
             lines.append(
-                f"| `{a.action}` | {a.tier} | {used} | {a.recorded_tokens:,} → {a.compiled_tokens:,} | "
+                f"| `{a.action}` | {a.tier} | {used} | {a.recorded_tokens_unique:,} → {a.compiled_tokens:,} | "
                 f"{a.recorded_latency_ms/1000:.1f} s → {a.compiled_latency_ms/1000:.2f} s | {a.matches} |"
             )
         slm_steps = [(a, s) for a in self.actions for s in a.steps if s.executor_used.startswith("slm:")]
@@ -175,19 +197,19 @@ class BenchReport:
                              f"{s.recorded_latency_ms/1000:.1f} s → {s.compiled_latency_ms/1000:.1f} s | {s.note} |")
         lines += ["", "## Token ledger — who spent what", "",
                   "Every recorded step, the model that produced it, and what runs it in the compiled build.", "",
-                  "| step | action | recorded model | prompt (cached) + completion = total | compiled executor | compiled tokens |",
-                  "| :-- | :-- | :-- | --: | :-- | --: |"]
+                  "| step | action | recorded model | prompt (cached) + completion = total | unique | compiled executor | compiled tokens |",
+                  "| :-- | :-- | :-- | --: | --: | :-- | --: |"]
         for a in self.actions:
             for s in a.steps:
                 lines.append(f"| {s.step_id} | `{a.action}` | {s.recorded_model or '?'} | "
                              f"{s.recorded_prompt_tokens:,} ({s.recorded_cached_tokens:,}) + {s.recorded_completion_tokens:,} = {s.recorded_tokens:,} | "
-                             f"{s.compiled_model} | {s.compiled_tokens:,} |")
+                             f"{s.recorded_tokens_unique:,} | {s.compiled_model} | {s.compiled_tokens:,} |")
         cached = sum(s.recorded_cached_tokens for a in self.actions for s in a.steps)
         lines += ["", "| model / executor | recorded tokens | compiled tokens |", "| :-- | --: | --: |"]
         for key, (rt, ct) in self.by_model().items():
             lines.append(f"| {key} | {rt:,} | {ct:,} |")
-        lines += ["", f"Recorded prompt tokens served from the provider cache: {cached:,} (counted in the totals above; billed at the cached rate).",
-                  "Totals are the sum of every request's usage as reported by the provider — each agent turn re-sends its whole context, which is why they exceed the agent CLI's own 'tokens used' figure."]
+        lines += ["", f"Recorded prompt tokens served from the provider cache: {cached:,} (counted in the cumulative totals above; billed at the cached rate).",
+                  "The per-model table sums every request's usage as reported by the provider (cumulative-context basis) — each agent turn re-sends its whole context, which is why it exceeds the agent CLI's own 'tokens used' figure. The *unique* column of the ledger counts each token once."]
         lines += ["", "## Outputs", ""]
         for a in self.actions:
             for s in a.steps:
@@ -332,6 +354,66 @@ def _step_tokens(step: TraceStep) -> int:
     return int((usage or {}).get("total_tokens", 0))
 
 
+def unique_step_tokens(trace: TraceIR) -> Dict[str, tuple[int, str]]:
+    """``{step_id: (unique tokens, basis)}`` — each token of the session counted once.
+
+    An agent session re-sends its whole cumulative context on every request, so summing
+    per-request usage counts the same tokens once per turn. The *unique* cost of a step is
+    its prompt growth over the previous request plus its completion; the first request's
+    prompt counts in full. When the prompt shrinks (context reset / compaction / subagent),
+    the uncached part of the fresh prompt is counted (conservative). Traces without a
+    prompt/completion split fall back to increments of ``total_tokens`` (basis
+    ``total_delta`` — an estimate, flagged in the report).
+    """
+    out: Dict[str, tuple[int, str]] = {}
+    prev_prompt: Optional[int] = None
+    prev_total: Optional[int] = None
+    for step in trace.steps:
+        pt, ct = _step_token_split(step)
+        tt = _step_tokens(step)
+        if pt or ct:
+            if prev_prompt is None:
+                new_input = pt
+            elif pt >= prev_prompt:
+                new_input = pt - prev_prompt
+            else:
+                new_input = max(pt - _step_cached(step), 0)
+            out[step.step_id] = (new_input + ct, "prompt_delta")
+            prev_prompt, prev_total = pt, tt
+        elif tt:
+            out[step.step_id] = (tt if prev_total is None else max(tt - prev_total, 0), "total_delta")
+            prev_total = tt
+        else:
+            out[step.step_id] = (0, "")
+    return out
+
+
+def attach_unique_tokens(report: BenchReport, trace: TraceIR) -> BenchReport:
+    """Fill each step's ``recorded_tokens_unique`` / ``unique_basis`` from the trace."""
+    uniq = unique_step_tokens(trace)
+    for a in report.actions:
+        for s in a.steps:
+            s.recorded_tokens_unique, s.unique_basis = uniq.get(s.step_id, (0, ""))
+    return report
+
+
+def report_from_dict(data: Dict[str, Any]) -> BenchReport:
+    """Rebuild a :class:`BenchReport` from a previously written ``benchmark.json``.
+
+    Lets totals (e.g. the unique-token columns) be recomputed from the trace without
+    replaying the build. Unknown / missing step keys are ignored / defaulted, so reports
+    written before a column existed load fine.
+    """
+    step_keys = {f.name for f in dataclass_fields(StepBench)}
+    actions = [ActionBench(action=a["action"], tier=a["tier"],
+                           steps=[StepBench(**{k: v for k, v in s.items() if k in step_keys})
+                                  for s in a.get("steps", [])])
+               for a in data.get("actions", [])]
+    return BenchReport(work=data["work"], build_dir=data["build_dir"], run_id=data["run_id"],
+                       source_agent=data["source_agent"], actions=actions,
+                       final_answer=data.get("final_answer", ""))
+
+
 def _normalizer():
     from core.compiler.compiler import WorkCompiler
 
@@ -449,9 +531,12 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
             upstream.append((action, rec_out))
 
     report.actions = [benches[a] for a in work_ir.actions]
+    attach_unique_tokens(report, trace)
     t = report.totals()
     telemetry.event("bench.report", work=work_ir.work, run_id=trace.run_id, recorded_tokens=t["recorded_tokens"],
+                    recorded_tokens_unique=t["recorded_tokens_unique"],
                     compiled_tokens=t["compiled_tokens"], token_savings_pct=t["token_savings_pct"],
+                    savings_unique_pct=t["savings_unique_pct"],
                     speedup_x=t["speedup_x"], outputs_matched=t["outputs_matched"], outputs_checked=t["outputs_checked"])
 
     for step in reversed(trace.steps):
@@ -462,12 +547,13 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
     return report
 
 
-def write_report(report: BenchReport, out_dir: Path | str) -> Dict[str, str]:
+def write_report(report: BenchReport, out_dir: Path | str, append_to_ledger: bool = True) -> Dict[str, str]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "BENCHMARK.md").write_text(report.to_markdown(), encoding="utf-8")
     (out / "benchmark.json").write_text(json.dumps(report.to_dict(), indent=2, ensure_ascii=False, default=str) + "\n", encoding="utf-8")
-    append_ledger(out, "bench", report.run_id, report.ledger_rows())
+    if append_to_ledger:
+        append_ledger(out, "bench", report.run_id, report.ledger_rows())
     return {"markdown": str(out / "BENCHMARK.md"), "json": str(out / "benchmark.json")}
 
 

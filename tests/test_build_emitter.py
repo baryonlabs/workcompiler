@@ -143,8 +143,10 @@ def test_benchmark_replays_code_tier_with_zero_tokens_and_matching_output(tmp_pa
 
     totals = report.totals()
     assert totals["recorded_tokens"] == 2000
+    assert totals["recorded_tokens_unique"] == 1100    # 940 (first request) + 100 prompt growth + 60 completion
     assert totals["compiled_tokens"] == 1060           # only the escalated respond step still costs tokens
     assert totals["token_savings_pct"] == 47.0
+    assert totals["savings_unique_pct"] == 3.6
     assert totals["outputs_matched"] == 1 and totals["outputs_checked"] == 1
     assert totals["compiled_actions"] == 1 and totals["escalated_actions"] == 1
     code_action = report.actions[0]
@@ -154,9 +156,10 @@ def test_benchmark_replays_code_tier_with_zero_tokens_and_matching_output(tmp_pa
 
     paths = write_report(report, tmp_path / "report")
     md = Path(paths["markdown"]).read_text()
-    assert "| LLM tokens | 2,000 | 1,060 | −47.0% |" in md
+    assert "| LLM tokens (unique) | 1,100 | 1,060 | −3.6% |" in md
+    assert "| LLM tokens (cumulative-context sum; reference) | 2,000 | 1,060 | −47.0% |" in md
     # token ledger: recorded model vs compiled executor, per step and per model
-    assert "| s1 | `shell_printf` | gpt-5-codex | 900 (0) + 40 = 940 | code | 0 |" in md
+    assert "| s1 | `shell_printf` | gpt-5-codex | 900 (0) + 40 = 940 | 940 | code | 0 |" in md
     assert report.by_model()["gpt-5-codex"][0] == 940 and report.by_model()["code"] == (0, 0)
     ledger = (tmp_path / "report" / "ledger.jsonl").read_text().splitlines()
     assert len(ledger) == 2 and json.loads(ledger[0])["compiled_executor"] == "code"

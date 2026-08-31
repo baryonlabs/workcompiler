@@ -4,44 +4,47 @@ Recorded agent session `claude_5603ea11-cf34-4d8d-b6db-0be21322061e` (`claude-co
 
 | | recorded (agent) | compiled (build) | delta |
 | :-- | --: | --: | --: |
-| LLM tokens | 1,426,098 | 213,044 | −85.1% |
+| LLM tokens (unique) | 218,118 | 213,044 | −2.3% |
+| LLM tokens (cumulative-context sum; reference) | 1,426,098 | 213,044 | −85.1% |
 | wall time | 74.1 s | 10.72 s | 6.9× faster |
 | outputs reproduced | — | 4/6 | |
 | actions compiled / escalated | — | 6 / 1 | |
 
+**Unique** is the headline metric: each token counted once — the first request's full prompt, then only each later request's prompt growth, plus every completion. The cumulative-context sum adds up every request's usage as reported by the provider — an agent session re-sends its whole context every turn, so that sum counts the same tokens once per turn and overstates the cost of the agent path. Escalated steps keep their full recorded per-request cost on the compiled side (conservative: a real escalation would send a smaller, rebuilt prompt).
+
 ## Per action
 
-| action | tier | executor used | tokens rec → comp | latency rec → comp | output match |
+| action | tier | executor used | tokens rec (unique) → comp | latency rec → comp | output match |
 | :-- | :-- | :-- | --: | --: | :-- |
 | `read_task` | code | code:customer_renewal_claude/handlers | 170,135 → 0 | 4.1 s → 0.01 s | 1/1 |
-| `read_contracts` | code | code:customer_renewal_claude/handlers | 204,588 → 0 | 6.7 s → 0.05 s | 0/1 |
-| `read_behavior` | code | code:customer_renewal_claude/handlers | 206,473 → 0 | 4.4 s → 0.01 s | 1/1 |
-| `shell_cd` | code | code:customer_renewal_claude/handlers | 208,933 → 0 | 19.1 s → 0.03 s | 1/1 |
-| `shell_mkdir` | code | code:customer_renewal_claude/handlers | 210,765 → 0 | 16.7 s → 0.02 s | 1/1 |
-| `shell_cat` | code | code:customer_renewal_claude/handlers | 212,160 → 0 | 12.5 s → 0.01 s | 0/1 |
-| `respond` | frontier_llm | escalated:frontier_llm | 213,044 → 213,044 | 10.6 s → 10.59 s | n/a |
+| `read_contracts` | code | code:customer_renewal_claude/handlers | 34,560 → 0 | 6.7 s → 0.05 s | 0/1 |
+| `read_behavior` | code | code:customer_renewal_claude/handlers | 2,298 → 0 | 4.4 s → 0.01 s | 1/1 |
+| `shell_cd` | code | code:customer_renewal_claude/handlers | 2,787 → 0 | 19.1 s → 0.03 s | 1/1 |
+| `shell_mkdir` | code | code:customer_renewal_claude/handlers | 3,470 → 0 | 16.7 s → 0.02 s | 1/1 |
+| `shell_cat` | code | code:customer_renewal_claude/handlers | 2,946 → 0 | 12.5 s → 0.01 s | 0/1 |
+| `respond` | frontier_llm | escalated:frontier_llm | 1,922 → 213,044 | 10.6 s → 10.59 s | n/a |
 
 ## Token ledger — who spent what
 
 Every recorded step, the model that produced it, and what runs it in the compiled build.
 
-| step | action | recorded model | prompt (cached) + completion = total | compiled executor | compiled tokens |
-| :-- | :-- | :-- | --: | :-- | --: |
-| step_1 | `read_task` | claude-fable-5 | 170,028 (0) + 107 = 170,135 | code | 0 |
-| step_2 | `read_contracts` | claude-fable-5 | 204,175 (143,438) + 413 = 204,588 | code | 0 |
-| step_3 | `read_behavior` | claude-fable-5 | 206,146 (203,941) + 327 = 206,473 | code | 0 |
-| step_4 | `shell_cd` | claude-fable-5 | 207,295 (206,010) + 1,638 = 208,933 | code | 0 |
-| step_5 | `shell_mkdir` | claude-fable-5 | 209,214 (207,159) + 1,551 = 210,765 | code | 0 |
-| step_6 | `shell_cat` | claude-fable-5 | 211,122 (209,078) + 1,038 = 212,160 | code | 0 |
-| step_7 | `respond` | claude-fable-5 | 212,335 (210,986) + 709 = 213,044 | claude-fable-5 | 213,044 |
+| step | action | recorded model | prompt (cached) + completion = total | unique | compiled executor | compiled tokens |
+| :-- | :-- | :-- | --: | --: | :-- | --: |
+| step_1 | `read_task` | claude-fable-5 | 170,028 (0) + 107 = 170,135 | 170,135 | code | 0 |
+| step_2 | `read_contracts` | claude-fable-5 | 204,175 (143,438) + 413 = 204,588 | 34,560 | code | 0 |
+| step_3 | `read_behavior` | claude-fable-5 | 206,146 (203,941) + 327 = 206,473 | 2,298 | code | 0 |
+| step_4 | `shell_cd` | claude-fable-5 | 207,295 (206,010) + 1,638 = 208,933 | 2,787 | code | 0 |
+| step_5 | `shell_mkdir` | claude-fable-5 | 209,214 (207,159) + 1,551 = 210,765 | 3,470 | code | 0 |
+| step_6 | `shell_cat` | claude-fable-5 | 211,122 (209,078) + 1,038 = 212,160 | 2,946 | code | 0 |
+| step_7 | `respond` | claude-fable-5 | 212,335 (210,986) + 709 = 213,044 | 1,922 | claude-fable-5 | 213,044 |
 
 | model / executor | recorded tokens | compiled tokens |
 | :-- | --: | --: |
 | claude-fable-5 | 1,426,098 | 213,044 |
 | code | 0 | 0 |
 
-Recorded prompt tokens served from the provider cache: 1,180,612 (counted in the totals above; billed at the cached rate).
-Totals are the sum of every request's usage as reported by the provider — each agent turn re-sends its whole context, which is why they exceed the agent CLI's own 'tokens used' figure.
+Recorded prompt tokens served from the provider cache: 1,180,612 (counted in the cumulative totals above; billed at the cached rate).
+The per-model table sums every request's usage as reported by the provider (cumulative-context basis) — each agent turn re-sends its whole context, which is why it exceeds the agent CLI's own 'tokens used' figure. The *unique* column of the ledger counts each token once.
 
 ## Outputs
 

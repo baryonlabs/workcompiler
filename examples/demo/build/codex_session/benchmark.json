@@ -5,8 +5,11 @@
   "source_agent": "codex-cli",
   "totals": {
     "recorded_tokens": 147288,
+    "recorded_tokens_unique": 20506,
     "compiled_tokens": 6551,
     "token_savings_pct": 95.6,
+    "savings_unique_pct": 68.1,
+    "unique_token_basis": "prompt_delta",
     "recorded_latency_ms": 106149.9,
     "compiled_latency_ms": 31607.9,
     "speedup_x": 3.4,
@@ -43,6 +46,7 @@
       "recorded_cached_tokens": 0,
       "recorded_completion_tokens": 154,
       "recorded_tokens": 13765,
+      "recorded_tokens_unique": 13765,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -54,6 +58,7 @@
       "recorded_cached_tokens": 15104,
       "recorded_completion_tokens": 128,
       "recorded_tokens": 16698,
+      "recorded_tokens_unique": 1050,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -65,6 +70,7 @@
       "recorded_cached_tokens": 13056,
       "recorded_completion_tokens": 90,
       "recorded_tokens": 14252,
+      "recorded_tokens_unique": 641,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -76,6 +82,7 @@
       "recorded_cached_tokens": 13056,
       "recorded_completion_tokens": 369,
       "recorded_tokens": 15004,
+      "recorded_tokens_unique": 842,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -87,6 +94,7 @@
       "recorded_cached_tokens": 14080,
       "recorded_completion_tokens": 912,
       "recorded_tokens": 16560,
+      "recorded_tokens_unique": 1925,
       "compiled_executor": "qwen2.5:7b",
       "compiled_tokens": 3181
     },
@@ -98,6 +106,7 @@
       "recorded_cached_tokens": 16128,
       "recorded_completion_tokens": 133,
       "recorded_tokens": 17478,
+      "recorded_tokens_unique": 561,
       "compiled_executor": "qwen2.5:7b",
       "compiled_tokens": 3370
     },
@@ -109,6 +118,7 @@
       "recorded_cached_tokens": 16128,
       "recorded_completion_tokens": 79,
       "recorded_tokens": 16996,
+      "recorded_tokens_unique": 426,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -120,6 +130,7 @@
       "recorded_cached_tokens": 17152,
       "recorded_completion_tokens": 152,
       "recorded_tokens": 18046,
+      "recorded_tokens_unique": 701,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -131,6 +142,7 @@
       "recorded_cached_tokens": 17152,
       "recorded_completion_tokens": 157,
       "recorded_tokens": 18489,
+      "recorded_tokens_unique": 595,
       "compiled_executor": "skipped",
       "compiled_tokens": 0
     }
@@ -140,6 +152,7 @@
       "action": "shell_sed",
       "tier": "code",
       "recorded_tokens": 30463,
+      "recorded_tokens_unique": 14815,
       "compiled_tokens": 0,
       "recorded_latency_ms": 9363.5,
       "compiled_latency_ms": 14.2,
@@ -161,6 +174,8 @@
           "recorded_prompt_tokens": 13611,
           "recorded_completion_tokens": 154,
           "recorded_cached_tokens": 0,
+          "recorded_tokens_unique": 13765,
+          "unique_basis": "prompt_delta",
           "quality": null
         },
         {
@@ -179,6 +194,8 @@
           "recorded_prompt_tokens": 16570,
           "recorded_completion_tokens": 128,
           "recorded_cached_tokens": 15104,
+          "recorded_tokens_unique": 1050,
+          "unique_basis": "prompt_delta",
           "quality": null
         }
       ]
@@ -187,6 +204,7 @@
       "action": "shell_python3",
       "tier": "code",
       "recorded_tokens": 14252,
+      "recorded_tokens_unique": 641,
       "compiled_tokens": 0,
       "recorded_latency_ms": 3537.7,
       "compiled_latency_ms": 122.7,
@@ -208,6 +226,8 @@
           "recorded_prompt_tokens": 14162,
           "recorded_completion_tokens": 90,
           "recorded_cached_tokens": 13056,
+          "recorded_tokens_unique": 641,
+          "unique_basis": "prompt_delta",
           "quality": null
         }
       ]
@@ -216,6 +236,7 @@
       "action": "shell_find",
       "tier": "code",
       "recorded_tokens": 15004,
+      "recorded_tokens_unique": 842,
       "compiled_tokens": 0,
       "recorded_latency_ms": 8624.5,
       "compiled_latency_ms": 34.3,
@@ -237,6 +258,8 @@
           "recorded_prompt_tokens": 14635,
           "recorded_completion_tokens": 369,
           "recorded_cached_tokens": 13056,
+          "recorded_tokens_unique": 842,
+          "unique_basis": "prompt_delta",
           "quality": null
         }
       ]
@@ -245,6 +268,7 @@
       "action": "respond",
       "tier": "slm",
       "recorded_tokens": 34038,
+      "recorded_tokens_unique": 2486,
       "compiled_tokens": 6551,
       "recorded_latency_ms": 65712.1,
       "compiled_latency_ms": 31400.7,
@@ -266,6 +290,8 @@
           "recorded_prompt_tokens": 15648,
           "recorded_completion_tokens": 912,
           "recorded_cached_tokens": 14080,
+          "recorded_tokens_unique": 1925,
+          "unique_basis": "prompt_delta",
           "quality": 1.0
         },
         {
@@ -284,6 +310,8 @@
           "recorded_prompt_tokens": 17345,
           "recorded_completion_tokens": 133,
           "recorded_cached_tokens": 16128,
+          "recorded_tokens_unique": 561,
+          "unique_basis": "prompt_delta",
           "quality": 1.0
         }
       ]
@@ -292,6 +320,7 @@
       "action": "shell_curl",
       "tier": "code",
       "recorded_tokens": 53531,
+      "recorded_tokens_unique": 1722,
       "compiled_tokens": 0,
       "recorded_latency_ms": 18912.1,
       "compiled_latency_ms": 35.9,
@@ -313,6 +342,8 @@
           "recorded_prompt_tokens": 16917,
           "recorded_completion_tokens": 79,
           "recorded_cached_tokens": 16128,
+          "recorded_tokens_unique": 426,
+          "unique_basis": "prompt_delta",
           "quality": null
         },
         {
@@ -331,6 +362,8 @@
           "recorded_prompt_tokens": 17894,
           "recorded_completion_tokens": 152,
           "recorded_cached_tokens": 17152,
+          "recorded_tokens_unique": 701,
+          "unique_basis": "prompt_delta",
           "quality": null
         },
         {
@@ -349,6 +382,8 @@
           "recorded_prompt_tokens": 18332,
           "recorded_completion_tokens": 157,
           "recorded_cached_tokens": 17152,
+          "recorded_tokens_unique": 595,
+          "unique_basis": "prompt_delta",
           "quality": null
         }
       ]

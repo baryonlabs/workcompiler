@@ -19,6 +19,8 @@ DATA = Path(sys.argv[2] if len(sys.argv) > 2 else "data")
 OUT = Path(sys.argv[3] if len(sys.argv) > 3 else "out")
 EPOCHS = float(sys.argv[4]) if len(sys.argv) > 4 else 12.0
 SEED = int(sys.argv[5]) if len(sys.argv) > 5 else 20260831
+# serve base+adapter instead of merging when disk is tight (the merged bf16 model is ~15GB)
+MERGE = (sys.argv[6] if len(sys.argv) > 6 else "merge") != "no-merge"
 set_seed(SEED)
 
 
@@ -78,9 +80,10 @@ manifest = {
 print("MANIFEST:", json.dumps(manifest["adapter_sha256"]))
 
 # merge on CPU in bf16 so the served model is full-precision (QLoRA trained the adapter only)
-from peft import PeftModel
-base = AutoModelForCausalLM.from_pretrained(BASE, torch_dtype=torch.bfloat16, device_map="cpu")
-merged = PeftModel.from_pretrained(base, str(OUT / "adapter")).merge_and_unload()
-merged.save_pretrained(str(OUT / "merged"), safe_serialization=True)
-tokenizer.save_pretrained(str(OUT / "merged"))
-print("DONE: adapter + merged saved under", OUT)
+if MERGE:
+    from peft import PeftModel
+    base = AutoModelForCausalLM.from_pretrained(BASE, torch_dtype=torch.bfloat16, device_map="cpu")
+    merged = PeftModel.from_pretrained(base, str(OUT / "adapter")).merge_and_unload()
+    merged.save_pretrained(str(OUT / "merged"), safe_serialization=True)
+    tokenizer.save_pretrained(str(OUT / "merged"))
+print("DONE: adapter%s saved under" % (" + merged" if MERGE else " (no merge)"), OUT)

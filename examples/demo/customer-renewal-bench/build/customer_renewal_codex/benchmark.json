@@ -5,8 +5,11 @@
   "source_agent": "codex_exec",
   "totals": {
     "recorded_tokens": 139437,
+    "recorded_tokens_unique": 23614,
     "compiled_tokens": 4208,
     "token_savings_pct": 97.0,
+    "savings_unique_pct": 82.2,
+    "unique_token_basis": "prompt_delta",
     "recorded_latency_ms": 82643.9,
     "compiled_latency_ms": 17172.7,
     "speedup_x": 4.8,
@@ -39,6 +42,7 @@
       "recorded_cached_tokens": 0,
       "recorded_completion_tokens": 93,
       "recorded_tokens": 14031,
+      "recorded_tokens_unique": 14031,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -50,6 +54,7 @@
       "recorded_cached_tokens": 0,
       "recorded_completion_tokens": 235,
       "recorded_tokens": 14921,
+      "recorded_tokens_unique": 983,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -61,6 +66,7 @@
       "recorded_cached_tokens": 0,
       "recorded_completion_tokens": 215,
       "recorded_tokens": 15345,
+      "recorded_tokens_unique": 659,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -72,6 +78,7 @@
       "recorded_cached_tokens": 0,
       "recorded_completion_tokens": 1001,
       "recorded_tokens": 17631,
+      "recorded_tokens_unique": 2501,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -83,6 +90,7 @@
       "recorded_cached_tokens": 0,
       "recorded_completion_tokens": 243,
       "recorded_tokens": 19540,
+      "recorded_tokens_unique": 1366,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -94,6 +102,7 @@
       "recorded_cached_tokens": 0,
       "recorded_completion_tokens": 183,
       "recorded_tokens": 18151,
+      "recorded_tokens_unique": 1521,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -105,6 +114,7 @@
       "recorded_cached_tokens": 0,
       "recorded_completion_tokens": 1099,
       "recorded_tokens": 19273,
+      "recorded_tokens_unique": 1305,
       "compiled_executor": "code",
       "compiled_tokens": 0
     },
@@ -116,6 +126,7 @@
       "recorded_cached_tokens": 0,
       "recorded_completion_tokens": 102,
       "recorded_tokens": 20545,
+      "recorded_tokens_unique": 1248,
       "compiled_executor": "qwen2.5:7b",
       "compiled_tokens": 4208
     }
@@ -125,6 +136,7 @@
       "action": "shell_sed",
       "tier": "code",
       "recorded_tokens": 14031,
+      "recorded_tokens_unique": 14031,
       "compiled_tokens": 0,
       "recorded_latency_ms": 3237.6,
       "compiled_latency_ms": 6.8,
@@ -146,6 +158,8 @@
           "recorded_prompt_tokens": 13938,
           "recorded_completion_tokens": 93,
           "recorded_cached_tokens": 0,
+          "recorded_tokens_unique": 14031,
+          "unique_basis": "prompt_delta",
           "quality": null
         }
       ]
@@ -154,6 +168,7 @@
       "action": "shell_rg",
       "tier": "code",
       "recorded_tokens": 14921,
+      "recorded_tokens_unique": 983,
       "compiled_tokens": 0,
       "recorded_latency_ms": 6670.0,
       "compiled_latency_ms": 24.6,
@@ -175,6 +190,8 @@
           "recorded_prompt_tokens": 14686,
           "recorded_completion_tokens": 235,
           "recorded_cached_tokens": 0,
+          "recorded_tokens_unique": 983,
+          "unique_basis": "prompt_delta",
           "quality": null
         }
       ]
@@ -183,6 +200,7 @@
       "action": "shell_cat",
       "tier": "code",
       "recorded_tokens": 15345,
+      "recorded_tokens_unique": 659,
       "compiled_tokens": 0,
       "recorded_latency_ms": 5806.7,
       "compiled_latency_ms": 10.1,
@@ -204,6 +222,8 @@
           "recorded_prompt_tokens": 15130,
           "recorded_completion_tokens": 215,
           "recorded_cached_tokens": 0,
+          "recorded_tokens_unique": 659,
+          "unique_basis": "prompt_delta",
           "quality": null
         }
       ]
@@ -212,6 +232,7 @@
       "action": "shell_jq",
       "tier": "code",
       "recorded_tokens": 37171,
+      "recorded_tokens_unique": 3867,
       "compiled_tokens": 0,
       "recorded_latency_ms": 26326.5,
       "compiled_latency_ms": 74.7,
@@ -233,6 +254,8 @@
           "recorded_prompt_tokens": 16630,
           "recorded_completion_tokens": 1001,
           "recorded_cached_tokens": 0,
+          "recorded_tokens_unique": 2501,
+          "unique_basis": "prompt_delta",
           "quality": null
         },
         {
@@ -251,6 +274,8 @@
           "recorded_prompt_tokens": 19297,
           "recorded_completion_tokens": 243,
           "recorded_cached_tokens": 0,
+          "recorded_tokens_unique": 1366,
+          "unique_basis": "prompt_delta",
           "quality": null
         }
       ]
@@ -259,6 +284,7 @@
       "action": "shell_mkdir",
       "tier": "code",
       "recorded_tokens": 18151,
+      "recorded_tokens_unique": 1521,
       "compiled_tokens": 0,
       "recorded_latency_ms": 5276.3,
       "compiled_latency_ms": 4.8,
@@ -280,6 +306,8 @@
           "recorded_prompt_tokens": 17968,
           "recorded_completion_tokens": 183,
           "recorded_cached_tokens": 0,
+          "recorded_tokens_unique": 1521,
+          "unique_basis": "prompt_delta",
           "quality": null
         }
       ]
@@ -288,6 +316,7 @@
       "action": "write_pricing_cust_1001",
       "tier": "code",
       "recorded_tokens": 19273,
+      "recorded_tokens_unique": 1305,
       "compiled_tokens": 0,
       "recorded_latency_ms": 24219.0,
       "compiled_latency_ms": 0.4,
@@ -309,6 +338,8 @@
           "recorded_prompt_tokens": 18174,
           "recorded_completion_tokens": 1099,
           "recorded_cached_tokens": 0,
+          "recorded_tokens_unique": 1305,
+          "unique_basis": "prompt_delta",
           "quality": null
         }
       ]
@@ -317,6 +348,7 @@
       "action": "respond",
       "tier": "slm",
       "recorded_tokens": 20545,
+      "recorded_tokens_unique": 1248,
       "compiled_tokens": 4208,
       "recorded_latency_ms": 11107.9,
       "compiled_latency_ms": 17051.3,
@@ -338,6 +370,8 @@
           "recorded_prompt_tokens": 20443,
           "recorded_completion_tokens": 102,
           "recorded_cached_tokens": 0,
+          "recorded_tokens_unique": 1248,
+          "unique_basis": "prompt_delta",
           "quality": 1.0
         }
       ]
