@@ -70,3 +70,55 @@ def test_successful_slm_respond_is_cached_for_repeat_runs(tmp_path, monkeypatch)
     monkeypatch.setattr(slm, "_http_post_json", boom)
     second = run_build(root, request="Prepare the renewal proposal for CUST-1001", out_dir=tmp_path / "r2")
     assert second.steps[1].mode == "cache" and second.totals()["tokens"] == 0
+
+
+def test_stale_cache_is_skipped_when_upstream_data_changes(tmp_path, monkeypatch):
+    from core.build.run import run_build
+
+    root, _ = _write_build(tmp_path, monkeypatch)
+
+    def agent(prompt, ctx):
+        for path, content in slm.parse_file_blocks(GOOD_1002).items():
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+            Path(path).write_text(content + "\n")
+        return {"output": "wrote files", "tokens": 9000, "latency_ms": 1200.0, "exit_code": 0, "model": "agent-x"}
+
+    run_build(root, params={"customer_id": "CUST-1002"}, escalate="codex", escalator=agent, out_dir=tmp_path / "r1")
+    entry = cache.lookup_any(root, "write_pricing", {"customer_id": "CUST-1002"})[0]
+    assert entry and entry["upstream_sha"]
+
+    # the source data changes → the replayed code output changes → the entry is stale, not replayed
+    (tmp_path / "ctx.txt").write_text((tmp_path / "ctx.txt").read_text().replace("seats 60", "seats 90"))
+    stale = run_build(root, params={"customer_id": "CUST-1002"}, out_dir=tmp_path / "r2")
+    assert stale.steps[1].mode == "needs_agent" and "cache stale" in stale.steps[1].note
+
+    # a fresh escalation refreshes the entry; the next run hits again
+    run_build(root, params={"customer_id": "CUST-1002"}, escalate="codex", escalator=agent, out_dir=tmp_path / "r3")
+    again = run_build(root, params={"customer_id": "CUST-1002"}, out_dir=tmp_path / "r4")
+    assert again.steps[1].mode == "cache" and again.totals()["tokens"] == 0
+
+    # --no-cache ignores a valid entry
+    nocache = run_build(root, params={"customer_id": "CUST-1002"}, out_dir=tmp_path / "r5", use_cache=False)
+    assert nocache.steps[1].mode == "needs_agent"
+
+
+def test_cache_cli_list_and_clear(tmp_path, monkeypatch, capsys):
+    from core.build.__main__ import main
+    from core.build.run import run_build
+
+    root, _ = _write_build(tmp_path, monkeypatch)
+
+    def agent(prompt, ctx):
+        for path, content in slm.parse_file_blocks(GOOD_1002).items():
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+            Path(path).write_text(content + "\n")
+        return {"output": "ok", "tokens": 100, "latency_ms": 10.0, "exit_code": 0, "model": "agent-x"}
+
+    run_build(root, params={"customer_id": "CUST-1002"}, escalate="codex", escalator=agent, out_dir=tmp_path / "r1")
+    assert main(["cache", "list", str(root)]) == 0
+    out = capsys.readouterr().out
+    assert "write_pricing" in out and "customer_id=CUST-1002" in out and "agent-x" not in out  # source column is the backend name
+    assert main(["cache", "clear", str(root), "--action", "write_pricing"]) == 0
+    assert "removed" in capsys.readouterr().out
+    assert cache.entries(root) == [] or all(e["action"] != "write_pricing" for e in cache.entries(root))
+    assert main(["cache", "list", str(root)]) == 0

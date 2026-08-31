@@ -104,7 +104,7 @@ python3 -m core.build bench   build/customer_renewal_codex                      
 | 스텝 | code 6 + escalated:claude 1 + slm 1 | code 6 + **cache 2** |
 | 산출물 | Codex 하이브리드와 동일 | 동일 (캐시에서 복원) |
 
-캐시는 빌드 안(`cache/<action>/<params>.json`)에 살고, 에이전트가 쓴 파일 내용까지 캡처하므로 산출물을 지워도 복원됩니다. 다른 파라미터(CUST-1003)는 캐시를 지나쳐 정상적으로 에스컬레이션됩니다.
+캐시는 빌드 안(`cache/<action>/<params>.json`)에 살고, 에이전트가 쓴 파일 내용까지 캡처하므로 산출물을 지워도 복원됩니다. 다른 파라미터(CUST-1003)는 캐시를 지나쳐 정상적으로 에스컬레이션되고, 같은 파라미터라도 상류 데이터(계약·사용량·정책)가 바뀌면 저장된 상류 출력 지문과 어긋나 **stale로 무효화**되어 다시 에스컬레이션됩니다 (`owc build cache list|clear`, `--no-cache`).
 
 HOW 명세: [`build/customer_renewal_codex/customer_renewal_codex.work`](build/customer_renewal_codex/customer_renewal_codex.work) — executors(어떤 스텝이 code/llm인지)와 escalation(어떤 스텝이 `agent`로 남는지) 블록을 고쳐 재컴파일하면 분할을 바꿀 수 있습니다.
 

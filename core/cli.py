@@ -2,7 +2,7 @@
 
     owc proxy [--port 8787]                 start the zero-code proxy (Codex / Responses API passthrough)
     owc compile <file.work> [...]           OpenWorkLang → build/<work>/ (same as python -m core.openworklang compile)
-    owc build <from-work|from-trace|bench|run|promote|demote|show> ...   the build backend (same as python -m core.build)
+    owc build <from-work|from-trace|bench|run|promote|demote|cache|show> ...   the build backend (same as python -m core.build)
     owc agent <list|doctor|setup|exec> ...  coding-agent backends (Claude Code, Codex, Gemini, opencode, Aider)
     owc skills <install|list|doctor> ...    sync .agents/skills into each agent's skills directory
     owc version
@@ -33,7 +33,7 @@ def main(argv=None) -> int:
     p.add_argument("--workspace", help="Directory builds/outputs may be written to (default: current directory)")
 
     sub.add_parser("compile", help="Compile an OpenWorkLang .work file into a build tree", add_help=False)
-    sub.add_parser("build", help="Build backend: from-work | from-trace | bench | run | promote | demote | show", add_help=False)
+    sub.add_parser("build", help="Build backend: from-work | from-trace | bench | run | promote | demote | cache | show", add_help=False)
     sub.add_parser("agent", help="Agent backends: list | doctor | setup <name> | exec <prompt>", add_help=False)
     sub.add_parser("skills", help="Skills sync: install [--agent …] | list | doctor [--check]", add_help=False)
     sub.add_parser("version", help="Print the version")

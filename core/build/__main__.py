@@ -7,6 +7,7 @@
     python3 -m core.build run        build/<work> --request "..." [--param k=v] [--escalate auto|claude|codex|…] [--binder regex|agent]
     python3 -m core.build promote    build/<work> <action> [--model qwen2.5:7b] [--dry-run]   # frontier → local SLM under the quality gate
     python3 -m core.build demote     build/<work> <action>
+    python3 -m core.build cache      list|clear build/<work> [--action a]   # escalate-once replay cache
 """
 
 from __future__ import annotations
@@ -82,7 +83,8 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     params = dict(kv.split("=", 1) for kv in (args.param or []))
     report = run_build(args.build_dir, request=args.request, params=params or None,
-                       escalate=args.escalate, binder=args.binder, out_dir=args.out, model=getattr(args, "model", None))
+                       escalate=args.escalate, binder=args.binder, out_dir=args.out, model=getattr(args, "model", None),
+                       use_cache=not getattr(args, "no_cache", False))
     t = report.totals()
     print(f"[run] {report.work}: params={json.dumps(report.params, ensure_ascii=False)} ({', '.join(f'{k}:{v}' for k, v in report.binding.items())})")
     print(f"  tokens {t['tokens']:,} (recorded session {t['recorded_tokens']:,}), wall {t['latency_ms']/1000:.1f}s "
@@ -128,6 +130,24 @@ def cmd_demote(args) -> int:
     return 0
 
 
+def cmd_cache(args) -> int:
+    from core.build.cache import clear, entries
+
+    if args.op == "clear":
+        print(f"[cache] removed {clear(args.build_dir, args.action)} entr(ies)")
+        return 0
+    rows = entries(args.build_dir)
+    if not rows:
+        print("[cache] empty")
+        return 0
+    print(f"{'action':28s} {'params':30s} {'source':16s} {'at':20s} files upstream")
+    for e in rows:
+        params = ",".join(f"{k}={v}" for k, v in (e.get("params") or {}).items())[:30]
+        print(f"{e.get('action', '?'):28s} {params:30s} {e.get('source', '?'):16s} {e.get('at', '?'):20s} "
+              f"{len(e.get('files') or {}):5d} {(e.get('upstream_sha') or '')[:8]}")
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="python3 -m core.build", description="OpenWorkCompiler build backend")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -164,6 +184,7 @@ def main(argv=None) -> int:
                    help="Backend for steps that need an agent: auto picks the recorded agent or the first installed CLI")
     e.add_argument("--binder", choices=["regex", "agent", "codex"], default="regex", help="How the front agent extracts parameters")
     e.add_argument("--model", help="Model for the escalation backend")
+    e.add_argument("--no-cache", action="store_true", help="Ignore cached escalation results for this run")
     e.add_argument("--out", help="Directory for run reports (default: <build_dir>/runs)")
     e.set_defaults(func=cmd_run)
 
@@ -182,6 +203,12 @@ def main(argv=None) -> int:
     g.add_argument("build_dir")
     g.add_argument("action")
     g.set_defaults(func=cmd_demote)
+
+    h = sub.add_parser("cache", help="Escalation cache of a build: list entries or clear them")
+    h.add_argument("op", choices=["list", "clear"])
+    h.add_argument("build_dir")
+    h.add_argument("--action", help="clear only this action's entries")
+    h.set_defaults(func=cmd_cache)
 
     args = parser.parse_args(argv)
     from core import telemetry

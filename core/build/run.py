@@ -209,7 +209,7 @@ def _escalation_prompt(build_dir: Path, action: str, params: Dict[str, Any], ups
 
 def run_build(build_dir: Path | str, request: Optional[str] = None, params: Optional[Dict[str, str]] = None,
               escalate: str = "none", binder: str = "regex", escalator: Optional[Escalator] = None,
-              out_dir: Optional[Path | str] = None, model: Optional[str] = None) -> RunReport:
+              out_dir: Optional[Path | str] = None, model: Optional[str] = None, use_cache: bool = True) -> RunReport:
     root = Path(build_dir)
     work_ir = load_work_ir(root / "work.yaml")
 
@@ -243,7 +243,7 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
 
     steps_src = trace.steps if trace is not None else []
     from core.build import slm as slm_tier
-    from core.build.cache import lookup as cache_lookup, store as cache_store
+    from core.build.cache import fingerprint as cache_fingerprint, lookup_any as cache_lookup_any, store as cache_store
 
     def _context_so_far() -> List[tuple[str, str]]:
         return [(s.action, slm_tier.expand_files(s.output)) for s in report.steps if s.output]
@@ -284,8 +284,10 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
 
         reason = "synthesized content (agent computed it)" if action in synthesized else f"{tier} tier"
         cache_key_params = values or {"__request__": request or ""}
-        cached = cache_lookup(root, action, cache_key_params)
-        if cached is not None:
+        upstream_sha = cache_fingerprint(_context_so_far())
+        cached, cache_status = cache_lookup_any(root, action, cache_key_params, upstream_sha) if use_cache else (None, "disabled")
+        stale_note = f"cache stale (upstream outputs changed since {cached.get('at')}); escalating; " if cache_status == "stale" else ""
+        if cache_status == "hit" and cached is not None:
             # escalate once, replay forever: a previous run's verified agent/SLM result for the same parameters
             for rel, content in (cached.get("files") or {}).items():
                 target = Path(rel)
@@ -298,6 +300,7 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
                                         model="cache", recorded_model=str(getattr(step, "model", "") or ""),
                                         recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0), cost_usd=0.0))
             continue
+        reason = stale_note + reason
         recorded_patch = inputs.get("patch") if isinstance(inputs.get("patch"), str) else None
         runtime_files = slm_tier.SLMRuntime.load(root, action) if action in synthesized and recorded_patch else None
         if runtime_files is not None:
@@ -311,7 +314,7 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
                                                write_to=".")
                 tspan.update({"tokens": fdone.result.tokens, "passed": fdone.verdict.passed})
             if fdone.result.ok and fdone.verdict.passed:
-                cache_store(root, action, cache_key_params, output="", source=f"slm:{runtime_files.model}", files=fdone.files)
+                cache_store(root, action, cache_key_params, output="", source=f"slm:{runtime_files.model}", files=fdone.files, upstream_sha=upstream_sha)
                 listing = "\n".join(f"A {p} (written)" for p in sorted(fdone.files))
                 report.steps.append(RunStep(step.step_id, action, f"slm:{runtime_files.model}", fdone.result.tokens,
                                             fdone.result.latency_ms, True, listing, "gate " + fdone.verdict.summary(),
@@ -335,7 +338,7 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
                                         min_facts=slm_tier.expected_fact_count(trace, idx, work_ir.actions, norm))
                 tspan.update({"tokens": done.result.tokens, "passed": done.verdict.passed})
             if done.result.ok and done.verdict.passed:
-                cache_store(root, action, cache_key_params, output=done.result.output, source=f"slm:{runtime.model}")
+                cache_store(root, action, cache_key_params, output=done.result.output, source=f"slm:{runtime.model}", upstream_sha=upstream_sha)
                 report.steps.append(RunStep(step.step_id, action, f"slm:{runtime.model}", done.result.tokens, done.result.latency_ms, True,
                                             done.result.output, "gate " + done.verdict.summary(), model=runtime.model,
                                             recorded_model=str(getattr(step, "model", "") or ""),
@@ -364,7 +367,7 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
                               "exit_code": res.get("exit_code", 0)})
             ok = res.get("exit_code", 0) == 0
             if ok:
-                cache_store(root, action, cache_key_params, output=str(res.get("output", "")), source=backend_name,
+                cache_store(root, action, cache_key_params, output=str(res.get("output", "")), source=backend_name, upstream_sha=upstream_sha,
                             recorded_patch=recorded_patch, recorded_params={p["name"]: p["recorded_value"] for p in
                                 json.loads((root / "PARAMS.json").read_text(encoding="utf-8")).get("params", [])} if (root / "PARAMS.json").exists() else {})
             report.steps.append(RunStep(step.step_id, action, f"escalated:{backend_name}", int(res.get("tokens", 0)),
