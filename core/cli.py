@@ -5,6 +5,7 @@
     owc build <from-work|from-trace|bench|run|promote|demote|cache|show> ...   the build backend (same as python -m core.build)
     owc agent <list|doctor|setup|exec> ...  coding-agent backends (Claude Code, Codex, Gemini, opencode, Aider)
     owc skills <install|list|doctor> ...    sync .agents/skills into each agent's skills directory
+    owc org <init|publish|pull|status> ...  shared registry: individuals' builds, caches and ledgers merge into one org asset
     owc version
 """
 
@@ -36,10 +37,11 @@ def main(argv=None) -> int:
     sub.add_parser("build", help="Build backend: from-work | from-trace | bench | run | promote | demote | cache | show", add_help=False)
     sub.add_parser("agent", help="Agent backends: list | doctor | setup <name> | exec <prompt>", add_help=False)
     sub.add_parser("skills", help="Skills sync: install [--agent …] | list | doctor [--check]", add_help=False)
+    sub.add_parser("org", help="Org registry: init <repo> | publish <build> | pull <work> | status", add_help=False)
     sub.add_parser("version", help="Print the version")
 
     # let sub-CLIs own their arguments
-    if argv and argv[0] in ("compile", "build", "agent", "skills"):
+    if argv and argv[0] in ("compile", "build", "agent", "skills", "org"):
         rest = argv[1:]
         if argv[0] == "compile":
             from core.openworklang.__main__ import main as compile_main
@@ -50,6 +52,9 @@ def main(argv=None) -> int:
         if argv[0] == "skills":
             from core.skills import main as skills_main
             return skills_main(rest)
+        if argv[0] == "org":
+            from core.org import main as org_main
+            return org_main(rest)
         from core.build.__main__ import main as build_main
         return build_main(rest)
 

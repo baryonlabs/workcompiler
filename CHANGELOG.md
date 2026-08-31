@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **`owc-inspect`** (`tools/inspect/`, Go single binary): a read-only local dashboard that verifies every layer of a build in one screen — capture trace (evidence per step), tier map, bench reproduction matrix (match/mismatch/inherent), SLM gate check breakdown, cache freshness (upstream fingerprints), harden loop iterations with the needs-human gate, and the append-only ledger. `go run ./tools/inspect -dir build`.
+- **`owc org`** (`core/org.py`): a shared git repository becomes the organizational registry — `publish` copies a build's durable artifacts and **merges escalate-once cache entries by parameter key** (fresher upstream fingerprint wins), appends bench totals + provenance to a savings ledger; `pull` gives a teammate the build (their repeat runs replay your cached escalations at 0 tokens); `status` prints the org-wide ledger. Adoption guide: docs/ORG-ADOPTION.md.
+- Role-split diagram now shows the harness loop step (④′), and the compile-loop infographic includes it.
+
 ## v0.6.0 — 2026-08-31
 
 조직의 '판단하는 방법'을 실행 가능한 자산으로 — the decision catalog, the training win, and the compile-time harness loop.

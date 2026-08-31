@@ -44,13 +44,15 @@ flowchart LR
         direction TB
         A1["② Agents solve it once<br/>Codex runs TASK.md<br/>proxy captures the trajectory<br/>(demonstrates the quality)"]
         A2["④ LLM compile<br/>trace → Work IR → build/&lt;work&gt;/<br/>HOW codified as OpenWorkLang (.work)"]
+        A4["④′ Harness loop (owc build harden)<br/>an agent edits build artifacts ·<br/>the deterministic bench grades (accept on improvement, else roll back)"]
         A3["⑥ Hybrid execution<br/>front agent: bind params · judge exceptions<br/>code/rule · ml/slm: deterministic, 0 tokens<br/>only synthesized steps escalate to an agent"]
     end
 
     H1 -->|"TASK.md + BEHAVIOR.md"| A1
     A1 -->|"deliverables + trace"| H2
     H2 -->|"approved session"| A2
-    A2 -->|"&lt;work&gt;.work · PARAMS.json · handlers/ · prompts/"| H4
+    A2 -->|"draft build"| A4
+    A4 -->|"&lt;work&gt;.work · PARAMS.json · handlers/ · prompts/ · HARDEN.md"| H4
     H4 -->|"recompile"| A3
     A3 -.->|"quality signals · new traces (train SLM candidates → shrink the agent's share)"| A2
 ```
@@ -61,6 +63,7 @@ flowchart LR
 | First run | — | agents solve it once and **demonstrate the quality** (`codex exec`, captured by the proxy) |
 | Verify | **approve** that the result's quality equals the WHAT | — |
 | Codify | review / edit the split and limits in `.work` | **LLM compile** — the verified session becomes the **HOW** (OpenWorkLang): code / rule / ml / slm / agent |
+| Hardening | confirm only what automation could not fix (needs-human gate) | **harness loop** (`owc build harden`) — a coding agent fixes, the deterministic benchmark grades |
 | Execute | handle only escalated exceptions | **efficiency** (deterministic · SLM, zero-to-few tokens) + **flexibility** (a front agent binds parameters and judges exceptions) |
 
 Measured: on the same renewal-proposal task the compiled build produced identical deliverables with **−85%** tokens, **7.4×** faster than the agent — **−97%** with zero frontier escalations once the last summary step was promoted to a local SLM — and the hybrid run for a new customer (CUST-1002) was **2.1×** faster than Codex alone with the agent's share reduced to one synthesized step ([benchmarks](#30-second-demo-use-it-from-inside-codex)).
@@ -697,6 +700,14 @@ openworkcompiler/
 
 ---
 
+## owc-inspect — the layer-verification console
+
+<p align="center"><img src="docs/images/owc-inspect.png" alt="owc-inspect: capture, tier map, reproduction matrix, SLM gates, cache freshness, harness loop and ledger on one screen" width="840"></p>
+
+Every piece of verification evidence lives in files (JSON/YAML). `go run ./tools/inspect -dir build` reads them
+and renders seven layers — capture → tier map → reproduction matrix → SLM gates → cache freshness → harness
+loop → ledger — each led by "what verified this". Read-only, single binary, no external services.
+
 ## Usage & Demonstration
 
 ### Install (one line)
@@ -716,6 +727,8 @@ owc build from-trace trace.json --target my-work        # captured session → b
 owc build bench build/my_work                           # agent vs. build: outputs · tokens · speed
 owc build run build/my_work --request "…" --escalate auto    # front agent + build (auto|claude|codex|gemini|opencode|aider)
 owc build promote build/my_work respond --model qwen2.5:7b  # frontier LLM → local SLM under the quality gate (owc build demote to roll back)
+owc org init <git-url> && owc org publish build/my_work      # merge into the org registry (docs/ORG-ADOPTION.md)
+go run ./tools/inspect -dir build                             # owc-inspect layer-verification console (http://127.0.0.1:8890)
 owc agent list · owc agent setup claude · owc skills install --agent claude   # detect agents · proxy wiring · skills sync
 ```
 

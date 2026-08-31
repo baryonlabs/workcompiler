@@ -44,13 +44,15 @@ flowchart LR
         direction TB
         A1["② 에이전트가 1회 해결<br/>Codex가 TASK.md 수행<br/>프록시가 trajectory 캡처<br/>(품질을 보여 줌)"]
         A2["④ LLM 컴파일<br/>trace → Work IR → build/&lt;work&gt;/<br/>HOW를 OpenWorkLang(.work)으로 규정화"]
+        A4["④′ 하네스 루프 (owc build harden)<br/>AI가 빌드 아티팩트 수정 ·<br/>결정론 벤치가 채점 (오르면 채택, 아니면 롤백)"]
         A3["⑥ 하이브리드 실행<br/>앞단 에이전트: 파라미터 바인딩 · 예외 판단<br/>code/rule · ml/slm: 토큰 0 결정론 실행<br/>합성 스텝만 에이전트로 에스컬레이션"]
     end
 
     H1 -->|"TASK.md + BEHAVIOR.md"| A1
     A1 -->|"결과물 + 트레이스"| H2
     H2 -->|"승인된 세션"| A2
-    A2 -->|"&lt;work&gt;.work · PARAMS.json · handlers/ · prompts/"| H4
+    A2 -->|"빌드 초안"| A4
+    A4 -->|"&lt;work&gt;.work · PARAMS.json · handlers/ · prompts/ · HARDEN.md"| H4
     H4 -->|"재컴파일"| A3
     A3 -.->|"품질 신호 · 새 트레이스 (SLM 후보 학습 → 에이전트 몫 축소)"| A2
 ```
@@ -61,6 +63,7 @@ flowchart LR
 | 첫 수행 | — | 에이전트가 한 번 해결해 **품질을 보여 줌** (`codex exec`, 프록시 캡처) |
 | 검증 | 결과의 품질이 WHAT과 같음을 **승인** | — |
 | 규정화 | `.work`의 분할·한계를 검토·수정 | **LLM 컴파일** — 검증된 세션을 **HOW**(OpenWorkLang)로: code / rule / ml / slm / agent |
+| 보정 | 자동 수정이 못 넘는 결함만 확인 (needs-human 게이트) | **하네스 루프**(`owc build harden`) — 수정은 코드 에이전트, 채점은 결정론 벤치마크 |
 | 실행 | 에스컬레이션된 예외만 처리 | **효율성**(결정론·SLM, 토큰 0~소량) + **유연성**(앞단 에이전트가 파라미터·예외 담당) |
 
 실측: 같은 갱신 제안서 작업에서 컴파일된 빌드는 에이전트 대비 토큰 **−85%**, **7.4×** 빠르게 같은 산출물을 냈고, 마지막 남은 요약 스텝을 로컬 SLM으로 승격한 뒤에는 **−97%**(frontier 에스컬레이션 0)까지 내려갔으며, 새 고객(CUST-1002)에 대한 하이브리드 실행은 Codex 단독 대비 **2.1×** 빠르며 에이전트 몫은 합성 스텝 1개로 줄었습니다 ([벤치마크](#30초-데모-codex-안에서-그대로-쓰기)).
@@ -723,6 +726,14 @@ openworkcompiler/
 
 ---
 
+## owc-inspect — 레이어 검증 콘솔
+
+<p align="center"><img src="docs/images/owc-inspect.png" alt="owc-inspect: 캡처·컴파일·벤치·SLM 게이트·캐시·하네스·원장을 한 화면에서 검증" width="840"></p>
+
+빌드의 모든 검증 증거는 파일(JSON/YAML)로 남습니다. `go run ./tools/inspect -dir build`가 그것을 읽어
+레이어 7개(캡처 → 계층 지도 → 재현 매트릭스 → SLM 게이트 → 캐시 신선도 → 하네스 루프 → 원장)를
+"무엇으로 검증되었나" 기준으로 시각화합니다 — 읽기 전용, 단일 바이너리, 외부 서비스 없음.
+
 ## 사용 가이드 & 데모 실행
 
 ### 설치 (한 줄)
@@ -742,6 +753,8 @@ owc build from-trace trace.json --target my-work        # 캡처한 세션 → �
 owc build bench build/my_work                           # 에이전트 vs 빌드: 결과 · 토큰 · 속도
 owc build run build/my_work --request "…" --escalate auto    # 앞단 에이전트 + 빌드 (auto|claude|codex|gemini|opencode|aider)
 owc build promote build/my_work respond --model qwen2.5:7b  # frontier LLM → 로컬 SLM (품질 게이트 통과 시; owc build demote 로 롤백)
+owc org init <git-url> && owc org publish build/my_work      # 조직 레지스트리로 합류 (docs/ORG-ADOPTION.md)
+go run ./tools/inspect -dir build                             # 레이어 검증 콘솔 owc-inspect (http://127.0.0.1:8890)
 owc agent list · owc agent setup claude · owc skills install --agent claude   # 에이전트 탐지 · 프록시 연결 · 스킬 동기화
 ```
 

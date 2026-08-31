@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>owc-inspect — 레이어 검증 콘솔</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0c0f13; --panel:#12161c; --panel2:#161b23; --line:#232b36; --line2:#2d3745;
+  --fg:#d7dee8; --dim:#7d8a99; --faint:#4a5665;
+  --ok:#3ddc84; --ok-dim:#1d5c3c; --warn:#ffb454; --bad:#ff6b6b; --info:#6cb6ff;
+  --mono:"IBM Plex Mono",ui-monospace,monospace; --sans:"IBM Plex Sans KR",-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--ink)}
+body{font-family:var(--sans);color:var(--fg);font-size:14px;line-height:1.55;
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(108,182,255,.05), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,.006) 2px 4px),
+    var(--ink)}
+a{color:var(--info);text-decoration:none}
+.mono{font-family:var(--mono)}
+
+.shell{display:grid;grid-template-columns:264px 1fr;min-height:100vh}
+/* ── left rail ── */
+.rail{border-right:1px solid var(--line);padding:20px 0;position:sticky;top:0;height:100vh;overflow-y:auto;background:linear-gradient(180deg,#0e1116,#0c0f13)}
+.brand{padding:0 20px 18px;border-bottom:1px solid var(--line)}
+.brand h1{font-size:15px;letter-spacing:.04em;font-weight:700}
+.brand h1 b{color:var(--ok)}
+.brand .sub{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:3px;letter-spacing:.08em;text-transform:uppercase}
+.builds{padding:12px 10px}
+.build{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:8px;
+  padding:10px 12px;margin-bottom:4px;color:var(--fg);cursor:pointer;font:inherit;transition:.15s}
+.build:hover{background:var(--panel2)}
+.build.active{background:var(--panel2);border-color:var(--line2)}
+.build .bname{font-family:var(--mono);font-size:12.5px;font-weight:600}
+.build .bmeta{font-size:11px;color:var(--dim);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.pill{font-family:var(--mono);font-size:10px;padding:0 6px;border-radius:99px;border:1px solid var(--line2);color:var(--dim)}
+.pill.ok{color:var(--ok);border-color:var(--ok-dim)}
+.pill.warn{color:var(--warn);border-color:#5c4523}
+
+/* ── main ── */
+.main{padding:26px 34px 80px;max-width:1180px}
+.crumb{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.title{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.title .mono{color:var(--dim);font-size:15px;font-weight:400;margin-left:10px}
+
+/* status strip */
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:20px 0 8px}
+.stat{background:var(--panel);padding:14px 16px}
+.stat .k{font-size:11px;color:var(--dim);letter-spacing:.05em}
+.stat .v{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:2px}
+.stat .v small{font-size:12px;color:var(--dim);font-weight:400}
+.v.ok{color:var(--ok)} .v.warn{color:var(--warn)} .v.bad{color:var(--bad)}
+
+/* layer nav */
+.lnav{position:sticky;top:0;z-index:5;display:flex;gap:2px;padding:12px 0 10px;background:linear-gradient(180deg,var(--ink) 75%,transparent);flex-wrap:wrap}
+.lnav a{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:4px 10px;letter-spacing:.03em}
+.lnav a:hover{color:var(--fg);border-color:var(--line2)}
+.lnav a .n{color:var(--faint);margin-right:5px}
+
+/* layer sections */
+.layer{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-top:18px;overflow:hidden;
+  opacity:0;transform:translateY(8px);animation:rise .4s ease forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.lhead{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.lnum{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line2);border-radius:5px;padding:1px 7px}
+.lname{font-weight:700;font-size:15px}
+.verdict{margin-left:auto;font-family:var(--mono);font-size:12px;padding:3px 12px;border-radius:99px;font-weight:600}
+.verdict.ok{color:#08130c;background:var(--ok)}
+.verdict.warn{color:#1c1204;background:var(--warn)}
+.verdict.bad{color:#190808;background:var(--bad)}
+.verdict.off{color:var(--faint);border:1px dashed var(--line2)}
+.lbody{padding:16px 18px}
+.how{font-size:12px;color:var(--dim);margin-bottom:12px}
+.how b{color:var(--fg)}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);
+  text-align:left;padding:6px 10px;border-bottom:1px solid var(--line)}
+td{padding:7px 10px;border-bottom:1px solid rgba(35,43,54,.5);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.mono,th.r,td.r{font-family:var(--mono)}
+th.r,td.r{text-align:right}
+.tag{font-family:var(--mono);font-size:10.5px;padding:1px 8px;border-radius:99px;border:1px solid var(--line2);color:var(--dim);white-space:nowrap}
+.tag.code{color:var(--ok);border-color:var(--ok-dim)}
+.tag.slm{color:var(--info);border-color:#274a66}
+.tag.frontier_llm,.tag.llm{color:var(--warn);border-color:#5c4523}
+.tag.human{color:var(--bad);border-color:#5e2727}
+.dot{display:inline-block;width:8px;height:8px;border-radius:99px;margin-right:7px;vertical-align:0}
+.dot.match{background:var(--ok)} .dot.mismatch{background:var(--bad)} .dot.inherent{background:var(--warn)} .dot.not-compared{background:var(--faint)}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;min-width:80px}
+.bar i{display:block;height:100%;background:var(--ok)}
+.small{font-size:11px;color:var(--dim)}
+.empty{color:var(--faint);font-size:12.5px;padding:6px 0}
+details.doc{margin-top:10px;border:1px solid var(--line);border-radius:8px}
+details.doc summary{cursor:pointer;padding:8px 12px;font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+details.doc pre{padding:12px;border-top:1px solid var(--line);overflow-x:auto;font-family:var(--mono);font-size:11px;line-height:1.6;color:var(--fg);max-height:420px;overflow-y:auto}
+.checks{display:flex;gap:5px;flex-wrap:wrap}
+.chk{font-family:var(--mono);font-size:10px;padding:1px 7px;border-radius:5px}
+.chk.pass{color:var(--ok);background:rgba(61,220,132,.08)}
+.chk.fail{color:var(--bad);background:rgba(255,107,107,.1)}
+.loading{padding:60px;text-align:center;color:var(--faint);font-family:var(--mono);font-size:12px;letter-spacing:.2em;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.35}}
+@media(max-width:900px){.shell{grid-template-columns:1fr}.rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="rail">
+    <div class="brand">
+      <h1>owc<b>-inspect</b></h1>
+      <div class="sub">layer verification console</div>
+    </div>
+    <div class="builds" id="builds"><div class="loading">SCANNING</div></div>
+  </nav>
+  <main class="main" id="main"><div class="loading">SELECT A BUILD</div></main>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>Number(n||0).toLocaleString("ko-KR");
+const sec=ms=>(Number(ms||0)/1000).toFixed(1)+"s";
+
+async function loadBuilds(){
+  const builds=await (await fetch("/api/builds")).json();
+  $("#builds").innerHTML=builds.map(b=>{
+    const t=b.bench||{};
+    const pills=[
+      b.has_trace?'<span class="pill ok">trace</span>':'',
+      t.token_savings_pct!=null?`<span class="pill ok">−${t.token_savings_pct}%</span>`:'',
+      b.slm_promoted?`<span class="pill">slm×${b.slm_promoted}</span>`:'',
+      b.cache_entries?`<span class="pill">cache×${b.cache_entries}</span>`:'',
+      b.has_harden?'<span class="pill warn">harden</span>':''
+    ].join("");
+    return `<button class="build" data-name="${esc(b.name)}">
+      <div class="bname">${esc(b.name)}</div>
+      <div class="bmeta">${b.actions} actions ${pills}</div></button>`;
+  }).join("");
+  document.querySelectorAll(".build").forEach(el=>el.onclick=()=>{
+    document.querySelectorAll(".build").forEach(x=>x.classList.remove("active"));
+    el.classList.add("active"); loadBuild(el.dataset.name);
+  });
+  if(builds.length){document.querySelector(".build").click();}
+}
+
+const V=(cls,txt)=>`<span class="verdict ${cls}">${txt}</span>`;
+function layer(n,name,how,verdict,body){
+  return `<section class="layer" id="L${n}" style="animation-delay:${n*60}ms">
+    <div class="lhead"><span class="lnum">L${n}</span><span class="lname">${name}</span>${verdict}</div>
+    <div class="lbody"><div class="how">${how}</div>${body}</div></section>`;
+}
+
+function renderCapture(c){
+  if(!c.present) return layer(1,"캡처 — 실행 기록","","", '<div class="empty">trace.json 없음</div>');
+  const rows=c.steps.map(s=>`<tr>
+    <td class="mono">${esc(s.step)}</td><td class="mono">${esc(s.action)}</td>
+    <td><span class="tag">${esc(s.model||"?")}</span></td>
+    <td class="r mono">${fmt(s.tokens)}</td><td class="r mono small">${fmt(s.cached)}</td>
+    <td class="r mono">${sec(s.latency_ms)}</td>
+    <td class="r">${s.has_result?'<span class="chk pass">tool_result</span>':'<span class="small">—</span>'}</td></tr>`).join("");
+  const withRes=c.steps.filter(s=>s.has_result||!s.tool_calls).length;
+  return layer(1,"캡처 — 실행 기록",
+    `검증: 프록시가 <b>${esc(c.source_agent)}</b> v${esc(c.agent_version)} 세션(${esc(c.protocol)})을 스텝 ${c.steps.length}개로 캡처, run_id <span class="mono">${esc(c.run_id)}</span> · 도구 결과 부착 여부를 스텝별 확인`,
+    V(withRes===c.steps.length?"ok":"warn",`${c.steps.length} steps`),
+    `<table><tr><th>step</th><th>action</th><th>model</th><th class="r">tokens</th><th class="r">cached</th><th class="r">latency</th><th class="r">evidence</th></tr>${rows}</table>`);
+}
+
+function renderCompile(c){
+  if(!c.present) return layer(2,"컴파일 — 계층 지도","","", '<div class="empty">work.yaml 없음</div>');
+  const rows=c.actions.map(a=>`<span class="tag ${esc(a.tier)}" style="margin:2px 4px 2px 0;display:inline-block">${esc(a.action)} · ${esc(a.tier)}</span>`).join("");
+  const tiers=Object.entries(c.tiers).map(([t,n])=>`<span class="chk pass">${esc(t)} ×${n}</span>`).join(" ");
+  const params=(c.params||[]).map(p=>`<span class="tag">${esc(p.name)} = ${esc(p.recorded_value)}</span>`).join(" ");
+  const synth=(c.synthesized||[]).map(s=>`<span class="tag frontier_llm">${esc(s)}</span>`).join(" ");
+  return layer(2,"컴파일 — 계층 지도",
+    `검증: 액션 ${c.actions.length}개가 어느 실행 계층으로 하강했는지 + 파라미터·합성 스텝 선언 (<span class="mono">work.yaml · PARAMS.json</span>)`,
+    V("ok",`${c.actions.length} actions`),
+    `<div style="margin-bottom:10px">${rows}</div><div class="checks" style="margin-bottom:10px">${tiers}</div>
+     ${params?`<div class="small" style="margin-bottom:6px">파라미터: ${params}</div>`:""}
+     ${synth?`<div class="small">합성(에이전트 재생성 필요): ${synth}</div>`:""}`);
+}
+
+function renderBench(b){
+  if(!b.present) return layer(3,"벤치 — 재현 매트릭스","","", '<div class="empty">benchmark.json 없음 — <span class="mono">owc build bench</span> 실행 필요</div>');
+  const t=b.totals||{};
+  const rows=b.steps.map(s=>`<tr>
+    <td><span class="dot ${s.status}"></span><span class="mono">${esc(s.step)}</span></td>
+    <td class="mono">${esc(s.action)}</td><td><span class="tag ${esc(s.tier)}">${esc(s.tier)}</span></td>
+    <td class="r mono">${fmt(s.recorded_tokens)} → <b>${fmt(s.compiled_tokens)}</b></td>
+    <td class="r mono">${sec(s.recorded_latency_ms)} → ${sec(s.compiled_latency_ms)}</td>
+    <td class="small">${esc(s.status==="inherent"?"실행마다 달라지는 출력 (비교 제외 권고)":s.note)}</td></tr>`).join("");
+  const inh=b.steps.filter(s=>s.status==="inherent").length;
+  const mm=b.steps.filter(s=>s.status==="mismatch").length;
+  return layer(3,"벤치 — 재현 매트릭스",
+    `검증: 기록된 세션을 컴파일된 계층으로 재실행해 출력 동일성·토큰·지연을 실측 — <b>${t.outputs_matched}/${t.outputs_checked} 재현</b>${inh?` (그중 본질적 비재현 ${inh}건 분리)`:""}, 토큰 <b>−${t.token_savings_pct}%</b>, <b>${t.speedup_x}×</b>`,
+    V(mm===0?"ok":"warn",`${t.outputs_matched}/${t.outputs_checked}`),
+    `<table><tr><th>step</th><th>action</th><th>tier</th><th class="r">tokens</th><th class="r">latency</th><th>note</th></tr>${rows}</table>`);
+}
+
+function renderSLM(s){
+  if(!s.present) return layer(4,"SLM 게이트 — 승격 판정","","", '<div class="empty">승격 시도 없음</div>');
+  const blocks=s.actions.map(a=>{
+    const evals=(a.evaluations||[]).map(e=>{
+      const checks=Object.entries(e.checks||{}).map(([k,v])=>`<span class="chk ${v?"pass":"fail"}">${esc(k)}</span>`).join("");
+      return `<tr><td class="mono">${esc(e.step)}</td><td>${esc(e.gate)}</td><td><div class="checks">${checks}</div></td><td class="r mono">${fmt(e.tokens)}</td></tr>`;
+    }).join("");
+    const fleet=(a.fleet||[]).map(f=>`<tr><td class="mono">${esc(f.model)}</td><td class="r mono">${f.passed}/${f.customers}</td><td class="r mono">${Math.round(f.pass_rate*100)}%</td><td class="r mono">${fmt(f.avg_tokens)}</td></tr>`).join("");
+    return `<div style="margin-bottom:14px">
+      <div style="margin-bottom:8px"><span class="tag slm">${esc(a.action)}</span>
+        ${a.promoted?`<span class="verdict ok" style="margin-left:8px">PROMOTED → ${esc(a.model)}</span>`:'<span class="verdict off" style="margin-left:8px">NOT PROMOTED</span>'}</div>
+      ${evals?`<table><tr><th>step</th><th>gate</th><th>checks</th><th class="r">slm tokens</th></tr>${evals}</table>`:""}
+      ${fleet?`<div class="small" style="margin:8px 0 4px">held-out 플릿 평가 이력</div><table><tr><th>model</th><th class="r">pass</th><th class="r">rate</th><th class="r">avg tok</th></tr>${fleet}</table>`:""}</div>`;
+  }).join("");
+  const promoted=s.actions.filter(a=>a.promoted).length;
+  return layer(4,"SLM 게이트 — 승격 판정",
+    "검증: 기록 예시 재생성을 결정론 게이트(근거 재현율·환각 정밀도·길이·자리표시자)로 채점 — 통과해야만 executor가 바뀜, 오답 승격은 거부 기록이 남음",
+    V(promoted?"ok":"off",`${promoted}/${s.actions.length} promoted`), blocks);
+}
+
+function renderCache(c){
+  if(!c.present) return layer(5,"캐시 — 한 번 에스컬레이션, 영원히 재생","","", '<div class="empty">캐시 항목 없음</div>');
+  const rows=c.entries.map(e=>`<tr>
+    <td class="mono">${esc(e.action)}</td>
+    <td class="mono small">${esc(Object.entries(e.params||{}).map(([k,v])=>k+"="+v).join(", "))}</td>
+    <td><span class="tag">${esc(e.source)}</span></td>
+    <td class="r mono small">${esc(e.at)}</td>
+    <td class="r">${e.fingerprinted?`<span class="chk pass">sha ${esc(e.upstream_sha)}</span>`:'<span class="chk fail">지문 없음</span>'}</td>
+    <td class="r mono">${e.files||"—"}</td></tr>`).join("");
+  const fresh=c.entries.filter(e=>e.fingerprinted).length;
+  return layer(5,"캐시 — 한 번 에스컬레이션, 영원히 재생",
+    `검증: 파라미터 키별 결과 + <b>상류 출력 지문</b>(원천 데이터 변경 시 자동 무효화) — 지문 보유 ${fresh}/${c.entries.length}`,
+    V(fresh===c.entries.length?"ok":"warn",`${c.entries.length} entries`),
+    `<table><tr><th>action</th><th>params</th><th>source</th><th class="r">at</th><th class="r">freshness</th><th class="r">files</th></tr>${rows}</table>`);
+}
+
+function renderHarden(h){
+  if(!h.present) return layer(6,"하네스 루프 — 수정은 AI, 채점은 벤치","","", '<div class="empty">harden 실행 이력 없음 — <span class="mono">owc build harden</span></div>');
+  const iters=(h.iterations||[]).map(i=>`<tr>
+    <td class="mono">${i.n}</td><td class="mono">${i.failures}</td>
+    <td>${(i.attempted||[]).map(a=>`<span class="tag">${esc(a)}</span>`).join(" ")||"—"}</td>
+    <td>${(i.accepted||[]).map(a=>`<span class="chk pass">${esc(a)}</span>`).join(" ")||"—"}</td>
+    <td>${(i.reverted||[]).map(a=>`<span class="chk fail">${esc(a)}</span>`).join(" ")||"—"}</td>
+    <td class="r mono">${(i.score_before||[]).join("/")} → <b>${(i.score_after||[]).join("/")}</b></td></tr>`).join("");
+  const f=h.final||{};
+  return layer(6,"하네스 루프 — 수정은 AI, 채점은 벤치",
+    `검증: 수정 수용 조건 = 재현 점수의 실측 상승(아니면 롤백) · 실패 서명별 이력 영속 · 중단 사유 <b>${esc(h.stopped_because)}</b>` +
+    (h.needs_human&&h.needs_human.length?` · <span class="chk fail">사람 확인 필요: ${h.needs_human.map(esc).join(", ")}</span>`:""),
+    V(h.converged?"ok":"warn",h.converged?`수렴 ${f.matched}/${f.checked}`:`${f.matched}/${f.checked}`),
+    `<table><tr><th>iter</th><th>failures</th><th>attempted</th><th>accepted</th><th>reverted</th><th class="r">score</th></tr>${iters}</table>`);
+}
+
+function renderLedger(l){
+  if(!l.present) return layer(7,"원장 — 감사 기록","","", '<div class="empty">ledger.jsonl 없음</div>');
+  const rows=l.rows.slice(-14).reverse().map(r=>`<tr>
+    <td class="mono small">${esc(r.at)}</td><td><span class="tag">${esc(r.kind)}</span></td>
+    <td class="mono">${esc(r.action||r.step||"")}</td>
+    <td class="r mono">${fmt(r.recorded_tokens)} → ${fmt(r.run_tokens??r.compiled_tokens??0)}</td>
+    <td class="mono small">${esc(r.mode||r.compiled_executor||"")}</td></tr>`).join("");
+  return layer(7,"원장 — 감사 기록",
+    `검증: 실행마다 스텝×모델×토큰이 append-only로 누적 (${l.rows.length}행) — "누가 무엇을 얼마에 실행했나"의 근거`,
+    V("ok",`${l.rows.length} rows`),
+    `<table><tr><th>at</th><th>kind</th><th>action</th><th class="r">tokens</th><th>executor</th></tr>${rows}</table>`);
+}
+
+async function loadBuild(name){
+  $("#main").innerHTML='<div class="loading">READING EVIDENCE</div>';
+  const d=await (await fetch("/api/build/"+encodeURIComponent(name))).json();
+  const t=(d.bench&&d.bench.totals)||{};
+  const docs=Object.entries(d.docs||{}).map(([n,txt])=>
+    `<details class="doc"><summary>${esc(n)}</summary><pre>${esc(txt)}</pre></details>`).join("");
+  $("#main").innerHTML=`
+    <div class="crumb">BUILD EVIDENCE / ${esc(name)}</div>
+    <div class="title">${esc((d.compile&&d.compile.work)||name)}<span class="mono">${esc(name)}</span></div>
+    <div class="strip">
+      <div class="stat"><div class="k">재현</div><div class="v ${t.outputs_matched===t.outputs_checked?"ok":"warn"}">${t.outputs_matched??"–"}<small>/${t.outputs_checked??"–"}</small></div></div>
+      <div class="stat"><div class="k">토큰 절감</div><div class="v ok">−${t.token_savings_pct??"–"}<small>%</small></div></div>
+      <div class="stat"><div class="k">속도</div><div class="v">${t.speedup_x??"–"}<small>×</small></div></div>
+      <div class="stat"><div class="k">에스컬레이션 잔여</div><div class="v ${t.escalated_actions?"warn":"ok"}">${t.escalated_actions??"–"}</div></div>
+      <div class="stat"><div class="k">캐시</div><div class="v">${(d.cache.entries||[]).length}</div></div>
+      <div class="stat"><div class="k">하네스</div><div class="v ${d.harden.present?(d.harden.converged?"ok":"warn"):""}">${d.harden.present?(d.harden.converged?"수렴":"미수렴"):"—"}</div></div>
+    </div>
+    <nav class="lnav">${[["1","캡처"],["2","컴파일"],["3","벤치"],["4","SLM 게이트"],["5","캐시"],["6","하네스"],["7","원장"]].map(([n,t])=>`<a href="#L${n}"><span class="n">L${n}</span>${t}</a>`).join("")}</nav>
+    ${renderCapture(d.capture)}${renderCompile(d.compile)}${renderBench(d.bench)}
+    ${renderSLM(d.slm)}${renderCache(d.cache)}${renderHarden(d.harden)}${renderLedger(d.ledger)}
+    ${docs?`<section class="layer" style="animation-delay:520ms"><div class="lhead"><span class="lnum">DOC</span><span class="lname">원문 리포트</span></div><div class="lbody">${docs}</div></section>`:""}`;
+}
+loadBuilds();
+</script>
+</body>
+</html>
