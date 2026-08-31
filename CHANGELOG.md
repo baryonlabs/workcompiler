@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Honest savings metric**: benchmarks now report **unique tokens** (per-step prompt delta + completion) as the headline, demoting the cumulative-context sum to a reference row — the renewal build is −82.2% unique (was advertised −97% cumulative), and the claude build is reframed as a reproduction case (−2.3% unique). `owc build bench --recompute-totals` rewrites reports from stored traces.
+- **Gate fixes** (adversarially tested): the thousands-separator fusion bug in `_NUM_RE` (a CSV row no longer yields a fabricated number) and a sentence-scoped negation-cue check (a "does not exist / ignore these numbers" output no longer passes with recall 1.00); 25-case adversarial suite pins FP 11→3, FN 3→1 with remaining principled limits as strict xfails.
+- **Decision-eval statistics**: append-only eval history, case-cluster bootstrap 95% CIs, per-policy scoreboards, a relaxed-match metric, and fair re-baselining of raw models on the same bf16 greedy shim (conclusion unchanged). Training runs are now pinned and manifested (seed, epochs, package versions, adapter hashes).
+
 - **`owc-inspect`** (`tools/inspect/`, Go single binary): a read-only local dashboard that verifies every layer of a build in one screen — capture trace (evidence per step), tier map, bench reproduction matrix (match/mismatch/inherent), SLM gate check breakdown, cache freshness (upstream fingerprints), harden loop iterations with the needs-human gate, and the append-only ledger. `go run ./tools/inspect -dir build`.
 - **`owc org`** (`core/org.py`): a shared git repository becomes the organizational registry — `publish` copies a build's durable artifacts and **merges escalate-once cache entries by parameter key** (fresher upstream fingerprint wins), appends bench totals + provenance to a savings ledger; `pull` gives a teammate the build (their repeat runs replay your cached escalations at 0 tokens); `status` prints the org-wide ledger. Adoption guide: docs/ORG-ADOPTION.md.
 - Role-split diagram now shows the harness loop step (④′), and the compile-loop infographic includes it.

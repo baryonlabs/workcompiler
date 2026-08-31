@@ -1,0 +1,51 @@
+{
+  "seed": 20260831,
+  "folds": [
+    [
+      "finance-expense-approval",
+      "sales-quote-expedite",
+      "cs-ticket-tiering",
+      "hr-overtime-approval",
+      "ga-travel-approval",
+      "proc-price-increase"
+    ],
+    [
+      "it-access-request",
+      "sales-discount-approval",
+      "mkt-influencer-vetting",
+      "hr-resume-screening",
+      "log-delay-compensation",
+      "it-incident-priority"
+    ],
+    [
+      "finance-budget-overrun",
+      "cs-refund-decision",
+      "finance-payment-extension",
+      "sec-sharing-exception",
+      "legal-privacy-incident",
+      "pq-defect-batch-hold"
+    ],
+    [
+      "pq-feature-flag-rollout",
+      "hr-leave-approval",
+      "mkt-campaign-topup",
+      "it-change-approval",
+      "ga-asset-disposal",
+      "proc-po-approval"
+    ],
+    [
+      "legal-contract-routing",
+      "sec-phishing-response",
+      "cs-goodwill-coupon",
+      "proc-vendor-onboarding",
+      "sales-renewal-priority"
+    ],
+    [
+      "log-return-disposition",
+      "log-reorder-point",
+      "legal-nda-fastpass",
+      "ga-donation-request",
+      "mkt-lead-scoring"
+    ]
+  ]
+}

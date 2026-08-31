@@ -33,11 +33,24 @@ raw 7b의 [8.3, 25.0]과는 겹치지 않으므로 훈련 효과 자체는 CI를
 정책별 편차가 큽니다(튜닝 모델 4/10 ~ 10/10) — unseen 성능은 정책의 규칙 구조 난이도에 크게 의존하며,
 이것이 클러스터 CI가 넓은 이유이기도 합니다.
 
+## 공정 베이스라인 (동일 서빙 조건 재평가)
+
+raw 베이스라인(Ollama 4bit + 기본 샘플링)과 튜닝 모델(bf16 shim, greedy)의 서빙 조건이 달랐다는 지적에 따라,
+raw 모델들을 **튜닝 모델과 동일한 bf16 transformers shim + greedy**로 재평가했습니다:
+
+| 모델 (bf16 greedy, 동일 shim) | seen 정확 일치 | unseen 정확 일치 [95% CI] |
+| :-- | --: | --: |
+| qwen2.5-3b raw | 9/56 (16.1%) | 7/60 (11.7%) [0.0, 25.0] |
+| qwen2.5-7b raw | 18/56 (32.1%) | 9/60 (15.0%) [3.3, 26.7] |
+
+Ollama 4bit 때의 8.3%/16.7%와 사실상 같습니다 — **양자화·샘플링 교란은 훈련 격차를 설명하지 못하며**,
+tuned 68.3% [53.3, 83.3]과 공정 조건 raw 7b 15.0% [3.3, 26.7]의 CI는 여전히 겹치지 않습니다.
+
 훈련: 28개 사례 × 인스턴스 40 (1,120행) → RTX 4090 QLoRA 2 epochs (~12분). 파생(산술) 실험의 0/6과 대비되는
 재현 가능한 결론: **SFT는 계산은 못 배우지만 정책 적용(판단)은 배운다** — seen 2.5×, unseen 4.1× 향상.
 미달 구간(unseen 68%)은 게이트가 걸러 에이전트/사람으로 에스컬레이션되므로, 수용된 판단의 정밀도가 지표입니다.
 
-재현: `python3 examples/org/decision_dataset.py` → TRL QLoRA(`build/remote-train/train_remote.py`) → `python3 examples/org/decision_eval.py --model … --base-url …`.
+재현: `python3 examples/org/decision_dataset.py` → TRL QLoRA(`tools/remote-train/train_remote.py` — 시드·MANIFEST 기록, `requirements-train.txt` 핀) → `python3 examples/org/decision_eval.py --model … --base-url …`.
 평가 이력은 append-only로 누적되며(같은 라벨의 반복 실행 보존), 실행 이력이 2개 이상인 모델은
 [eval_report.md](eval_report.md)에 평균±표준편차가 병기됩니다.
 원자료: [eval_history.json](eval_history.json) · [MANIFEST.json](MANIFEST.json) · 자동 리포트: [eval_report.md](eval_report.md)
