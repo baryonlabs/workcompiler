@@ -149,7 +149,9 @@ def infer(system: str, user: str, runtime: SLMRuntime, transport: Optional[Trans
 
 # --------------------------------------------------------------------------- facts + gate
 
-_NUM_RE = re.compile(r"(?<![\w./-])[-+]?\d[\d,]*(?:\.\d+)?%?(?![\w-])")
+# commas join digit groups only in the thousands shape 1,234,567; CSV neighbours such as
+# "2026-05,260,410000" stay separate numbers (260 and 410000), never a fused 260410000
+_NUM_RE = re.compile(r"(?<![\w./-])[-+]?(?:\d{1,3}(?:,\d{3})+(?!\d)|\d+)(?:\.\d+)?%?(?![\w-])")
 _ID_RE = re.compile(r"\b[A-Z][A-Z0-9]{1,}-[A-Z0-9-]*\d[A-Z0-9-]*\b")
 _PATH_RE = re.compile(r"(?<![\w-])(?:[\w.-]+/)+[\w.-]+\.(?:md|json|ya?ml|csv|txt|py|xml|html)\b")
 _MASK = "<value>"
@@ -192,6 +194,30 @@ def anchors(recorded_output: str, context: str) -> set:
     return rec & ctx
 
 
+_NEGATION_RE = re.compile(
+    r"(?i)\b(?:not|never|cannot|ignored?|ignoring|disregard(?:ed|ing)?|exclud(?:e|ed|ing)|"
+    r"invalid|incorrect|wrong|void|cancell?ed|obsolete|outdated|nonexistent|"
+    r"no longer|no such|no record|\w+n[’']t)\b"
+    r"|없|않|무시|취소|잘못|무효|제외|아닙")
+# sentence ends: newline, !/?, or a period not inside a number/path token (2026.5, x.json stay whole)
+_SENT_SPLIT_RE = re.compile(r"\.(?=\s|$)|[!?\n]")
+
+
+def negated_facts(text: str) -> set:
+    """Facts stated only in sentences carrying a negation / invalidation cue ("does not exist",
+    "ignore", "무시" …) — they do not count as asserted. A cue heuristic, sentence-scoped: a fact
+    that also appears in a cue-free sentence stays asserted; a cue in one sentence never poisons
+    facts stated in another."""
+    neg: set = set()
+    pos: set = set()
+    for sentence in _SENT_SPLIT_RE.split(text):
+        if not sentence.strip():
+            continue
+        facts = _flat(extract_facts(sentence))
+        (neg if _NEGATION_RE.search(sentence) else pos).update(facts)
+    return neg - pos
+
+
 def mask_facts(text: str) -> str:
     """Blank numbers, ids and paths so an example conveys structure and tone, not answers."""
     out = _ID_RE.sub(_MASK, text)
@@ -208,6 +234,7 @@ class GateResult:
     length_ratio: float
     missing: List[str] = field(default_factory=list)
     ungrounded: List[str] = field(default_factory=list)
+    negated: List[str] = field(default_factory=list)
     checks: Dict[str, bool] = field(default_factory=dict)
 
     @property
@@ -217,21 +244,27 @@ class GateResult:
     def summary(self) -> str:
         parts = [f"recall {self.recall:.2f}", f"grounded {self.precision:.2f}", f"len ×{self.length_ratio:.1f}"]
         for name, ok in self.checks.items():
-            if not ok and name in ("no_placeholder", "fact_density", "non_empty"):
+            if not ok and name in ("no_placeholder", "fact_density", "non_empty", "negation_cues"):
                 parts.append(name.replace("_", " ") + " failed")
         if self.missing:
             parts.append("missing " + ", ".join(self.missing[:4]))
         if self.ungrounded:
             parts.append("ungrounded " + ", ".join(self.ungrounded[:4]))
+        if self.negated:
+            parts.append("negated " + ", ".join(self.negated[:4]))
         return ("PASS" if self.passed else "FAIL") + " (" + "; ".join(parts) + ")"
 
 
 def gate(output: str, *, context: str, recorded_output: str = "", required: Optional[set] = None,
-         runtime: Optional[SLMRuntime] = None, params: Optional[Dict[str, Any]] = None, min_facts: int = 0) -> GateResult:
+         runtime: Optional[SLMRuntime] = None, params: Optional[Dict[str, Any]] = None, min_facts: int = 0,
+         negation_cues: bool = True) -> GateResult:
     """Deterministic quality gate for a generated text.
 
     * recall — every anchor (fact of the recording grounded in the context, or ``required``) reappears
+      *asserted*: with ``negation_cues`` (on by default) a fact stated only in sentences that carry a
+      negation / invalidation cue ("does not exist", "ignore", "무시" …) does not count as restated
     * precision — every number/id/path the output states exists in the context or the recording
+      (a hallucinated value stays ungrounded even inside a negated sentence)
     * length — bounded relative to the recording (when one is given)
     * min_facts — for new-parameter runs (no recording to anchor on): the message must state at least
       as many grounded facts as the recorded answer did, and never the literal placeholder
@@ -241,9 +274,12 @@ def gate(output: str, *, context: str, recorded_output: str = "", required: Opti
     for value in (params or {}).values():
         req |= _flat(extract_facts(str(value)))
     got = _flat(extract_facts(output))
+    negated = negated_facts(output) if negation_cues else set()
+    asserted = got - negated
     allowed = _flat(extract_facts(context)) | _flat(extract_facts(recorded_output)) | req
-    missing = sorted(req - got)
+    missing = sorted(req - asserted)
     ungrounded = sorted(got - allowed)
+    neg_req = sorted(req & negated)
     recall = 1.0 if not req else 1.0 - len(missing) / len(req)
     precision = 1.0 if not got else 1.0 - len(ungrounded) / len(got)
     length_ratio = (len(output) / len(recorded_output)) if recorded_output else 1.0
@@ -253,10 +289,12 @@ def gate(output: str, *, context: str, recorded_output: str = "", required: Opti
         "grounded": precision >= rt.min_precision,
         "length": length_ratio <= rt.max_length_ratio,
         "no_placeholder": _MASK not in output,
-        "fact_density": len(got & allowed) >= min_facts,
+        "fact_density": len(asserted & allowed) >= min_facts,
+        "negation_cues": not neg_req,
     }
     return GateResult(all(checks.values()), round(recall, 3), round(precision, 3), round(length_ratio, 2),
-                      [m.split(":", 1)[1] for m in missing], [u.split(":", 1)[1] for u in ungrounded], checks)
+                      [m.split(":", 1)[1] for m in missing], [u.split(":", 1)[1] for u in ungrounded],
+                      [n.split(":", 1)[1] for n in neg_req], checks)
 
 
 def quality_record(trace_id: str, action: str, result: SLMResult, verdict: GateResult,
@@ -271,7 +309,8 @@ def quality_record(trace_id: str, action: str, result: SLMResult, verdict: GateR
                          metadata={"model": result.model, "prompt_tokens": result.prompt_tokens,
                                    "completion_tokens": result.completion_tokens, "score": verdict.score,
                                    "recall": verdict.recall, "precision": verdict.precision,
-                                   "missing": verdict.missing, "ungrounded": verdict.ungrounded})
+                                   "missing": verdict.missing, "ungrounded": verdict.ungrounded,
+                                   "negated": verdict.negated})
 
 
 # --------------------------------------------------------------------------- prompt
