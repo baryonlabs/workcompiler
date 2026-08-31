@@ -179,6 +179,9 @@ recipe so that **every one of the 34 policies is unseen exactly once** (340 item
 
 ### 5.1 Transfer to unseen policies
 
+![Figure 1 — (a) the ICL ladder with cluster-bootstrap CIs; (b) the counterfactual control.](figs/fig1_ladder_counterfactual.png)
+
+
 | model (identical bf16 greedy serving) | unseen exact | 95% CI (cluster) | verdict | relaxed |
 | :-- | --: | :-- | --: | --: |
 | raw 3B, zero-shot | 11.7% | [0.0, 25.0] | 50.0% | 11.7% |
@@ -191,8 +194,12 @@ LOCO fold accuracies range 65.0–80.0%: the pinned-split result is not an artif
 partition. Across 3 training seeds on the pinned split, unseen exact is 62.8% ± 4.8pp (60.0,
 60.0, 68.3) — run variance is real and reported, and no seed approaches the raw baseline.
 In-context examples help substantially (15 → 50%) but fine-tuning adds ~20pp over ICL while
-also removing the per-request example tokens. Per-policy scores range 4/10–10/10; policy
-structure difficulty, not instance noise, drives the CI width.
+also removing the per-request example tokens. Per-policy scores range 1/10–10/10 under LOCO
+(Figure 2); policy structure difficulty, not instance noise, drives the CI width — approval
+policies with date/limit arithmetic in their conditions (leave, overtime, payment extension)
+sit at the bottom, foreshadowing the computation boundary of §5.3.
+
+![Figure 2 — per-policy transfer under leave-case-out; every policy is unseen exactly once.](figs/fig2_per_policy.png)
 
 ### 5.2 What was learned: the counterfactual control
 
@@ -292,7 +299,6 @@ generator and stored model outputs.
 - [ ] Verify every ⚠ citation against the original paper (only Progressive Crystallization,
       HarnessFix, EntCollabBench abstracts were directly verified during the survey).
 - [ ] Related-work prose (§2 is currently a positioning skeleton).
-- [ ] Figure 1: the ICL ladder + counterfactual bar chart. Figure 2: per-policy scoreboard.
 - [ ] Decide the venue and convert to its LaTeX template (ACL style files).
 - [ ] Limitations section as a separate ACL-required section (lift from §3.4/§6).
 - [ ] Consider adding the 14B/other-base-model column if GPU time allows.
