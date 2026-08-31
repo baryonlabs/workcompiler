@@ -341,9 +341,12 @@ def test_run_build_binds_new_parameters_and_escalates_only_synthesized_steps(tmp
     assert totals["tokens"] == 3000 and totals["recorded_tokens"] == 27600
     assert (tmp_path / "runs" / "RUN_REPORT.md").exists()
 
-    # without an escalation backend the synthesized step is reported, not faked
+    # the successful escalation above was cached: the same parameters now replay locally at 0 tokens
     report2 = run_build(manifest.build_dir, params={"customer_id": "CUST-1002"}, out_dir=tmp_path / "runs2")
-    assert report2.steps[1].mode == "needs_agent" and report2.binding == {"customer_id": "override"}
+    assert report2.steps[1].mode == "cache" and report2.steps[1].tokens == 0 and report2.binding == {"customer_id": "override"}
+    # unseen parameters without a backend are reported, not faked
+    report3 = run_build(manifest.build_dir, params={"customer_id": "CUST-1003"}, out_dir=tmp_path / "runs3")
+    assert report3.steps[1].mode == "needs_agent"
 
 
 def test_build_emits_editable_openworklang_source_that_round_trips(tmp_path, monkeypatch):

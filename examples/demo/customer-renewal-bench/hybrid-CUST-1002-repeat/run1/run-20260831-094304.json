@@ -1,0 +1,273 @@
+{
+  "work": "customer-renewal-codex",
+  "build_dir": "build/customer_renewal_codex",
+  "request": "Prepare the annual renewal proposal for customer CUST-1002.",
+  "params": {
+    "customer_id": "CUST-1002"
+  },
+  "binding": {
+    "customer_id": "regex"
+  },
+  "totals": {
+    "tokens": 184454,
+    "cached_tokens": 97621,
+    "uncached_tokens": 86833,
+    "latency_ms": 58907.5,
+    "cost_usd": 1.8593,
+    "code_steps": 6,
+    "slm_steps": 1,
+    "cache_steps": 0,
+    "escalated_steps": 1,
+    "needs_agent_steps": 0,
+    "recorded_tokens": 139437,
+    "recorded_latency_ms": 82643.9,
+    "token_savings_pct": -32.3,
+    "speedup_x": 1.4
+  },
+  "by_model": {
+    "?": {
+      "recorded_tokens": 139437,
+      "run_tokens": 0
+    },
+    "code": {
+      "recorded_tokens": 0,
+      "run_tokens": 0
+    },
+    "claude-fable-5": {
+      "recorded_tokens": 0,
+      "run_tokens": 180273
+    },
+    "qwen2.5:7b": {
+      "recorded_tokens": 0,
+      "run_tokens": 4181
+    }
+  },
+  "ledger": [
+    {
+      "step": "step_1",
+      "action": "shell_sed",
+      "recorded_model": "",
+      "recorded_tokens": 14031,
+      "run_executor": "code",
+      "run_tokens": 0,
+      "run_cached_tokens": 0,
+      "mode": "code",
+      "params": {
+        "customer_id": "CUST-1002"
+      }
+    },
+    {
+      "step": "step_2",
+      "action": "shell_rg",
+      "recorded_model": "",
+      "recorded_tokens": 14921,
+      "run_executor": "code",
+      "run_tokens": 0,
+      "run_cached_tokens": 0,
+      "mode": "code",
+      "params": {
+        "customer_id": "CUST-1002"
+      }
+    },
+    {
+      "step": "step_3",
+      "action": "shell_cat",
+      "recorded_model": "",
+      "recorded_tokens": 15345,
+      "run_executor": "code",
+      "run_tokens": 0,
+      "run_cached_tokens": 0,
+      "mode": "code",
+      "params": {
+        "customer_id": "CUST-1002"
+      }
+    },
+    {
+      "step": "step_4",
+      "action": "shell_jq",
+      "recorded_model": "",
+      "recorded_tokens": 17631,
+      "run_executor": "code",
+      "run_tokens": 0,
+      "run_cached_tokens": 0,
+      "mode": "code",
+      "params": {
+        "customer_id": "CUST-1002"
+      }
+    },
+    {
+      "step": "step_5",
+      "action": "shell_mkdir",
+      "recorded_model": "",
+      "recorded_tokens": 18151,
+      "run_executor": "code",
+      "run_tokens": 0,
+      "run_cached_tokens": 0,
+      "mode": "code",
+      "params": {
+        "customer_id": "CUST-1002"
+      }
+    },
+    {
+      "step": "step_6",
+      "action": "write_pricing_cust_1001",
+      "recorded_model": "",
+      "recorded_tokens": 19273,
+      "run_executor": "claude-fable-5",
+      "run_tokens": 180273,
+      "run_cached_tokens": 97621,
+      "mode": "escalated:claude",
+      "params": {
+        "customer_id": "CUST-1002"
+      }
+    },
+    {
+      "step": "step_7",
+      "action": "shell_jq",
+      "recorded_model": "",
+      "recorded_tokens": 19540,
+      "run_executor": "code",
+      "run_tokens": 0,
+      "run_cached_tokens": 0,
+      "mode": "code",
+      "params": {
+        "customer_id": "CUST-1002"
+      }
+    },
+    {
+      "step": "step_8",
+      "action": "respond",
+      "recorded_model": "",
+      "recorded_tokens": 20545,
+      "run_executor": "qwen2.5:7b",
+      "run_tokens": 4181,
+      "run_cached_tokens": 0,
+      "mode": "slm:qwen2.5:7b",
+      "params": {
+        "customer_id": "CUST-1002"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step_id": "step_1",
+      "action": "shell_sed",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 6.425207946449518,
+      "ok": true,
+      "output": "# Task: renewal proposal for customer CUST-1001\n\nYou are the sales-ops assistant. Prepare the annual renewal proposal for **CUST-1001**.\n\nRules (from `behaviors/`): verify the *active* contract in the CRM before pricing, and price with the\n*current* policy `data/pricing/pricing_v2.yaml` — never the legacy table.\n\nDo the work with auditable shell commands (jq / python3 / cat), from the repository root:\n\n1. **Lookup contract** — read `examples/customer-renewal/data/crm/contracts.json`, select the\n   contract for CUST-1001 whose `status` is `active`, and print it.\n2. **Calculate usage** — from `examples/customer-renewal/data/usage/usage-2026-07.csv`, compute for\n   CUST-1001 the peak `seats_active` over the 3 months, the growth of `seats_active` (last vs first\n   month, in %) and the average `api_calls`.\n3. **Price the offer** — apply `pricing_v2.yaml`: recommended committed seats per `seat_recommendation`,\n   list price for the plan, volume discount band, loyalty discount if the customer has >= 2 years of\n   continuous service (use the active contract's `start_date`, today is 2026-08-29), cap at\n   `max_total_discount_pct`. Compute monthly and annual totals. Write the calculation as JSON to\n   `build/renewal/pricing-CUST-1001.json`.\n4. **Draft the proposal** — write `build/renewal/proposal-CUST-1001.md` with: customer & contract\n   summary, usage summary, a pricing table (seats × list price − discounts = monthly / annual), and\n   every clause from `required_clauses` verbatim.\n5. Reply with a short summary (recommended seats, total annual price, discounts applied) and the two\n   file paths.\n",
+      "note": "",
+      "model": "code",
+      "recorded_model": "",
+      "recorded_tokens": 14031,
+      "cached_tokens": 0,
+      "cost_usd": null
+    },
+    {
+      "step_id": "step_2",
+      "action": "shell_rg",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 25.799165945500135,
+      "ok": true,
+      "output": "examples/customer-renewal/domain.linkml.yaml\nexamples/customer-renewal/data/pricing/pricing_v1_legacy.yaml\nexamples/customer-renewal/data/pricing/pricing_v2.yaml\nexamples/customer-renewal/data/usage/usage-2026-07.csv\nexamples/customer-renewal/data/crm/contracts.json\nexamples/customer-renewal/TASK.md\nexamples/customer-renewal/behaviors/verify-current-contract/BEHAVIOR.md\nexamples/customer-renewal/work.yaml\nexamples/customer-renewal/behaviors/use-current-pricing-policy/BEHAVIOR.md\nexamples/customer-renewal/behaviors/use-current-pricing-policy/BEHAVIOR.md\nexamples/customer-renewal/behaviors/verify-current-contract/BEHAVIOR.md\njq: error (at examples/customer-renewal/data/crm/contracts.json:50): Cannot index string with string \"customer_id\"\n",
+      "note": "exit_code=5",
+      "model": "code",
+      "recorded_model": "",
+      "recorded_tokens": 14921,
+      "cached_tokens": 0,
+      "cost_usd": null
+    },
+    {
+      "step_id": "step_3",
+      "action": "shell_cat",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 10.88170800358057,
+      "ok": true,
+      "output": "{\n  \"generated_at\": \"2026-08-01\",\n  \"contracts\": [\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2024-0917\",\n      \"status\": \"active\",\n      \"plan\": \"enterprise\",\n      \"seats\": 240,\n      \"price_per_seat_month_usd\": 38.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2024-09-01\",\n      \"end_date\": \"2026-09-30\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    },\n    {\n      \"customer_id\": \"CUST-1002\",\n      \"customer_name\": \"Bluebird Logistics\",\n      \"contract_id\": \"CTR-2025-0142\",\n      \"status\": \"active\",\n      \"plan\": \"professional\",\n      \"seats\": 60,\n      \"price_per_seat_month_usd\": 25.0,\n      \"pricing_policy\": \"pricing_v2\",\n      \"start_date\": \"2025-11-15\",\n      \"end_date\": \"2026-11-14\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"m.lee@example.com\",\n      \"special_terms\": [\"custom SLA 99.95%\"]\n    },\n    {\n      \"customer_id\": \"CUST-1001\",\n      \"customer_name\": \"ACME Manufacturing Co.\",\n      \"contract_id\": \"CTR-2022-0311\",\n      \"status\": \"expired\",\n      \"plan\": \"professional\",\n      \"seats\": 120,\n      \"price_per_seat_month_usd\": 22.0,\n      \"pricing_policy\": \"pricing_v1_legacy\",\n      \"start_date\": \"2022-09-01\",\n      \"end_date\": \"2024-08-31\",\n      \"billing\": \"annual\",\n      \"account_owner\": \"j.park@example.com\",\n      \"special_terms\": []\n    }\n  ]\n}\ncustomer_id,month,seats_active,api_calls,storage_gb,support_tickets\nCUST-1001,2026-05,238,1840000,910,4\nCUST-1001,2026-06,247,2010000,955,3\nCUST-1001,2026-07,262,2265000,1010,5\nCUST-1002,2026-05,54,310000,120,1\nCUST-1002,2026-06,57,325000,128,2\nCUST-1002,2026-07,58,331000,131,1\n# Current enterprise pricing policy (rules.pricing_v2). Effective 2026-01-01.\n# The renewal offer MUST be computed from this table (see behaviors/use-current-pricing-policy).\npolicy: pricing_v2\neffective_from: \"2026-01-01\"\ncurrency: USD\nrenewal_term_months: 12\nlist_price_per_seat_month:\n  starter: 12.0\n  professional: 25.0\n  enterprise: 40.0\nvolume_discount_bands:            # applied on list price, by committed seats\n  - min_seats: 50\n    pct: 5\n  - min_seats: 200\n    pct: 10\n  - min_seats: 500\n    pct: 15\nloyalty_discount:                 # customers with >= min_years continuous service\n  min_years: 2\n  pct: 3\nmax_total_discount_pct: 20        # hard cap; anything beyond needs sales-director approval\nseat_recommendation:\n  rule: \"commit seats = max(current contract seats, peak seats_active of last 3 months) rounded up to next 10\"\nrequired_clauses:\n  - \"12-month term with 60-day auto-renewal notice\"\n  - \"Data Processing Addendum v3 attached\"\n  - \"Price valid for 30 days from proposal date\"\n# BEHAVIOR: verify-current-contract\n\n## 1. Intent\nEnsure that any renewal offer or contract analysis looks up the active, current customer contract from the CRM before computing renewal terms.\n\n## 2. Evidence\nEvidence consists of a `crm.lookup_contract` step occurring before `services.usage.calculate` or `rules.pricing_v2` steps in the execution trajectory.\n\n## 3. Decision\n- `true`: `crm.lookup_contract` executed successfully and returned active contract data prior to pricing logic.\n- `false`: Pricing or drafting occurred without querying the active contract, or queried a cached/stale record.\n- `na`: Trajectory does not involve contract renewals.\n\n## 4. Execution\nEnforced at compile-time as a non-removable workflow transition dependency and verified by post-hoc trajectory judges.\n\n## 5. Recovery\nIf missing, halt execution and escalate to CRM lookup connector or prompt reviewer.\n\n## 6. Failure Modes\nUsing hardcoded contract terms or relying on LLM memory from previous turns.\n# BEHAVIOR: use-current-pricing-policy\n\n## 1. Intent\nGuarantees that pricing calculations apply the current active enterprise pricing table (`rules.pricing_v2`) rather than legacy discount structures.\n\n## 2. Evidence\nInvocation of `rules.pricing_v2` with live policy parameters in the trajectory.\n\n## 3. Decision\n- `true`: Active pricing policy rule engine was queried and applied.\n- `false`: Custom unverified pricing was hallucinated or legacy table was applied.\n- `na`: Trajectory does not perform pricing calculations.\n\n## 4. Execution\nEnforced as a deterministic Rule engine executor step.\n\n## 5. Recovery\nRe-derive offer using standard rule engine `rules.pricing_v2`.\n\n## 6. Failure Modes\nLLM hallucinating custom percentage discounts outside authorized bands.\n",
+      "note": "",
+      "model": "code",
+      "recorded_model": "",
+      "recorded_tokens": 15345,
+      "cached_tokens": 0,
+      "cost_usd": null
+    },
+    {
+      "step_id": "step_4",
+      "action": "shell_jq",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 36.40995896421373,
+      "ok": true,
+      "output": "{\n  \"customer_id\": \"CUST-1002\",\n  \"customer_name\": \"Bluebird Logistics\",\n  \"contract_id\": \"CTR-2025-0142\",\n  \"status\": \"active\",\n  \"plan\": \"professional\",\n  \"seats\": 60,\n  \"price_per_seat_month_usd\": 25.0,\n  \"pricing_policy\": \"pricing_v2\",\n  \"start_date\": \"2025-11-15\",\n  \"end_date\": \"2026-11-14\",\n  \"billing\": \"annual\",\n  \"account_owner\": \"m.lee@example.com\",\n  \"special_terms\": [\n    \"custom SLA 99.95%\"\n  ]\n}\n{\n  \"usage\": {\n    \"peak_seats_active\": 58,\n    \"seats_growth_pct\": 7.4074,\n    \"average_api_calls\": 322000.0\n  },\n  \"pricing\": {\n    \"recommended_committed_seats\": 60,\n    \"list_price_per_seat_month_usd\": 25.0,\n    \"gross_monthly_usd\": 1500.0,\n    \"volume_discount_pct\": 5,\n    \"loyalty_discount_pct\": 0,\n    \"total_discount_pct\": 5,\n    \"monthly_total_usd\": 1425.0,\n    \"annual_total_usd\": 17100.0,\n    \"loyalty_eligible_as_of\": \"False\",\n    \"two_year_anniversary\": \"2027-11-15\"\n  }\n}\n",
+      "note": "",
+      "model": "code",
+      "recorded_model": "",
+      "recorded_tokens": 17631,
+      "cached_tokens": 0,
+      "cost_usd": null
+    },
+    {
+      "step_id": "step_5",
+      "action": "shell_mkdir",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 4.59675001911819,
+      "ok": true,
+      "output": "",
+      "note": "",
+      "model": "code",
+      "recorded_model": "",
+      "recorded_tokens": 18151,
+      "cached_tokens": 0,
+      "cost_usd": null
+    },
+    {
+      "step_id": "step_6",
+      "action": "write_pricing_cust_1001",
+      "mode": "escalated:claude",
+      "tokens": 180273,
+      "latency_ms": 40751.0,
+      "ok": true,
+      "output": "CUST-1002(Bluebird Logistics)의 갱신 제안을 완료했습니다.\n\n**요약**\n- 권장 커밋 시트: **60석** (현재 계약 60석 vs 최근 3개월 피크 58석 중 큰 값을 10석 단위로 올림)\n- 가격: 60석 × $25.00 = 월 $1,500.00 − 5% 볼륨 할인($75.00) = **월 $1,425.00 / 연 $17,100.00**\n- 적용 할인: 볼륨 할인 5% (50석 밴드). 로열티 할인은 0% — 2년 연속 서비스 기준일이 2027-11-15라 제안일(2026-08-29) 기준 미충족. 합계 5%로 20% 상한 이내.\n\n**생성 파일**\n- `build/renewal/pricing-CUST-1002.json` — 계산 근거 JSON (사용량: 피크 58석, 성장률 7.4074%, 평균 API 호출 322,000.00)\n- `build/renewal/proposal-CUST-1002.md` — 제안서 (계약 요약, 사용량 요약, 가격 표, required_clauses 3개 원문 포함; 특약 \"custom SLA 99.95%\" 명시)",
+      "note": "synthesized content (agent computed it)",
+      "model": "claude-fable-5",
+      "recorded_model": "",
+      "recorded_tokens": 19273,
+      "cached_tokens": 97621,
+      "cost_usd": 1.859281
+    },
+    {
+      "step_id": "step_7",
+      "action": "shell_jq",
+      "mode": "code",
+      "tokens": 0,
+      "latency_ms": 55.919083999469876,
+      "ok": true,
+      "output": "{\n  \"customer_id\": \"CUST-1002\",\n  \"customer_name\": \"Bluebird Logistics\",\n  \"contract_id\": \"CTR-2025-0142\",\n  \"status\": \"active\",\n  \"plan\": \"professional\",\n  \"seats\": 60,\n  \"price_per_seat_month_usd\": 25.0,\n  \"pricing_policy\": \"pricing_v2\",\n  \"start_date\": \"2025-11-15\",\n  \"end_date\": \"2026-11-14\",\n  \"billing\": \"annual\",\n  \"account_owner\": \"m.lee@example.com\",\n  \"special_terms\": [\n    \"custom SLA 99.95%\"\n  ]\n}\n{\n  \"usage\": {\n    \"peak_seats_active\": 58,\n    \"seats_growth_pct\": 7.4074,\n    \"average_api_calls\": 322000.0\n  },\n  \"pricing\": {\n    \"recommended_committed_seats\": 60,\n    \"list_price_per_seat_month_usd\": 25.0,\n    \"gross_monthly_usd\": 1500.0,\n    \"volume_discount_pct\": 5,\n    \"loyalty_discount_pct\": 0,\n    \"total_discount_pct\": 5,\n    \"monthly_total_usd\": 1425.0,\n    \"annual_total_usd\": 17100.0,\n    \"loyalty_eligible_as_of\": \"False\",\n    \"two_year_anniversary\": \"2027-11-15\"\n  }\n}\n",
+      "note": "",
+      "model": "code",
+      "recorded_model": "",
+      "recorded_tokens": 19540,
+      "cached_tokens": 0,
+      "cost_usd": null
+    },
+    {
+      "step_id": "step_8",
+      "action": "respond",
+      "mode": "slm:qwen2.5:7b",
+      "tokens": 4181,
+      "latency_ms": 18016.4942080155,
+      "ok": true,
+      "output": "Renewal proposal completed.\n\n- Recommended seats: **60**\n- Annual price: **$17,100**\n- Discounts: **5% volume**, **0% loyalty**\n\nFiles:\n\n- [Pricing calculation](build/renewal/pricing-CUST-1002.json)\n- [Renewal proposal](build/renewal/proposal-CUST-1002.md)",
+      "note": "gate PASS (recall 1.00; grounded 1.00; len ×1.0)",
+      "model": "qwen2.5:7b",
+      "recorded_model": "",
+      "recorded_tokens": 20545,
+      "cached_tokens": 0,
+      "cost_usd": 0.0
+    }
+  ]
+}

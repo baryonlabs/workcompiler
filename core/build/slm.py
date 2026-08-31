@@ -502,6 +502,20 @@ def evaluate(build_dir: Path | str, action: str, runtime: SLMRuntime, *, transpo
             continue
         recorded = _recorded_output(step)
         upstream = _upstream_from_trace(trace, idx, work_ir.actions, norm)
+        inp = step.input if isinstance(step.input, dict) else {}
+        if isinstance(inp.get("patch"), str) and inp["patch"].strip():
+            # derivation step: regenerate the recorded files for the recorded parameters; exact match required
+            fdone = execute_files(root, action, work_ir.work, params, upstream, runtime=runtime,
+                                  recorded_patch=inp["patch"], recorded_params=params, exact=True,
+                                  trace_id=f"{trace.run_id}:{step.step_id}", transport=transport)
+            verdict = GateResult(fdone.verdict.passed, fdone.verdict.score, fdone.verdict.score, 1.0,
+                                 checks=dict(fdone.verdict.checks))
+            verdict.missing = [n for n in fdone.verdict.notes][:4]
+            report.evaluations.append(Evaluation(step.step_id, fdone.result, verdict, _step_tokens(step),
+                                                 float(getattr(step, "latency_ms", 0.0) or 0.0), _step_model(step),
+                                                 _clip(inp["patch"], 2500)))
+            report.records.append(fdone.record)
+            continue
         # the recording is the ground truth: it is shown only *masked* (structure/tone, no values), so every
         # fact in the SLM's answer has to come from the upstream outputs — that is what the gate checks
         done = execute(root, action, work_ir.work, params, upstream, runtime=runtime, recorded_output=recorded,
@@ -530,6 +544,21 @@ def step_request(step: Any) -> str:
     inp = step.input if isinstance(getattr(step, "input", None), dict) else {}
     text = inp.get("content") or inp.get("raw_args") or ""
     return str(text) if isinstance(text, (str, int, float)) else ""
+
+
+def _flip_work_source_escalation(root: Path, action: str, value: str) -> Optional[Path]:
+    """Rewrite the action's line in the .work ``escalation`` block (e.g. ``agent`` -> ``slm_then_agent``)."""
+    for path in root.glob("*.work"):
+        text = path.read_text(encoding="utf-8")
+        m = re.search(r"^  escalation: \{\n(.*?)^  \}", text, re.S | re.M)
+        if not m:
+            continue
+        inner = m.group(1)
+        new_inner, n = re.subn(rf"^(\s+){re.escape(action)}: [\w-]+,$", rf"\g<1>{action}: {value},", inner, count=1, flags=re.M)
+        if n:
+            path.write_text(text.replace(inner, new_inner, 1), encoding="utf-8")
+            return path
+    return None
 
 
 def _flip_work_source(root: Path, action: str, tier: str) -> Optional[Path]:
@@ -574,11 +603,16 @@ def promote(build_dir: Path | str, action: str, runtime: Optional[SLMRuntime] = 
         previous = executors.get(action)
         prev_dict = previous.model_dump() if hasattr(previous, "model_dump") else dict(previous or {})
         report.previous_executor = prev_dict
-        new_spec = {"type": "slm", "preferred": rt.model, "fallback": ["frontier_llm", "human"],
-                    "runtime": str((out_dir / RUNTIME_FILE).relative_to(root))}
-        executors[action] = type(previous)(**new_spec) if previous is not None and hasattr(previous, "model_dump") else new_spec
-        save_work_ir(work_ir, root / "work.yaml")
-        _flip_work_source(root, action, "slm")
+        if prev_dict.get("type") != "code":
+            new_spec = {"type": "slm", "preferred": rt.model, "fallback": ["frontier_llm", "human"],
+                        "runtime": str((out_dir / RUNTIME_FILE).relative_to(root))}
+            executors[action] = type(previous)(**new_spec) if previous is not None and hasattr(previous, "model_dump") else new_spec
+            save_work_ir(work_ir, root / "work.yaml")
+            _flip_work_source(root, action, "slm")
+        else:
+            # synthesized code step: the handler still replays the recorded params; runtime.json makes the
+            # SLM the front agent's first choice for NEW params (before any agent escalation)
+            _flip_work_source_escalation(root, action, "slm_then_agent")
         (out_dir / PROMOTION_FILE).write_text(json.dumps({"action": action, "to": "slm", "model": rt.model,
                                                           "previous_executor": prev_dict, "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
                                                           "totals": report.totals()}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -613,3 +647,317 @@ def demote(build_dir: Path | str, action: str) -> Dict[str, Any]:
             p.unlink()
     _update_manifest(root, {"action": action, "from": "slm", "to": tier, "at": time.strftime("%Y-%m-%dT%H:%M:%S")})
     return {"action": action, "restored": previous}
+
+
+# --------------------------------------------------------------------------- file mode (derivation steps)
+
+FILE_RE = re.compile(r"===FILE ([^=\n]+?)===\n(.*?)\n?===END===", re.S)
+
+
+def parse_file_blocks(text: str) -> Dict[str, str]:
+    """``===FILE <path>=== … ===END===`` blocks emitted by the model → {path: content}."""
+    return {m.group(1).strip(): m.group(2) for m in FILE_RE.finditer(text)}
+
+
+def _json_flat(value: Any, prefix: str = "") -> Dict[str, Any]:
+    out: Dict[str, Any] = {}
+    if isinstance(value, dict):
+        for k, v in value.items():
+            out.update(_json_flat(v, f"{prefix}.{k}" if prefix else str(k)))
+    elif isinstance(value, list):
+        for i, v in enumerate(value):
+            out.update(_json_flat(v, f"{prefix}[{i}]"))
+    else:
+        out[prefix] = value
+    return out
+
+
+def _num(value: Any) -> Optional[float]:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
+def _close(a: float, b: float) -> bool:
+    return abs(a - b) <= max(0.01, abs(b) * 1e-6)
+
+
+def _sibling_groups(flat: Dict[str, Any]) -> Dict[str, Dict[str, float]]:
+    groups: Dict[str, Dict[str, float]] = {}
+    for path, value in flat.items():
+        n = _num(value)
+        if n is None:
+            continue
+        parent = path.rsplit(".", 1)[0] if "." in path else ""
+        groups.setdefault(parent, {})[path.rsplit(".", 1)[-1]] = n
+    return groups
+
+
+def _norm_any(token: str) -> Optional[str]:
+    """Like _norm_number but keeps small integers — pair grounding needs them (pct: 5)."""
+    t = str(token).replace(",", "").rstrip("%").lstrip("+")
+    try:
+        return f"{float(t):.4f}".rstrip("0").rstrip(".")
+    except ValueError:
+        return None
+
+
+def _context_pairs(context: str) -> set:
+    """Unordered pairs of numbers that co-occur within a few lines of each other in the context —
+    'this pct belongs to this band', 'this price to this plan'."""
+    lines = context.splitlines()
+    pairs = set()
+    for i, line in enumerate(lines):
+        window = " ".join(lines[i:i + 3])
+        nums = {n for n in (_norm_any(m.group(0)) for m in _NUM_RE.finditer(window)) if n}
+        for a in nums:
+            for b in nums:
+                if a < b:
+                    pairs.add((a, b))
+    return pairs
+
+
+def mine_relations(recorded_flat: Dict[str, Any]) -> List[Tuple[str, str, str, str]]:
+    """Arithmetic identities among sibling numbers of the recorded JSON (a+b=c, a-b=c, a*b=c,
+    a*b/100=c, a*12=c) — the derivation invariants a regeneration must preserve."""
+    out: List[Tuple[str, str, str, str]] = []
+
+    def j(parent: str, key: str) -> str:
+        return f"{parent}.{key}" if parent else key
+
+    for parent, sibs in _sibling_groups(recorded_flat).items():
+        keys = list(sibs)
+        for i, a in enumerate(keys):
+            for b in keys:
+                for c in keys:
+                    if c in (a, b):
+                        continue
+                    va, vb, vc = sibs[a], sibs[b], sibs[c]
+                    if b != a and _close(va + vb, vc) and a < b:
+                        out.append(("add", j(parent, a), j(parent, b), j(parent, c)))
+                    if b != a and _close(va - vb, vc):
+                        out.append(("sub", j(parent, a), j(parent, b), j(parent, c)))
+                    if b != a and abs(vb) > 1e-9 and _close(va * vb, vc) and a < b:
+                        out.append(("mul", j(parent, a), j(parent, b), j(parent, c)))
+                    if b != a and _close(va * vb / 100.0, vc) and vb <= 100:
+                        out.append(("pct", j(parent, a), j(parent, b), j(parent, c)))
+            va = sibs[a]
+            for c in keys:
+                if c != a and _close(va * 12.0, sibs[c]):
+                    out.append(("x12", j(parent, a), "", j(parent, c)))
+    return out
+
+
+def _relation_holds(rel: Tuple[str, str, str, str], flat: Dict[str, Any]) -> Optional[bool]:
+    op, a, b, c = rel
+    va, vb, vc = _num(flat.get(a)), _num(flat.get(b)) if b else 0.0, _num(flat.get(c))
+    if va is None or vc is None or (b and vb is None):
+        return None                    # structure changed; the key-tree check reports that
+    return {"add": _close(va + vb, vc), "sub": _close(va - vb, vc), "mul": _close(va * vb, vc),
+            "pct": _close(va * vb / 100.0, vc), "x12": _close(va * 12.0, vc)}[op]
+
+
+def _subst_params(text: str, recorded_params: Dict[str, Any], params: Dict[str, Any]) -> str:
+    for name, value in (params or {}).items():
+        recorded = str((recorded_params or {}).get(name, ""))
+        if recorded:
+            text = text.replace(recorded, str(value))
+    return text
+
+
+@dataclass
+class FileGateResult:
+    passed: bool
+    checks: Dict[str, bool] = field(default_factory=dict)
+    notes: List[str] = field(default_factory=list)
+
+    @property
+    def score(self) -> float:
+        return round(sum(1 for v in self.checks.values() if v) / len(self.checks), 3) if self.checks else 0.0
+
+    def summary(self) -> str:
+        failed = [k for k, v in self.checks.items() if not v]
+        return ("PASS" if self.passed else "FAIL") + (" (" + "; ".join(failed + self.notes[:3]) + ")" if failed or self.notes else
+                f" ({len(self.checks)} checks)")
+
+
+def gate_files(files: Dict[str, str], *, recorded_patch: str, context: str, params: Optional[Dict[str, Any]] = None,
+               recorded_params: Optional[Dict[str, Any]] = None, exact: bool = False) -> FileGateResult:
+    """Gate for a derivation (file-writing) step.
+
+    ``exact=True`` (promotion, same parameters): the regenerated values must equal the recorded ones.
+    Otherwise (new parameters): file names/params substituted, identical JSON key tree, the recorded
+    arithmetic identities preserved, every jointly-grounded sibling pair still co-occurring in the
+    context (this is what catches e.g. a wrong discount band: (min_seats, pct) must be a real pair),
+    and non-JSON files consistent with the JSON's numbers.
+    """
+    from core.work_ir import patchfmt
+
+    checks: Dict[str, bool] = {}
+    notes: List[str] = []
+    recorded_files = {b.path: patchfmt.add_content(b) for b in patchfmt.parse_patch(recorded_patch) if b.op == "Add"}
+    expected_names = {_subst_params(p, recorded_params or {}, params or {}) for p in recorded_files}
+
+    def _match(expected: str) -> Optional[str]:
+        for got in files:
+            if got == expected or expected.endswith("/" + got.lstrip("./")) or got.endswith("/" + expected.lstrip("./")) \
+                    or Path(got).name == Path(expected).name:
+                return got
+        return None
+
+    matched = {exp: _match(exp) for exp in expected_names}
+    checks["file_set"] = all(matched.values()) and len(files) == len(expected_names) if expected_names else bool(files)
+    if not checks["file_set"]:
+        notes.append(f"files {sorted(files)} != expected {sorted(expected_names)}")
+    ctx_pairs = _context_pairs(context)
+    ctx_nums = {n for n in (_norm_number(m.group(0)) for m in _NUM_RE.finditer(context)) if n}
+    for rec_path, rec_content in recorded_files.items():
+        new_path = _subst_params(rec_path, recorded_params or {}, params or {})
+        content = files.get(matched.get(new_path) or new_path, "")
+        tag = Path(rec_path).suffix.lstrip(".") or "file"
+        if rec_path.endswith(".json"):
+            try:
+                new_flat = _json_flat(json.loads(content))
+            except Exception:
+                checks[f"{tag}_parses"] = False
+                continue
+            checks[f"{tag}_parses"] = True
+            rec_flat = _json_flat(json.loads(rec_content))
+            checks[f"{tag}_structure"] = set(new_flat) == set(rec_flat)
+            if exact:
+                same = all((_num(v) is not None and _num(new_flat.get(k)) is not None and _close(_num(new_flat[k]), _num(v)))
+                           or new_flat.get(k) == v for k, v in rec_flat.items() if k in new_flat)
+                checks[f"{tag}_values"] = same and checks[f"{tag}_structure"]
+                continue
+            relations = mine_relations(rec_flat)
+
+            def _informative(rel) -> bool:
+                _, a, b, c = rel
+                c_same = _num(new_flat.get(c)) is not None and _num(rec_flat.get(c)) is not None and \
+                    _close(_num(new_flat[c]), _num(rec_flat[c]))
+                inputs_changed = any(_num(new_flat.get(k)) is not None and _num(rec_flat.get(k)) is not None and
+                                     not _close(_num(new_flat[k]), _num(rec_flat[k])) for k in (a, b) if k)
+                return not (c_same and inputs_changed)      # a constant "derived" from changed inputs was a coincidence
+
+            broken = [r for r in relations if _informative(r) and _relation_holds(r, new_flat) is False]
+            checks[f"{tag}_relations"] = not broken
+            if broken:
+                notes.append("broken: " + ", ".join(f"{op}({a.split('.')[-1]},{b.split('.')[-1] if b else ''})→{c.split('.')[-1]}" for op, a, b, c in broken[:3]))
+            # sibling pairs that were jointly grounded in the recording must still be a real pair now
+            bad_pairs = []
+            rec_groups, new_groups = _sibling_groups(rec_flat), _sibling_groups(new_flat)
+            for parent, sibs in rec_groups.items():
+                names = list(sibs)
+                for i, a in enumerate(names):
+                    for b in names[i + 1:]:
+                        ra, rb = _norm_any(sibs[a]), _norm_any(sibs[b])
+                        if not ra or not rb or ra == rb or tuple(sorted((ra, rb))) not in ctx_pairs:
+                            continue          # this pair was not context-grounded in the recording
+                        na, nb = new_groups.get(parent, {}).get(a), new_groups.get(parent, {}).get(b)
+                        if na is None or nb is None:
+                            continue
+                        pa, pb = _norm_any(na), _norm_any(nb)
+                        if pa and pb and pa != pb and tuple(sorted((pa, pb))) not in ctx_pairs:
+                            bad_pairs.append(f"({a}={pa}, {b}={pb})")
+            checks[f"{tag}_pairs_grounded"] = not bad_pairs
+            if bad_pairs:
+                notes.append("ungrounded pairs: " + ", ".join(bad_pairs[:3]))
+        else:
+            checks[f"{tag}_present"] = bool(content.strip())
+            if exact:
+                rec_anchor = _flat(extract_facts(rec_content)) & (_flat(extract_facts(context)) | {f"numbers:{n}" for n in ctx_nums})
+                got = _flat(extract_facts(content))
+                checks[f"{tag}_anchors"] = len(rec_anchor - got) <= max(0, len(rec_anchor) // 5)
+    # cross-file: numbers stated in non-JSON files must exist in the JSON files / the context, or be a
+    # one-step derivation of JSON numbers (x12, sums, differences, percentages) — reports derive constantly
+    json_vals = set()
+    for path, content in files.items():
+        if path.endswith(".json"):
+            try:
+                json_vals |= {v for v in (_num(x) for x in _json_flat(json.loads(content)).values()) if v is not None}
+            except Exception:
+                pass
+    derived = set(json_vals)
+    for a in json_vals:
+        derived |= {a * 12.0, a / 12.0, a * 100.0}
+        for b in json_vals:
+            derived |= {a + b, a - b, a * b / 100.0}
+    allowed_vals = set(derived) | {0.0, 100.0}
+    for n in ctx_nums | {m.group(1) for m in _DATE_RE.finditer(context)}:
+        try:
+            allowed_vals.add(float(n))
+        except ValueError:
+            pass
+
+    def _grounded_value(text_num: str) -> bool:
+        try:
+            v = float(text_num)
+        except ValueError:
+            return False
+        return any(abs(v - a) <= max(0.51, abs(a) * 1e-4) for a in allowed_vals)   # 0.51: integer rounding
+
+    for path, content in files.items():
+        if not path.endswith(".json") and json_vals:
+            stated = {n for n in (_norm_number(m.group(0)) for m in _NUM_RE.finditer(content)) if n}
+            stated |= {m.group(1) for m in _DATE_RE.finditer(content)}
+            loose = {n for n in stated if not _grounded_value(n)}
+            checks["cross_file_grounded"] = checks.get("cross_file_grounded", True) and not loose
+            if loose:
+                notes.append(f"{Path(path).name}: numbers not in JSON/context/derived: {sorted(loose)[:4]}")
+    for name, value in (params or {}).items():
+        checks[f"param_{name}"] = any(str(value) in c for c in files.values()) or any(str(value) in p for p in files)
+    checks["no_placeholder"] = all(_MASK not in c for c in files.values())
+    return FileGateResult(bool(checks) and all(checks.values()), checks, notes)
+
+
+def build_file_prompt(action: str, work: str, params: Dict[str, Any], upstream: Sequence[Tuple[str, str]],
+                      recorded_patch: str, per_output_chars: int = 2500) -> Tuple[str, str]:
+    system = (f"You are the file-writing step `{action}` of the compiled work `{work}`. Compute this run's values from the "
+              "OUTPUTS (they contain the source records, tables and policies) and write the files.\n"
+              "Rules:\n"
+              "1. Whenever a value comes from a table or band in the OUTPUTS (price tiers, discount bands), first quote the "
+              "exact matching row and check its condition against your computed inputs before using it.\n"
+              "2. Do all arithmetic step by step BEFORE emitting; round money to 2 decimals.\n"
+              f"3. Follow the TEMPLATE structure exactly — every {_MASK} replaced by the correct computed or copied value; "
+              "never emit the placeholder itself.\n"
+              "4. After your reasoning, emit ONLY the files, each as:\n===FILE <path>===\n<content>\n===END===")
+    ctx = "\n\n".join(f"### {name}\n```\n{_clip(out, per_output_chars)}\n```" for name, out in upstream if str(out).strip())
+    user = (f"## PARAMETERS of this run\n```json\n{json.dumps(params, ensure_ascii=False)}\n```\n\n"
+            f"## OUTPUTS produced by the earlier steps of this run\n{ctx or '(none)'}\n\n"
+            f"## TEMPLATE (previous run for other parameter values, masked with {_MASK})\n{mask_facts(recorded_patch)}\n\n"
+            f"Write the files for this run's parameters now.")
+    return system, user
+
+
+@dataclass
+class SLMFileStep:
+    result: SLMResult
+    files: Dict[str, str]
+    verdict: FileGateResult
+    record: QualityRecord
+
+
+def execute_files(build_dir: Path | str, action: str, work: str, params: Dict[str, Any],
+                  upstream: Sequence[Tuple[str, str]], *, runtime: SLMRuntime, recorded_patch: str,
+                  recorded_params: Optional[Dict[str, Any]] = None, exact: bool = False, trace_id: str = "",
+                  transport: Optional[Transport] = None, write_to: Optional[Path | str] = None) -> SLMFileStep:
+    """Derivation step on the SLM: regenerate the recorded files for this run's parameters, gate them,
+    and (when ``write_to`` is given and the gate passes) write them to disk."""
+    system, user = build_file_prompt(action, work, params, upstream, recorded_patch)
+    rt = SLMRuntime(**{**asdict(runtime), "max_tokens": max(runtime.max_tokens, 3600)})
+    result = infer(system, user, rt, transport)
+    files = parse_file_blocks(result.output) if result.ok else {}
+    context = "\n".join(str(out) for _, out in upstream)
+    verdict = gate_files(files, recorded_patch=recorded_patch, context=context, params=params,
+                         recorded_params=recorded_params, exact=exact) if result.ok else \
+        FileGateResult(False, {"inference_ok": False}, [result.error])
+    fake_gate = GateResult(verdict.passed, verdict.score, verdict.score, 1.0, checks=dict(verdict.checks))
+    record = quality_record(trace_id, action, result, fake_gate)
+    record.behavior_verdicts["grounded_in_upstream_outputs"] = "true" if verdict.passed else "false"
+    record.metadata["files"] = sorted(files)
+    if verdict.passed and write_to is not None:
+        for path, content in files.items():
+            target = Path(write_to) / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content if content.endswith("\n") else content + "\n", encoding="utf-8")
+    return SLMFileStep(result, files, verdict, record)

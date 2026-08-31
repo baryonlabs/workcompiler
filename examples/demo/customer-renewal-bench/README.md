@@ -93,6 +93,19 @@ python3 -m core.build bench   build/customer_renewal_codex                      
 
 새 입력 CUST-1002 하이브리드([`hybrid-CUST-1002-slm/`](hybrid-CUST-1002-slm/)): code 6 + `respond`는 **SLM(qwen2.5:7b, 4,205 토큰, $0, 게이트 PASS)** + 합성 스텝 1개만 Claude Code — `pricing-CUST-1002.json`은 Codex/Claude 하이브리드와 동일. SLM이 게이트에 걸리면 자동으로 에이전트 에스컬레이션으로 넘어갑니다(`RUN_REPORT.md`에 SLM 시도와 사유가 남음).
 
+### 한 번 에스컬레이션하면, 반복 실행은 $0 ([`hybrid-CUST-1002-repeat/`](hybrid-CUST-1002-repeat/))
+
+파일을 *산출*하는 합성 스텝(`write_pricing_cust_1001`)도 SLM으로 내려보려 했지만 게이트가 거부했습니다 — 7b는 할인 밴드를 잘못 골랐고(산술 자기일관성 검사는 전부 통과하는 오답), 14b는 반올림 규칙 문구를 지어냈습니다. 그 증거는 [`models/slm/write_pricing_cust_1001/PROMOTION.md`](build/customer_renewal_codex/models/slm/write_pricing_cust_1001/PROMOTION.md)(NOT promoted)에 그대로 남겼습니다. 대신 이 오답을 잡는 검사(기록에서 함께 근거했던 숫자 쌍은 새 실행의 입력에도 쌍으로 실재해야 함)를 게이트에 넣었고, 파생 스텝은 **한 번만 에이전트에 에스컬레이션한 뒤 파라미터 키로 캐시**됩니다:
+
+| CUST-1002 | 1차 실행 (콜드) | **2차 실행 (같은 요청)** |
+| :-- | --: | --: |
+| LLM 토큰 | 184,454 (Claude가 파일 작성 180k + SLM respond 4,181) | **0** |
+| 벽시계 시간 | 58.9 s | **0.1 s** |
+| 스텝 | code 6 + escalated:claude 1 + slm 1 | code 6 + **cache 2** |
+| 산출물 | Codex 하이브리드와 동일 | 동일 (캐시에서 복원) |
+
+캐시는 빌드 안(`cache/<action>/<params>.json`)에 살고, 에이전트가 쓴 파일 내용까지 캡처하므로 산출물을 지워도 복원됩니다. 다른 파라미터(CUST-1003)는 캐시를 지나쳐 정상적으로 에스컬레이션됩니다.
+
 HOW 명세: [`build/customer_renewal_codex/customer_renewal_codex.work`](build/customer_renewal_codex/customer_renewal_codex.work) — executors(어떤 스텝이 code/llm인지)와 escalation(어떤 스텝이 `agent`로 남는지) 블록을 고쳐 재컴파일하면 분할을 바꿀 수 있습니다.
 
 ## 컴파일된 빌드가 하는 일

@@ -1,0 +1,227 @@
+# Run report — `customer-renewal-codex`
+
+Request: `Prepare the annual renewal proposal for customer CUST-1002.`
+
+## Parameters bound by the front agent
+
+| parameter | value | how |
+| :-- | :-- | :-- |
+| `customer_id` | `CUST-1002` | regex |
+
+## Totals
+
+| | this run (compiled build + front agent) | recorded agent session |
+| :-- | --: | --: |
+| LLM tokens | 0 | 139,437 |
+| wall time | 0.1 s | 82.6 s |
+| steps: code / cache / slm / escalated / needs agent | 6 / 2 / 0 / 0 / 0 | — |
+| token savings | −100.0% | |
+| speedup | 641.8× | |
+| cost reported by the backend | $0.0000 | |
+
+## Steps
+
+| step | action | mode | recorded model → tokens | this run: executor → tokens | latency | ok | note |
+| :-- | :-- | :-- | :-- | :-- | --: | :-- | :-- |
+| step_1 | `shell_sed` | code | ? → 14,031 | code → 0 | 0.01 s | ✓ |  |
+| step_2 | `shell_rg` | code | ? → 14,921 | code → 0 | 0.03 s | ✓ | exit_code=5 |
+| step_3 | `shell_cat` | code | ? → 15,345 | code → 0 | 0.01 s | ✓ |  |
+| step_4 | `shell_jq` | code | ? → 17,631 | code → 0 | 0.04 s | ✓ |  |
+| step_5 | `shell_mkdir` | code | ? → 18,151 | code → 0 | 0.00 s | ✓ |  |
+| step_6 | `write_pricing_cust_1001` | cache | ? → 19,273 | cache → 0 | 0.00 s | ✓ | replayed from claude escalation of 2026-08-31T09:42:46 (params matched) |
+| step_7 | `shell_jq` | code | ? → 19,540 | code → 0 | 0.04 s | ✓ |  |
+| step_8 | `respond` | cache | ? → 20,545 | cache → 0 | 0.00 s | ✓ | replayed from slm:qwen2.5:7b escalation of 2026-08-31T09:43:04 (params matched) |
+
+## Token ledger by model / executor
+
+| model / executor | recorded session | this run |
+| :-- | --: | --: |
+| ? | 139,437 | 0 |
+| code | 0 | 0 |
+| cache | 0 | 0 |
+
+## Outputs
+
+### step_1 · `shell_sed` — code
+
+```
+# Task: renewal proposal for customer CUST-1001
+
+You are the sales-ops assistant. Prepare the annual renewal proposal for **CUST-1001**.
+
+Rules (from `behaviors/`): verify the *active* contract in the CRM before pricing, and price with the
+*current* policy `data/pricing/pricing_v2.yaml` — never the legacy table.
+
+Do the work with auditable shell commands (jq / python3 / cat), from the repository root:
+
+1. **Lookup contract** — read `examples/customer-renewal/data/crm/contracts.json`, select the
+   contract for CUST-1001 whose `status` is `active`, and print it.
+2. **Calculate usage** — from `examples/customer-renewal/data/usage/usage-2026-07.csv`, compute for
+   CUST-1001 the peak `seats_active` over the 3 months, the growth of `seats_active` (last vs first
+   month, in %) and the average 
+… (815 more chars)
+```
+
+### step_2 · `shell_rg` — code
+
+```
+examples/customer-renewal/domain.linkml.yaml
+examples/customer-renewal/data/pricing/pricing_v1_legacy.yaml
+examples/customer-renewal/data/pricing/pricing_v2.yaml
+examples/customer-renewal/data/usage/usage-2026-07.csv
+examples/customer-renewal/data/crm/contracts.json
+examples/customer-renewal/TASK.md
+examples/customer-renewal/behaviors/verify-current-contract/BEHAVIOR.md
+examples/customer-renewal/behaviors/use-current-pricing-policy/BEHAVIOR.md
+examples/customer-renewal/work.yaml
+examples/customer-renewal/behaviors/use-current-pricing-policy/BEHAVIOR.md
+examples/customer-renewal/behaviors/verify-current-contract/BEHAVIOR.md
+jq: error (at examples/customer-renewal/data/crm/contracts.json:50): Cannot index string with string "customer_id"
+
+```
+
+### step_3 · `shell_cat` — code
+
+```
+{
+  "generated_at": "2026-08-01",
+  "contracts": [
+    {
+      "customer_id": "CUST-1001",
+      "customer_name": "ACME Manufacturing Co.",
+      "contract_id": "CTR-2024-0917",
+      "status": "active",
+      "plan": "enterprise",
+      "seats": 240,
+      "price_per_seat_month_usd": 38.0,
+      "pricing_policy": "pricing_v1_legacy",
+      "start_date": "2024-09-01",
+      "end_date": "2026-09-30",
+      "billing": "annual",
+      "account_owner": "j.park@example.com",
+      "special_terms": []
+    },
+    {
+      "customer_id": "CUST-1002",
+      "customer_name": "Bluebird Logistics",
+      "contract_id": "CTR-2025-0142",
+      "status": "active",
+      "plan": "professional",
+      "seats": 60,
+      "price_per_seat_month_usd": 25.0,
+      "pricing_policy": "pricing_v2",
+      "start_dat
+… (3679 more chars)
+```
+
+### step_4 · `shell_jq` — code
+
+```
+{
+  "customer_id": "CUST-1002",
+  "customer_name": "Bluebird Logistics",
+  "contract_id": "CTR-2025-0142",
+  "status": "active",
+  "plan": "professional",
+  "seats": 60,
+  "price_per_seat_month_usd": 25.0,
+  "pricing_policy": "pricing_v2",
+  "start_date": "2025-11-15",
+  "end_date": "2026-11-14",
+  "billing": "annual",
+  "account_owner": "m.lee@example.com",
+  "special_terms": [
+    "custom SLA 99.95%"
+  ]
+}
+{
+  "usage": {
+    "peak_seats_active": 58,
+    "seats_growth_pct": 7.4074,
+    "average_api_calls": 322000.0
+  },
+  "pricing": {
+    "recommended_committed_seats": 60,
+    "list_price_per_seat_month_usd": 25.0,
+    "gross_monthly_usd": 1500.0,
+    "volume_discount_pct": 5,
+    "loyalty_discount_pct": 0,
+    "total_discount_pct": 5,
+    "monthly_total_usd": 1425.0,
+    "annual_total_us
+… (99 more chars)
+```
+
+### step_5 · `shell_mkdir` — code
+
+```
+
+```
+
+### step_6 · `write_pricing_cust_1001` — cache
+
+```
+CUST-1002(Bluebird Logistics)의 갱신 제안을 완료했습니다.
+
+**요약**
+- 권장 커밋 시트: **60석** (현재 계약 60석 vs 최근 3개월 피크 58석 중 큰 값을 10석 단위로 올림)
+- 가격: 60석 × $25.00 = 월 $1,500.00 − 5% 볼륨 할인($75.00) = **월 $1,425.00 / 연 $17,100.00**
+- 적용 할인: 볼륨 할인 5% (50석 밴드). 로열티 할인은 0% — 2년 연속 서비스 기준일이 2027-11-15라 제안일(2026-08-29) 기준 미충족. 합계 5%로 20% 상한 이내.
+
+**생성 파일**
+- `build/renewal/pricing-CUST-1002.json` — 계산 근거 JSON (사용량: 피크 58석, 성장률 7.4074%, 평균 API 호출 322,000.00)
+- `build/renewal/proposal-CUST-1002.md` — 제안서 (계약 요약, 사용량 요약, 가격 표, required_clauses 3개 원문 포함; 특약 "custom SLA 99.95%" 명시)
+```
+
+### step_7 · `shell_jq` — code
+
+```
+{
+  "customer_id": "CUST-1002",
+  "customer_name": "Bluebird Logistics",
+  "contract_id": "CTR-2025-0142",
+  "status": "active",
+  "plan": "professional",
+  "seats": 60,
+  "price_per_seat_month_usd": 25.0,
+  "pricing_policy": "pricing_v2",
+  "start_date": "2025-11-15",
+  "end_date": "2026-11-14",
+  "billing": "annual",
+  "account_owner": "m.lee@example.com",
+  "special_terms": [
+    "custom SLA 99.95%"
+  ]
+}
+{
+  "usage": {
+    "peak_seats_active": 58,
+    "seats_growth_pct": 7.4074,
+    "average_api_calls": 322000.0
+  },
+  "pricing": {
+    "recommended_committed_seats": 60,
+    "list_price_per_seat_month_usd": 25.0,
+    "gross_monthly_usd": 1500.0,
+    "volume_discount_pct": 5,
+    "loyalty_discount_pct": 0,
+    "total_discount_pct": 5,
+    "monthly_total_usd": 1425.0,
+    "annual_total_us
+… (99 more chars)
+```
+
+### step_8 · `respond` — cache
+
+```
+Renewal proposal completed.
+
+- Recommended seats: **60**
+- Annual price: **$17,100**
+- Discounts: **5% volume**, **0% loyalty**
+
+Files:
+
+- [Pricing calculation](build/renewal/pricing-CUST-1002.json)
+- [Renewal proposal](build/renewal/proposal-CUST-1002.md)
+```

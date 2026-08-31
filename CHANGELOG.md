@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Escalate once, replay forever** (`core/build/cache.py`): a successful escalation or SLM result of a run is cached inside the build keyed by the bound parameters (files a derivation step wrote are captured too); a later run with the same parameters replays it locally. Measured on the promoted customer-renewal build for CUST-1002: cold run 184,454 tokens · 58.9 s (Claude writes the files once, the SLM answers) → **repeat run 0 LLM tokens · 0.1 s**, all 8 steps local (6 code + 2 cache), deliverables identical.
+- **Derivation (file-writing) steps on the SLM tier, gated** (`slm.execute_files` / `gate_files`): the model regenerates the recorded files for new parameters from a masked template; the gate checks the file set, JSON key tree, parameter substitution, mined arithmetic identities (a+b, a−b, a×b, %, ×12) and **sibling-pair grounding** — number pairs that were jointly grounded in the recording (a discount band's min-seats↔pct) must co-occur in this run's inputs, which catches a wrong band choice that every self-consistency check would pass. `owc build promote <build> <action>` evaluates derivation steps by exact reproduction of the recorded files.
+- Honest negative result, kept as evidence in `models/slm/write_pricing_cust_1001/PROMOTION.md`: qwen2.5:7b chose the wrong discount band and qwen2.5:14b invented a rounding detail, so the write step's promotion was **refused** by the gate — derivations stay with the agent (escalated once, then cached); restatement steps (`respond`) stay promoted.
+- `bind_parameters` now keeps explicit `--param` values that have no PARAMS.json entry.
+
 ## v0.4.1 — 2026-08-30
 
 - `ow-promote` skill (`$ow-promote <target> <action> [model]` in Codex, `/ow-promote` in Claude Code) and the README demo re-recorded with the pipx 0.4.0 install: `$ow-bench` → `$ow-promote codex-session respond qwen2.5:7b` (gate PASS 2/2, PROMOTED) → `$ow-bench` again with `respond` on the local SLM — 147,288 → 6,551 tokens (−95.6%), 3.4×, zero frontier escalations. `ow-bench` now points at `$ow-promote` for steps still on the frontier LLM.

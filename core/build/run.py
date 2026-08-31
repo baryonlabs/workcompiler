@@ -49,6 +49,9 @@ def bind_parameters(build_dir: Path | str, request: Optional[str] = None,
     bound: Dict[str, Any] = {}
     detail: Dict[str, str] = {}
     pending = []
+    for name, value in (overrides or {}).items():
+        if name not in {p["name"] for p in params}:
+            bound[name], detail[name] = value, "override"      # explicit values need no spec entry
     for p in params:
         name = p["name"]
         if overrides and name in overrides:
@@ -138,6 +141,7 @@ class RunReport:
             "cost_usd": round(sum(costs), 4) if costs else None,
             "code_steps": sum(1 for s in self.steps if s.mode == "code"),
             "slm_steps": sum(1 for s in self.steps if s.mode.startswith("slm:")),
+            "cache_steps": sum(1 for s in self.steps if s.mode == "cache"),
             "escalated_steps": sum(1 for s in self.steps if s.mode.startswith("escalated")),
             "needs_agent_steps": sum(1 for s in self.steps if s.mode == "needs_agent"),
             "recorded_tokens": self.recorded_tokens, "recorded_latency_ms": round(self.recorded_latency_ms, 1),
@@ -172,7 +176,7 @@ class RunReport:
         lines += ["", "## Totals", "", "| | this run (compiled build + front agent) | recorded agent session |", "| :-- | --: | --: |",
                   f"| LLM tokens | {t['tokens']:,}" + (f" ({t['cached_tokens']:,} cached · {t['uncached_tokens']:,} uncached)" if t['cached_tokens'] else "") + f" | {t['recorded_tokens']:,} |",
                   f"| wall time | {t['latency_ms']/1000:.1f} s | {t['recorded_latency_ms']/1000:.1f} s |",
-                  f"| steps: code / slm / escalated / needs agent | {t['code_steps']} / {t['slm_steps']} / {t['escalated_steps']} / {t['needs_agent_steps']} | — |"]
+                  f"| steps: code / cache / slm / escalated / needs agent | {t['code_steps']} / {t['cache_steps']} / {t['slm_steps']} / {t['escalated_steps']} / {t['needs_agent_steps']} | — |"]
         if t["token_savings_pct"] is not None:
             pct = t["token_savings_pct"]
             lines.append(f"| token savings | {'−' if pct >= 0 else '+'}{abs(pct)}% | |")
@@ -239,6 +243,7 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
 
     steps_src = trace.steps if trace is not None else []
     from core.build import slm as slm_tier
+    from core.build.cache import lookup as cache_lookup, store as cache_store
 
     def _context_so_far() -> List[tuple[str, str]]:
         return [(s.action, slm_tier.expand_files(s.output)) for s in report.steps if s.output]
@@ -278,6 +283,48 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
             continue
 
         reason = "synthesized content (agent computed it)" if action in synthesized else f"{tier} tier"
+        cache_key_params = values or {"__request__": request or ""}
+        cached = cache_lookup(root, action, cache_key_params)
+        if cached is not None:
+            # escalate once, replay forever: a previous run's verified agent/SLM result for the same parameters
+            for rel, content in (cached.get("files") or {}).items():
+                target = Path(rel)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content, encoding="utf-8")
+            listing = "\n".join(f"A {rel} (from cache)" for rel in sorted(cached.get("files") or {}))
+            report.steps.append(RunStep(step.step_id, action, "cache", 0, 0.0, True,
+                                        cached.get("output") or listing,
+                                        f"replayed from {cached.get('source')} escalation of {cached.get('at')} (params matched)",
+                                        model="cache", recorded_model=str(getattr(step, "model", "") or ""),
+                                        recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0), cost_usd=0.0))
+            continue
+        recorded_patch = inputs.get("patch") if isinstance(inputs.get("patch"), str) else None
+        runtime_files = slm_tier.SLMRuntime.load(root, action) if action in synthesized and recorded_patch else None
+        if runtime_files is not None:
+            recorded_params = {p["name"]: p["recorded_value"]
+                               for p in json.loads((root / "PARAMS.json").read_text(encoding="utf-8")).get("params", [])}
+            with telemetry.span("run.slm_files", work=work_ir.work, step=step.step_id, action=action,
+                                model=runtime_files.model) as tspan:
+                fdone = slm_tier.execute_files(root, action, work_ir.work, values, _context_so_far(),
+                                               runtime=runtime_files, recorded_patch=recorded_patch,
+                                               recorded_params=recorded_params, trace_id=f"run:{step.step_id}",
+                                               write_to=".")
+                tspan.update({"tokens": fdone.result.tokens, "passed": fdone.verdict.passed})
+            if fdone.result.ok and fdone.verdict.passed:
+                cache_store(root, action, cache_key_params, output="", source=f"slm:{runtime_files.model}", files=fdone.files)
+                listing = "\n".join(f"A {p} (written)" for p in sorted(fdone.files))
+                report.steps.append(RunStep(step.step_id, action, f"slm:{runtime_files.model}", fdone.result.tokens,
+                                            fdone.result.latency_ms, True, listing, "gate " + fdone.verdict.summary(),
+                                            model=runtime_files.model, recorded_model=str(getattr(step, "model", "") or ""),
+                                            recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0), cost_usd=0.0))
+                continue
+            reason = (f"slm file gate failed ({fdone.verdict.summary() if fdone.result.ok else fdone.result.error}); {reason}")
+            if backend is None:
+                report.steps.append(RunStep(step.step_id, action, f"slm:{runtime_files.model}", fdone.result.tokens,
+                                            fdone.result.latency_ms, False, "", reason + "; no escalation backend (--escalate)",
+                                            model=runtime_files.model, recorded_model=str(getattr(step, "model", "") or ""),
+                                            recorded_tokens=int(getattr(getattr(step, "token_usage", None), "total_tokens", 0) or 0), cost_usd=0.0))
+                continue
         runtime = slm_tier.SLMRuntime.load(root, action) if tier == "slm" and action not in synthesized else None
         if runtime is not None:
             with telemetry.span("run.slm", work=work_ir.work, step=step.step_id, action=action, model=runtime.model) as tspan:
@@ -288,6 +335,7 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
                                         min_facts=slm_tier.expected_fact_count(trace, idx, work_ir.actions, norm))
                 tspan.update({"tokens": done.result.tokens, "passed": done.verdict.passed})
             if done.result.ok and done.verdict.passed:
+                cache_store(root, action, cache_key_params, output=done.result.output, source=f"slm:{runtime.model}")
                 report.steps.append(RunStep(step.step_id, action, f"slm:{runtime.model}", done.result.tokens, done.result.latency_ms, True,
                                             done.result.output, "gate " + done.verdict.summary(), model=runtime.model,
                                             recorded_model=str(getattr(step, "model", "") or ""),
@@ -315,6 +363,10 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
                 tspan.update({"model": res.get("model"), "tokens": res.get("tokens", 0), "cached_tokens": res.get("cached_tokens", 0),
                               "exit_code": res.get("exit_code", 0)})
             ok = res.get("exit_code", 0) == 0
+            if ok:
+                cache_store(root, action, cache_key_params, output=str(res.get("output", "")), source=backend_name,
+                            recorded_patch=recorded_patch, recorded_params={p["name"]: p["recorded_value"] for p in
+                                json.loads((root / "PARAMS.json").read_text(encoding="utf-8")).get("params", [])} if (root / "PARAMS.json").exists() else {})
             report.steps.append(RunStep(step.step_id, action, f"escalated:{backend_name}", int(res.get("tokens", 0)),
                                         float(res.get("latency_ms", 0.0)), ok, str(res.get("output", "")),
                                         reason if ok else f"{reason}; escalation failed: {_clip(res.get('raw', ''), 300)}",

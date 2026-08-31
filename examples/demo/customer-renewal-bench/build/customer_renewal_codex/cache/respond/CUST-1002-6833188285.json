@@ -1,0 +1,10 @@
+{
+  "action": "respond",
+  "params": {
+    "customer_id": "CUST-1002"
+  },
+  "source": "slm:qwen2.5:7b",
+  "at": "2026-08-31T09:43:04",
+  "output": "Renewal proposal completed.\n\n- Recommended seats: **60**\n- Annual price: **$17,100**\n- Discounts: **5% volume**, **0% loyalty**\n\nFiles:\n\n- [Pricing calculation](build/renewal/pricing-CUST-1002.json)\n- [Renewal proposal](build/renewal/proposal-CUST-1002.md)",
+  "files": {}
+}

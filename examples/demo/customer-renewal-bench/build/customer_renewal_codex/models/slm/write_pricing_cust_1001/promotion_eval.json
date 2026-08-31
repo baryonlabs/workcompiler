@@ -1,0 +1,63 @@
+{
+  "work": "customer-renewal-codex",
+  "action": "write_pricing_cust_1001",
+  "build_dir": "build/customer_renewal_codex",
+  "runtime": {
+    "model": "qwen2.5:14b",
+    "base_url": "http://127.0.0.1:11434/v1",
+    "max_tokens": 700,
+    "temperature": 0.0,
+    "timeout_s": 240,
+    "min_quality": 0.9,
+    "min_recall": 0.9,
+    "min_precision": 0.9,
+    "max_length_ratio": 3.0
+  },
+  "totals": {
+    "evaluations": 1,
+    "pass_rate": 0.0,
+    "recorded_tokens": 19273,
+    "slm_tokens": 4200,
+    "token_savings_pct": 78.2,
+    "recorded_latency_ms": 24219.0,
+    "slm_latency_ms": 67903.0,
+    "speedup_x": 0.36,
+    "promoted": false
+  },
+  "evaluations": [
+    {
+      "step_id": "step_6",
+      "model": "qwen2.5:14b",
+      "output": "===FILE build/renewal/pricing-CUST-1001.json===\n{\n  \"customer_id\": \"CUST-1001\",\n  \"contract_id\": \"CTR-2024-0917\",\n  \"contract_status\": \"active\",\n  \"plan\": \"enterprise\",\n  \"proposal_date\": \"2026-08-29\",\n  \"policy\": \"pricing_v2\",\n  \"policy_effective_from\": \"2026-01-01\",\n  \"currency\": \"USD\",\n  \"renewal_term_months\": 12,\n  \"usage\": {\n    \"period_first_month\": \"2026-05\",\n    \"period_last_month\": \"2026-07\",\n    \"first_month_seats_active\": 238,\n    \"last_month_seats_active\": 262,\n    \"peak_seats_active\": 262,\n    \"seats_active_growth_pct\": 10.084,\n    \"average_api_calls\": 2038333.33\n  },\n  \"seat_recommendation\": {\n    \"current_contract_seats\": 240,\n    \"peak_seats_active\": 262,\n    \"base_seats\": 100,\n    \"rounding\": \"up to next 100\",\n    \"recommended_committed_seats\": 270\n  },\n  \"list_price_per_seat_month_usd\": 40.0,\n  \"gross_monthly_usd\": 10800.0,\n  \"discounts\": {\n    \"volume_band_min_seats\": 200,\n    \"volume_discount_pct\": 10,\n    \"loyalty_min_years\": 2,\n    \"continuous_service_start_date\": \"2024-09-01\",\n    \"loyalty_eligibility_date\": \"2026-09-01\",\n    \"loyalty_eligible_on_proposal_date\": false,\n    \"loyalty_discount_pct\": 0,\n    \"uncapped_total_discount_pct\": 10,\n    \"max_total_discount_pct\": 20,\n    \"total_discount_pct\": 10,\n    \"monthly_discount_usd\": 1080.0\n  },\n  \"monthly_total_usd\": 9720.0,\n  \"annual_total_usd\": 116640.0\n}\n===END===\n===FILE build/renewal/proposal-CUST-1001.md===\n# Annual Renewal Proposal — ACME Manufacturing Co.\n\nProposal date: 2026-08-29\n\n## Customer and contract summary\n\n- Customer: ACME Manufacturing Co. (CUST-1001)\n- Active contract: CTR-2024-0917\n- Current plan: Enterprise\n- Current committed seats: 240\n- Contract term: 2024-09-01 through 2026-09-30\n- Billing: Annual\n- Account owner: j.park@example.com\n- Renewal pricing policy: pricing_v2 (effective 2026-01-01)\n\n## Usage summary\n\nFor May through July, active seats increased from 238 to 262, a 10.084% increase. Peak active seats were 262 and average API usage was 2,038,333 calls per month. Under the current policy, the greater of the current 240-seat commitment and the 262-seat peak is rounded up to the next 100 seats, producing a recommended commitment of 270 seats.\n\n## Pricing\n\nAll amounts are in USD.\n\n| Calculation | Monthly | Annual |\n| --- | ---: | ---: |\n| 270 seats × $40.0 list price | $10800.0 | $129600.0 |\n| Less 10% volume discount | −$1080.0 | −$12960.0 |\n| Less 0% loyalty discount | −$0.0 | −$0.0 |\n| **Total after discounts** | **$9720.0** | **$116640.0** |\n\nThe 10% volume discount applies at the 200-seat band. No loyalty discount applies on the proposal date because two years of continuous service will be reached on 2026-09-01. The combined 10% discount is below the 20% policy cap.\n\n## Required clauses\n\n12-month term with 60-day auto-renewal notice\n\nData Processing Addendum v3 attached\n\nPrice valid for 30 days from proposal date\n===END===",
+      "prompt_tokens": 3154,
+      "completion_tokens": 1046,
+      "tokens": 4200,
+      "latency_ms": 67903.0,
+      "error": "",
+      "gate": "FAIL (recall 0.89; grounded 0.89; len ×1.0)",
+      "score": 0.889,
+      "checks": {
+        "file_set": true,
+        "json_parses": true,
+        "json_structure": true,
+        "json_values": false,
+        "md_present": true,
+        "md_anchors": true,
+        "cross_file_grounded": true,
+        "param_customer_id": true,
+        "no_placeholder": true
+      },
+      "missing": [],
+      "ungrounded": [],
+      "recorded_model": "",
+      "recorded_tokens": 19273,
+      "recorded_latency_ms": 24219.0
+    }
+  ],
+  "previous_executor": {
+    "type": "code",
+    "handler": "services.write_pricing_cust_1001"
+  },
+  "dry_run": true,
+  "at": "2026-08-31T09:01:05"
+}
