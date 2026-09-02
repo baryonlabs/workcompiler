@@ -124,6 +124,7 @@ class BenchReport:
             return None
         rec = comp = 0.0
         missing: set[str] = set()
+        unpriced_tokens = 0
 
         def rate(model: str, kind: str) -> Optional[float]:
             row = prices.get(model) or prices.get(model.split(":", 1)[0])
@@ -147,8 +148,19 @@ class BenchReport:
                 c_in = rate(st.compiled_model or "?", "input")
                 if c_in is not None:
                     comp += st.compiled_tokens * c_in / 1e6
-        return {"currency": "USD", "recorded": round(rec, 4), "compiled": round(comp, 4),
-                "saved": round(rec - comp, 4), "unpriced_models": sorted(missing)}
+                else:
+                    unpriced_tokens += st.compiled_tokens
+        out: Dict[str, Any] = {"currency": "USD", "recorded": round(rec, 4), "compiled": round(comp, 4),
+                               "unpriced_models": sorted(missing)}
+        if missing:
+            # a step nobody could price is not a free step: reporting a delta here would credit
+            # the build with savings it did not make (an escalation still on a frontier model, say)
+            out["saved"] = None
+            out["partial"] = True
+            out["unpriced_compiled_tokens"] = unpriced_tokens
+        else:
+            out["saved"] = round(rec - comp, 4)
+        return out
 
     def totals(self) -> Dict[str, Any]:
         rt = sum(a.recorded_tokens for a in self.actions)
@@ -231,9 +243,13 @@ class BenchReport:
                          f"(of {c['cases']}) | |")
         if t.get("cost"):
             c = t["cost"]
-            note = f" (unpriced: {', '.join(c['unpriced_models'])})" if c["unpriced_models"] else ""
-            lines.append(f"| cost ({c['currency']}, supplied price table){note} | ${c['recorded']:.4f} | ${c['compiled']:.4f} | "
-                         f"${c['saved']:.4f} saved |")
+            if c.get("partial"):
+                delta = (f"not computed — {', '.join(c['unpriced_models'])} unpriced "
+                         f"({c['unpriced_compiled_tokens']:,} compiled tokens)")
+            else:
+                delta = f"${c['saved']:.4f} saved"
+            lines.append(f"| cost ({c['currency']}, supplied price table) | ${c['recorded']:.4f} | "
+                         f"${c['compiled']:.4f}{'+' if c.get('partial') else ''} | {delta} |")
         if t.get("baseline_minutes"):
             lines.append(f"| person-minutes (declared baseline) | {t['baseline_minutes']:g} min | "
                          f"{t['compiled_latency_ms']/60000.0:.1f} min | {t['saved_minutes']:g} min saved |")

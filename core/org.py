@@ -262,10 +262,10 @@ def main(argv=None) -> int:
         return 0
     st = status()
     print(f"[org] registry {st['registry']}")
-    print(f"{'work':28s} {'pubs':>4s} {'last by':14s} {'tokens rec→comp':>22s} {'outputs':>8s} {'cache':>6s}")
+    print(f"{'work':28s} {'pubs':>4s} {'last by':14s} {'unique tokens rec→comp':>22s} {'outputs':>8s} {'cache':>6s}")
     for w in st["works"]:
         print(f"{w['work']:28s} {w['publishes']:4d} {w['last_by']:14s} "
-              f"{w['recorded_tokens']:>10,} → {w['compiled_tokens']:<9,} {w['outputs']:>8s} {w['cache_entries']:6d}")
+              f"{w['recorded_tokens_unique']:>10,} → {w['compiled_tokens']:<9,} {w['outputs']:>8s} {w['cache_entries']:6d}")
     if st.get("teams"):
         print(f"{'team':28s} {'pubs':>4s} {'unique tokens rec→comp':>28s}")
         for team, row in sorted(st["teams"].items()):

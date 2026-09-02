@@ -191,17 +191,30 @@ BASE_STEP = dict(recorded_tokens=0, recorded_latency_ms=0.0, compiled_tokens=0, 
                  executor_used="code:x", output_match=True, recorded_output="", compiled_output="")
 
 
-def test_cost_prices_cache_reads_separately_and_names_unpriced_models():
+def test_cost_prices_cache_reads_at_their_own_rate():
     """A price table is supplied, never shipped. Cache reads bill at their own rate, so folding
     them into the input rate would overstate what compiling saved."""
     r = _report_with([{**BASE_STEP, "step_id": "s1", "recorded_model": "big", "compiled_model": "code",
                        "recorded_prompt_tokens": 1_000_000, "recorded_cached_tokens": 900_000,
-                       "recorded_completion_tokens": 100_000, "compiled_tokens": 0},
-                      {**BASE_STEP, "step_id": "s2", "recorded_model": "mystery", "compiled_model": "code"}])
+                       "recorded_completion_tokens": 100_000, "compiled_tokens": 0}])
     c = r.costs({"big": {"input": 3.0, "output": 15.0, "cache_read": 0.3}, "code": {"input": 0.0}})
-    # 100k fresh input @3 + 900k cache @0.3 + 100k output @15 = 0.3 + 0.27 + 1.5
+    # 100k fresh input @3 + 900k cache @0.3 + 100k output @15 = 0.30 + 0.27 + 1.50
     assert c["recorded"] == 2.07 and c["compiled"] == 0.0 and c["saved"] == 2.07
-    assert c["unpriced_models"] == ["mystery"]      # never silently priced at zero
+    assert c["unpriced_models"] == [] and not c.get("partial")
+
+
+def test_an_unpriced_compiled_step_suppresses_the_savings_figure():
+    """Found end-to-end: a build whose escalation still runs on a frontier model priced that step
+    at zero, so the delta claimed savings the build never made. An unpriced step is unknown, not
+    free — the delta is withheld and the hole is named and sized."""
+    r = _report_with([{**BASE_STEP, "step_id": "s1", "recorded_model": "big", "compiled_model": "code",
+                       "recorded_prompt_tokens": 100_000, "recorded_completion_tokens": 0},
+                      {**BASE_STEP, "step_id": "s2", "recorded_model": "big", "compiled_model": "frontier_llm",
+                       "compiled_tokens": 20_000}])
+    c = r.costs({"big": {"input": 3.0, "output": 15.0, "cache_read": 0.3}, "code": {"input": 0.0}})
+    assert c["saved"] is None and c["partial"] is True
+    assert c["unpriced_models"] == ["frontier_llm"] and c["unpriced_compiled_tokens"] == 20_000
+    assert c["recorded"] == 0.3                     # what could be priced is still reported
 
 
 def test_no_price_table_means_no_cost_figure():
