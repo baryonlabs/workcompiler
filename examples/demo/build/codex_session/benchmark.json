@@ -19,7 +19,14 @@
     "escalated_actions": 0,
     "slm_actions": 1,
     "recorded_from": "2026-08-30T11:51:32.989431+00:00",
-    "recorded_to": "2026-08-30T11:53:21.409488+00:00"
+    "recorded_to": "2026-08-30T11:53:21.409488+00:00",
+    "completion": {
+      "passed": 4,
+      "incomplete": 1,
+      "behavior_violation": 0,
+      "abandoned": 0,
+      "cases": 5
+    }
   },
   "by_model": {
     "gpt-5.6-sol": {
@@ -159,6 +166,8 @@
       "recorded_latency_ms": 9363.5,
       "compiled_latency_ms": 14.2,
       "output_matches": "2/2",
+      "completion": "passed",
+      "behavior_verdicts": {},
       "steps": [
         {
           "step_id": "step_1",
@@ -213,6 +222,10 @@
       "recorded_latency_ms": 3537.7,
       "compiled_latency_ms": 122.7,
       "output_matches": "1/1",
+      "completion": "passed",
+      "behavior_verdicts": {
+        "after:shell_sed": "true"
+      },
       "steps": [
         {
           "step_id": "step_2",
@@ -246,6 +259,10 @@
       "recorded_latency_ms": 8624.5,
       "compiled_latency_ms": 34.3,
       "output_matches": "1/1",
+      "completion": "passed",
+      "behavior_verdicts": {
+        "after:shell_python3": "true"
+      },
       "steps": [
         {
           "step_id": "step_3",
@@ -279,6 +296,10 @@
       "recorded_latency_ms": 65712.1,
       "compiled_latency_ms": 31400.7,
       "output_matches": "2/2",
+      "completion": "passed",
+      "behavior_verdicts": {
+        "after:shell_find": "true"
+      },
       "steps": [
         {
           "step_id": "step_4",
@@ -333,6 +354,11 @@
       "recorded_latency_ms": 18912.1,
       "compiled_latency_ms": 35.9,
       "output_matches": "0/2",
+      "completion": "incomplete",
+      "behavior_verdicts": {
+        "after:shell_sed": "true",
+        "after:respond": "true"
+      },
       "steps": [
         {
           "step_id": "step_6",

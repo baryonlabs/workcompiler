@@ -19,7 +19,14 @@
     "escalated_actions": 1,
     "slm_actions": 0,
     "recorded_from": "2026-08-29T03:32:41.637078+00:00",
-    "recorded_to": "2026-08-29T03:33:52.884528+00:00"
+    "recorded_to": "2026-08-29T03:33:52.884528+00:00",
+    "completion": {
+      "passed": 5,
+      "incomplete": 2,
+      "behavior_violation": 0,
+      "abandoned": 0,
+      "cases": 7
+    }
   },
   "by_model": {
     "claude-fable-5": {
@@ -127,6 +134,8 @@
       "recorded_latency_ms": 4116.4,
       "compiled_latency_ms": 5.2,
       "output_matches": "1/1",
+      "completion": "passed",
+      "behavior_verdicts": {},
       "steps": [
         {
           "step_id": "step_1",
@@ -160,6 +169,10 @@
       "recorded_latency_ms": 6729.8,
       "compiled_latency_ms": 51.9,
       "output_matches": "0/1",
+      "completion": "incomplete",
+      "behavior_verdicts": {
+        "after:read_task": "true"
+      },
       "steps": [
         {
           "step_id": "step_2",
@@ -193,6 +206,10 @@
       "recorded_latency_ms": 4381.6,
       "compiled_latency_ms": 8.9,
       "output_matches": "1/1",
+      "completion": "passed",
+      "behavior_verdicts": {
+        "after:read_contracts": "true"
+      },
       "steps": [
         {
           "step_id": "step_3",
@@ -226,6 +243,10 @@
       "recorded_latency_ms": 19072.7,
       "compiled_latency_ms": 28.0,
       "output_matches": "1/1",
+      "completion": "passed",
+      "behavior_verdicts": {
+        "after:read_behavior": "true"
+      },
       "steps": [
         {
           "step_id": "step_4",
@@ -259,6 +280,10 @@
       "recorded_latency_ms": 16663.1,
       "compiled_latency_ms": 24.4,
       "output_matches": "1/1",
+      "completion": "passed",
+      "behavior_verdicts": {
+        "after:shell_cd": "true"
+      },
       "steps": [
         {
           "step_id": "step_5",
@@ -292,6 +317,10 @@
       "recorded_latency_ms": 12500.0,
       "compiled_latency_ms": 8.3,
       "output_matches": "0/1",
+      "completion": "incomplete",
+      "behavior_verdicts": {
+        "after:shell_mkdir": "true"
+      },
       "steps": [
         {
           "step_id": "step_6",
@@ -325,6 +354,10 @@
       "recorded_latency_ms": 10589.6,
       "compiled_latency_ms": 10589.6,
       "output_matches": "n/a",
+      "completion": "passed",
+      "behavior_verdicts": {
+        "after:shell_cat": "true"
+      },
       "steps": [
         {
           "step_id": "step_7",

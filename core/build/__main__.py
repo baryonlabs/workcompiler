@@ -58,8 +58,9 @@ def cmd_from_trace(args: argparse.Namespace) -> int:
 
 def cmd_bench(args: argparse.Namespace) -> int:
     import os
-    from core.build.bench import (BENCH_ACTIVE_ENV, PRICES_ENV, attach_unique_tokens, report_from_dict,
-                                  run_benchmark, write_report)
+    from core.build.bench import (BENCH_ACTIVE_ENV, PRICES_ENV, attach_unique_tokens, classify_completion,
+                                  report_from_dict, run_benchmark, write_report)
+    from core.work_ir import load_work_ir
 
     if getattr(args, "prices", None):
         os.environ[PRICES_ENV] = args.prices
@@ -78,6 +79,11 @@ def cmd_bench(args: argparse.Namespace) -> int:
         # unique-token columns from the trace, and rewrite BENCHMARK.md / benchmark.json.
         bench_path = Path(args.build_dir) / "benchmark.json"
         report = attach_unique_tokens(report_from_dict(json.loads(bench_path.read_text(encoding="utf-8"))), trace)
+        try:  # the dependency graph is the compile-time form of the work's invariants
+            deps = load_work_ir(Path(args.build_dir) / "work.yaml").to_dict().get("dependencies") or {}
+        except Exception:
+            deps = {}
+        classify_completion(report, deps)
         paths = write_report(report, args.out or args.build_dir, append_to_ledger=False)
     else:
         report = run_benchmark(args.build_dir, trace, replay=not args.no_replay)

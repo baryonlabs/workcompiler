@@ -24,6 +24,7 @@ from typing import Any, Dict, List, Optional
 from core.build.loader import load_build_into_engine
 from core import telemetry
 from core.work_ir import TraceIR, TraceStep, load_work_ir, normalize_tool_output
+from core.validation.quality_record import QualityRecord, evaluate_quality_fold
 
 
 @dataclass
@@ -54,6 +55,8 @@ class ActionBench:
     action: str
     tier: str
     steps: List[StepBench] = field(default_factory=list)
+    completion: str = ""              # passed | incomplete | behavior_violation | abandoned (see classify_completion)
+    behavior_verdicts: Dict[str, str] = field(default_factory=dict)
 
     @property
     def recorded_tokens(self) -> int:
@@ -90,6 +93,7 @@ class ActionBench:
             "recorded_latency_ms": round(self.recorded_latency_ms, 1),
             "compiled_latency_ms": round(self.compiled_latency_ms, 1),
             "output_matches": self.matches,
+            "completion": self.completion, "behavior_verdicts": dict(self.behavior_verdicts),
             "steps": [asdict(s) for s in self.steps],
         }
 
@@ -167,6 +171,9 @@ class BenchReport:
             "escalated_actions": sum(1 for a in self.actions if a.tier not in ("code", "rule", "http") and not any(s.executor_used.startswith("slm:") for s in a.steps)),
             "slm_actions": sum(1 for a in self.actions if any(s.executor_used.startswith("slm:") for s in a.steps)),
             "recorded_from": self._window()[0], "recorded_to": self._window()[1],
+            **({"completion": {c: sum(1 for a in self.actions if a.completion == c) for c in COMPLETION_CLASSES}
+                | {"cases": len(self.actions)}}
+               if any(a.completion for a in self.actions) else {}),
             **({"cost": c} if (c := self.costs()) else {}),
             **({"baseline_minutes": self.baseline_minutes,
                 "saved_minutes": round(self.baseline_minutes - cl / 60000.0, 1)}
@@ -217,6 +224,11 @@ class BenchReport:
             f"| outputs reproduced | — | {t['outputs_matched']}/{t['outputs_checked']} | |",
             f"| actions compiled / escalated | — | {t['compiled_actions']} / {t['escalated_actions']} | |",
         ]
+        if t.get("completion"):
+            c = t["completion"]
+            lines.append(f"| cases: passed / incomplete / behavior violation / abandoned | — | "
+                         f"{c['passed']} / {c['incomplete']} / {c['behavior_violation']} / {c['abandoned']} "
+                         f"(of {c['cases']}) | |")
         if t.get("cost"):
             c = t["cost"]
             note = f" (unpriced: {', '.join(c['unpriced_models'])})" if c["unpriced_models"] else ""
@@ -470,6 +482,53 @@ def unique_step_tokens(trace: TraceIR) -> Dict[str, tuple[int, str]]:
     return out
 
 
+COMPLETION_CLASSES = ("passed", "incomplete", "behavior_violation", "abandoned")
+
+
+def classify_completion(report: BenchReport, dependencies: Optional[Dict[str, List[str]]] = None) -> BenchReport:
+    """Classify each action as a *case*: passed / incomplete / behavior_violation / abandoned.
+
+    The reproduction score (``outputs_matched/outputs_checked``) counts output steps; an
+    organization asks a different question — of the work items attempted, how many actually
+    completed, and how many merely *looked* complete? This routes each action through the
+    project's own ``QualityRecord`` fold, so the lucky-correct rule (a required process was
+    skipped ⇒ FAIL, however good the output looks) governs both paths.
+
+    Behavior evidence is the declared dependency graph of ``work.yaml``: the compile-time form
+    of the work's invariants. An action whose declared predecessor never ran successfully before
+    it violated the process, even when its output matches the recording.
+
+    * ``abandoned`` — the action never executed in the compiled build (no steps).
+    * ``incomplete`` — it ran but stopped short: an unresolved escalation (``needs_agent``) or a
+      step whose output could not be produced.
+    * ``behavior_violation`` — it ran (and may even match) with a declared predecessor missing.
+    * ``passed`` — it ran, honored its declared order, and nothing was checked-and-wrong.
+    """
+    deps = dependencies or {}
+    ran_ok = {a.action for a in report.actions
+              if a.steps and not any(s.executor_used == "needs_agent" for s in a.steps)}
+    for a in report.actions:
+        if not a.steps:
+            a.completion, a.behavior_verdicts = "abandoned", {}
+            continue
+        missing = [d for d in deps.get(a.action, []) if d not in ran_ok]
+        a.behavior_verdicts = {f"after:{d}": ("true" if d in ran_ok else "false") for d in deps.get(a.action, [])}
+        checked = [s.output_match for s in a.steps if s.output_match is not None]
+        record = QualityRecord(
+            trace_id=f"{report.run_id}:{a.action}", action_name=a.action, executor_type=a.tier,
+            behavior_verdicts=dict(a.behavior_verdicts),
+            automated_checks={"outputs_reproduced": all(checked)} if checked else {},
+        )
+        fold = evaluate_quality_fold(record)
+        if missing:
+            a.completion = "behavior_violation"       # process skipped — the lucky-correct case
+        elif any(s.executor_used == "needs_agent" for s in a.steps):
+            a.completion = "incomplete"               # an escalation the build could not resolve
+        else:
+            a.completion = "passed" if fold != "FAIL" else "incomplete"
+    return report
+
+
 def attach_unique_tokens(report: BenchReport, trace: TraceIR) -> BenchReport:
     """Fill trace-derived per-step fields: unique tokens, wall-clock, and the recorded model.
 
@@ -624,6 +683,7 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
 
     report.actions = [benches[a] for a in work_ir.actions]
     attach_unique_tokens(report, trace)
+    classify_completion(report, work_ir.to_dict().get("dependencies") or {})
     try:  # a person-minutes baseline is declared in the work spec, when the org knows it
         report.baseline_minutes = float(work_ir.to_dict().get("baseline_minutes") or 0.0)
     except Exception:

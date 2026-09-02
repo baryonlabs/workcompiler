@@ -220,3 +220,49 @@ def test_time_window_and_person_minutes_appear_only_when_known():
     r.baseline_minutes = 45.0
     t = r.totals()
     assert t["saved_minutes"] == 44.0               # 45 min baseline − 1 min compiled run
+
+
+# --------------------------------------------------------------------------- case-level completion
+
+def _action(name, tier="code", steps=(), ):
+    from core.build.bench import ActionBench, StepBench
+    return ActionBench(action=name, tier=tier, steps=[StepBench(**{**BASE_STEP, **s}) for s in steps])
+
+
+def _report(actions):
+    from core.build.bench import BenchReport
+    return BenchReport(work="w", build_dir="b", run_id="r", source_agent="codex", actions=list(actions))
+
+
+def test_completion_classes_are_case_level_not_output_level():
+    """`outputs_matched/outputs_checked` counts output steps; the completion classes count work
+    items. A build can reproduce most outputs and still leave cases unfinished."""
+    from core.build.bench import classify_completion
+
+    r = _report([
+        _action("lookup", steps=[{"step_id": "s1", "output_match": True}]),
+        _action("price", steps=[{"step_id": "s2", "output_match": False}]),         # ran, wrong
+        _action("draft", steps=[{"step_id": "s3", "executor_used": "needs_agent"}]),  # unresolved
+        _action("send"),                                                             # never ran
+    ])
+    classify_completion(r, dependencies={})
+    got = {a.action: a.completion for a in r.actions}
+    assert got == {"lookup": "passed", "price": "incomplete", "draft": "incomplete", "send": "abandoned"}
+    assert r.totals()["completion"] == {"passed": 1, "incomplete": 2, "behavior_violation": 0,
+                                        "abandoned": 1, "cases": 4}
+
+
+def test_skipping_a_declared_predecessor_is_a_behavior_violation_even_when_the_output_matches():
+    """The lucky-correct defense: a matching output does not excuse a skipped process. The
+    declared dependency graph is the compile-time form of the work's invariants."""
+    from core.build.bench import classify_completion
+
+    r = _report([
+        _action("verify_contract"),                                        # never ran
+        _action("price", steps=[{"step_id": "s2", "output_match": True}]),  # right answer anyway
+    ])
+    classify_completion(r, dependencies={"price": ["verify_contract"]})
+    got = {a.action: a.completion for a in r.actions}
+    assert got["price"] == "behavior_violation"
+    assert r.actions[1].behavior_verdicts == {"after:verify_contract": "false"}
+    assert got["verify_contract"] == "abandoned"

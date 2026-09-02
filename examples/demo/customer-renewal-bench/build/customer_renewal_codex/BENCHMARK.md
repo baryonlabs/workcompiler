@@ -9,6 +9,7 @@ Recorded agent session `01a04b0b-3a8a-72b2-8905-cb600a9ad15a` (`codex_exec`) vs.
 | wall time | 82.6 s | 17.17 s | 4.8× faster |
 | outputs reproduced | — | 8/8 | |
 | actions compiled / escalated | — | 7 / 0 | |
+| cases: passed / incomplete / behavior violation / abandoned | — | 7 / 0 / 0 / 0 (of 7) | |
 | recorded window | 2026-08-29T01:03:46.209895+00:00 → 2026-08-29T01:05:06.342670+00:00 | | |
 
 **Unique** is the headline metric: each token counted once — the first request's full prompt, then only each later request's prompt growth, plus every completion. The cumulative-context sum adds up every request's usage as reported by the provider — an agent session re-sends its whole context every turn, so that sum counts the same tokens once per turn and overstates the cost of the agent path. Escalated steps keep their full recorded per-request cost on the compiled side (conservative: a real escalation would send a smaller, rebuilt prompt).

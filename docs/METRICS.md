@@ -41,9 +41,27 @@ claude 빌드는 respond가 frontier 에스컬레이션으로 남아 있어 **�
 
 ## 3. 완료율 — 분모가 무엇인지 밝힌다
 
-우리 `outputs_matched / outputs_checked`는 **출력 스텝 단위 재현율**이다(예: codex 8/8, claude 4/6).
-"업무 건 단위 완료율"이 아니다. 건 단위 지표(완료/미완료/행위 위반/중단)를 보고하려면 별도의
-분류가 필요하며, 지금 `quality_record`의 behavior 판정은 `benchmark.json`에 연결되어 있지 않다.
+분모가 둘이고, 서로 다른 질문에 답한다.
+
+| 지표 | 분모 | 답하는 질문 |
+| :-- | :-- | :-- |
+| `outputs_matched / outputs_checked` | 비교 가능한 **출력 스텝** | 컴파일된 빌드가 기록과 같은 출력을 내는가 |
+| `completion{passed, incomplete, behavior_violation, abandoned}` | **액션(업무 건)** | 시도한 일 중 실제로 끝난 것은 몇 건인가 |
+
+건 단위 4분류의 판정 규칙(`core/build/bench.py::classify_completion`):
+
+- `abandoned` — 컴파일된 빌드에서 아예 실행되지 않음.
+- `incomplete` — 실행됐지만 끝까지 못 감: 해소되지 않은 에스컬레이션(`needs_agent`)이거나 출력이
+  기록과 다름.
+- `behavior_violation` — 실행됐고 출력이 맞더라도, `work.yaml`의 **선언된 선행 액션**이 성공적으로
+  돌지 않았다. 과정을 건너뛴 것은 결과가 맞아도 실패다(lucky-correct 방어). 판정은 프로젝트의
+  `QualityRecord` fold(`core/validation/quality_record.py`)를 그대로 통과시켜 내린다.
+- `passed` — 실행됐고, 선언된 순서를 지켰고, 검사된 출력이 틀리지 않았다.
+
+행위 근거는 `work.yaml`의 `dependencies` 그래프다 — 이것이 그 작업 invariants의 컴파일 타임 형태다.
+실측 예: codex 갱신 빌드는 7건 전부 passed, claude 빌드는 출력 4/6에 대응해 **5 passed / 2
+incomplete**(총 7건).
+
 두 숫자를 같은 이름으로 부르지 않는다.
 
 층별로 재는 것이 다르다는 점도 함께 밝힌다.
@@ -92,5 +110,5 @@ owc build bench build/customer_renewal_codex --recompute-totals --prices prices.
 OWC_TEAM=sales OWC_SEAT=seat-12 owc org publish build/customer_renewal_codex
 ```
 
-여전히 못 재는 것: **업무 건 단위 완료 4분류**(완료/미완료/행위 위반/중단). `quality_record`의 행위
-판정이 `benchmark.json`에 연결되어 있지 않다 — 이건 입력이 아니라 구현이 남은 항목이다.
+건 단위 완료 4분류는 §3에 구현되어 `benchmark.json`의 `totals.completion`과 액션별
+`completion`·`behavior_verdicts`로 기록된다.
