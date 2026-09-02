@@ -47,6 +47,10 @@ def _run_git(repo: Path, *args: str) -> str:
     return proc.stdout
 
 
+ENV_TEAM = "OWC_TEAM"              # optional: the team a publish belongs to
+ENV_SEAT = "OWC_SEAT"              # optional: seat/licence id, for per-seat rollups
+
+
 def _identity() -> str:
     try:
         return subprocess.run(["git", "config", "user.name"], capture_output=True, text=True).stdout.strip() or os.environ.get("USER", "unknown")
@@ -151,6 +155,7 @@ def publish(build_dir: Path | str, work: Optional[str] = None, cache_contrib: bo
         except Exception:
             totals = {}
     entry = {"work": name, "by": _identity(), "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+             **{k: v for k, v in (("team", os.environ.get(ENV_TEAM)), ("seat", os.environ.get(ENV_SEAT))) if v},
              "artifacts": copied, "cache": cache_stats, "totals": totals}
     ledger = repo / "ledger" / f"{name}.jsonl"
     ledger.parent.mkdir(parents=True, exist_ok=True)
@@ -198,7 +203,18 @@ def status() -> Dict[str, Any]:
         total_unique += int(totals.get("recorded_tokens_unique", 0) or 0)
         total_compiled += int(totals.get("compiled_tokens", 0) or 0)
         total_cache += caches
-    return {"registry": str(repo), "works": works,
+    teams: Dict[str, Dict[str, Any]] = {}
+    for wdir in sorted((repo / "works").glob("*")) if (repo / "works").exists() else []:
+        ledger = repo / "ledger" / f"{wdir.name}.jsonl"
+        for line in (ledger.read_text(encoding="utf-8").splitlines() if ledger.exists() else []):
+            e = json.loads(line)
+            if not e.get("team"):
+                continue
+            row = teams.setdefault(e["team"], {"publishes": 0, "recorded_tokens_unique": 0, "compiled_tokens": 0})
+            row["publishes"] += 1
+            row["recorded_tokens_unique"] += int((e.get("totals") or {}).get("recorded_tokens_unique", 0) or 0)
+            row["compiled_tokens"] += int((e.get("totals") or {}).get("compiled_tokens", 0) or 0)
+    return {"registry": str(repo), "works": works, "teams": teams,
             # the savings the org can claim are the *unique* ones: summing per-request usage would
             # count a session's cumulative context once per turn. The cumulative sum stays as reference.
             "org_totals": {"works": len(works), "recorded_tokens": total_recorded,
@@ -250,6 +266,10 @@ def main(argv=None) -> int:
     for w in st["works"]:
         print(f"{w['work']:28s} {w['publishes']:4d} {w['last_by']:14s} "
               f"{w['recorded_tokens']:>10,} → {w['compiled_tokens']:<9,} {w['outputs']:>8s} {w['cache_entries']:6d}")
+    if st.get("teams"):
+        print(f"{'team':28s} {'pubs':>4s} {'unique tokens rec→comp':>28s}")
+        for team, row in sorted(st["teams"].items()):
+            print(f"{team:28s} {row['publishes']:4d} {row['recorded_tokens_unique']:>14,} → {row['compiled_tokens']:<11,}")
     t = st["org_totals"]
     savings = f" (−{t['savings_unique_pct']}% unique)" if t["savings_unique_pct"] is not None else ""
     ref = f", cumulative-context sum {t['recorded_tokens']:,} −{t['token_savings_pct']}%" if t["token_savings_pct"] is not None else ""

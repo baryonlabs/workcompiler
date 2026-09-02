@@ -58,8 +58,11 @@ def cmd_from_trace(args: argparse.Namespace) -> int:
 
 def cmd_bench(args: argparse.Namespace) -> int:
     import os
-    from core.build.bench import (BENCH_ACTIVE_ENV, attach_unique_tokens, report_from_dict,
+    from core.build.bench import (BENCH_ACTIVE_ENV, PRICES_ENV, attach_unique_tokens, report_from_dict,
                                   run_benchmark, write_report)
+
+    if getattr(args, "prices", None):
+        os.environ[PRICES_ENV] = args.prices
 
     if os.environ.get(BENCH_ACTIVE_ENV):
         print("[bench] nested benchmark call skipped (a benchmark is already replaying this build)")
@@ -284,6 +287,8 @@ def main(argv=None) -> int:
     d.add_argument("--trace", help="TraceIR JSON (default: <build_dir>/trace.json written at compile time)")
     d.add_argument("--no-replay", action="store_true", help="Only account costs; do not execute handlers")
     d.add_argument("--out", help="Directory for BENCHMARK.md / benchmark.json (default: build dir)")
+    d.add_argument("--prices", help="JSON price table {model: {input, output, cache_read}} in USD per 1M tokens "
+                                    "(or $OWC_PRICES); without it no cost figure is reported")
     d.add_argument("--recompute-totals", action="store_true",
                    help="No replay: recompute totals (incl. unique-token columns) from trace.json + the existing benchmark.json and rewrite the report")
     d.set_defaults(func=cmd_bench)

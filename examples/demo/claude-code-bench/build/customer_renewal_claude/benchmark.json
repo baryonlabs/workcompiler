@@ -17,7 +17,9 @@
     "outputs_matched": 4,
     "compiled_actions": 6,
     "escalated_actions": 1,
-    "slm_actions": 0
+    "slm_actions": 0,
+    "recorded_from": "2026-08-29T03:32:41.637078+00:00",
+    "recorded_to": "2026-08-29T03:33:52.884528+00:00"
   },
   "by_model": {
     "claude-fable-5": {
@@ -144,6 +146,7 @@
           "recorded_cached_tokens": 0,
           "recorded_tokens_unique": 170135,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-29T03:32:41.637078+00:00",
           "quality": null
         }
       ]
@@ -176,6 +179,7 @@
           "recorded_cached_tokens": 143438,
           "recorded_tokens_unique": 34560,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-29T03:32:48.614339+00:00",
           "quality": null
         }
       ]
@@ -208,6 +212,7 @@
           "recorded_cached_tokens": 203941,
           "recorded_tokens_unique": 2298,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-29T03:32:53.175548+00:00",
           "quality": null
         }
       ]
@@ -240,6 +245,7 @@
           "recorded_cached_tokens": 206010,
           "recorded_tokens_unique": 2787,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-29T03:33:12.417292+00:00",
           "quality": null
         }
       ]
@@ -272,6 +278,7 @@
           "recorded_cached_tokens": 207159,
           "recorded_tokens_unique": 3470,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-29T03:33:29.302591+00:00",
           "quality": null
         }
       ]
@@ -304,6 +311,7 @@
           "recorded_cached_tokens": 209078,
           "recorded_tokens_unique": 2946,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-29T03:33:42.072437+00:00",
           "quality": null
         }
       ]
@@ -336,6 +344,7 @@
           "recorded_cached_tokens": 210986,
           "recorded_tokens_unique": 1922,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-29T03:33:52.884528+00:00",
           "quality": null
         }
       ]

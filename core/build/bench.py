@@ -45,6 +45,7 @@ class StepBench:
     recorded_cached_tokens: int = 0   # part of the prompt served from the provider's cache (billed cheaper)
     recorded_tokens_unique: int = 0   # unique cost of this step: prompt growth over the previous request + completion
     unique_basis: str = ""            # "prompt_delta" (exact split) or "total_delta" (estimated from total_tokens increments)
+    recorded_at: str = ""             # ISO 8601 wall-clock of the recorded step (from the trace) — the time axis
     quality: Optional[float] = None   # SLM tier: gate score (min of anchor recall / grounding precision)
 
 
@@ -101,6 +102,49 @@ class BenchReport:
     source_agent: str
     actions: List[ActionBench] = field(default_factory=list)
     final_answer: str = ""
+    baseline_minutes: float = 0.0     # how long a person takes for this work (from work.yaml); 0 = unknown
+
+    def _window(self) -> tuple[str, str]:
+        stamps = sorted(s.recorded_at for a in self.actions for s in a.steps if s.recorded_at)
+        return (stamps[0], stamps[-1]) if stamps else ("", "")
+
+    def costs(self, prices: Optional[Dict[str, Dict[str, float]]] = None) -> Optional[Dict[str, Any]]:
+        """Recorded vs compiled cost in USD, per the supplied price table.
+
+        Cache reads are billed separately (typically ~1/10 of input), so they are priced with
+        ``cache_read`` rather than folded into the input rate. Unpriced models are reported by
+        name so a cost figure is never quietly computed from a partial table.
+        """
+        prices = prices if prices is not None else load_prices()
+        if not prices:
+            return None
+        rec = comp = 0.0
+        missing: set[str] = set()
+
+        def rate(model: str, kind: str) -> Optional[float]:
+            row = prices.get(model) or prices.get(model.split(":", 1)[0])
+            if row is None:
+                missing.add(model or "?")
+                return None
+            return float(row.get(kind, 0.0))
+
+        for a in self.actions:
+            for st in a.steps:
+                # some agents record no per-step model; fall back to the session's agent so a
+                # table keyed by agent ("codex") still prices it, and report what stayed unpriced
+                rec_model = st.recorded_model or self.source_agent or "?"
+                r_in = rate(rec_model, "input")
+                r_out = rate(rec_model, "output")
+                r_cache = rate(rec_model, "cache_read")
+                if r_in is not None:
+                    fresh = max(st.recorded_prompt_tokens - st.recorded_cached_tokens, 0)
+                    rec += (fresh * r_in + st.recorded_cached_tokens * (r_cache or 0.0)
+                            + st.recorded_completion_tokens * (r_out or 0.0)) / 1e6
+                c_in = rate(st.compiled_model or "?", "input")
+                if c_in is not None:
+                    comp += st.compiled_tokens * c_in / 1e6
+        return {"currency": "USD", "recorded": round(rec, 4), "compiled": round(comp, 4),
+                "saved": round(rec - comp, 4), "unpriced_models": sorted(missing)}
 
     def totals(self) -> Dict[str, Any]:
         rt = sum(a.recorded_tokens for a in self.actions)
@@ -122,6 +166,11 @@ class BenchReport:
             "compiled_actions": sum(1 for a in self.actions if a.tier in ("code", "rule", "http") or any(s.executor_used.startswith("slm:") for s in a.steps)),
             "escalated_actions": sum(1 for a in self.actions if a.tier not in ("code", "rule", "http") and not any(s.executor_used.startswith("slm:") for s in a.steps)),
             "slm_actions": sum(1 for a in self.actions if any(s.executor_used.startswith("slm:") for s in a.steps)),
+            "recorded_from": self._window()[0], "recorded_to": self._window()[1],
+            **({"cost": c} if (c := self.costs()) else {}),
+            **({"baseline_minutes": self.baseline_minutes,
+                "saved_minutes": round(self.baseline_minutes - cl / 60000.0, 1)}
+               if self.baseline_minutes else {}),
         }
 
     def by_model(self) -> Dict[str, tuple[int, int]]:
@@ -167,6 +216,18 @@ class BenchReport:
             + (f"{t['speedup_x']}× faster" if t['speedup_x'] else "n/a") + " |",
             f"| outputs reproduced | — | {t['outputs_matched']}/{t['outputs_checked']} | |",
             f"| actions compiled / escalated | — | {t['compiled_actions']} / {t['escalated_actions']} | |",
+        ]
+        if t.get("cost"):
+            c = t["cost"]
+            note = f" (unpriced: {', '.join(c['unpriced_models'])})" if c["unpriced_models"] else ""
+            lines.append(f"| cost ({c['currency']}, supplied price table){note} | ${c['recorded']:.4f} | ${c['compiled']:.4f} | "
+                         f"${c['saved']:.4f} saved |")
+        if t.get("baseline_minutes"):
+            lines.append(f"| person-minutes (declared baseline) | {t['baseline_minutes']:g} min | "
+                         f"{t['compiled_latency_ms']/60000.0:.1f} min | {t['saved_minutes']:g} min saved |")
+        if t.get("recorded_from"):
+            lines.append(f"| recorded window | {t['recorded_from']} → {t['recorded_to']} | | |")
+        lines += [
             "",
             "**Unique** is the headline metric: each token counted once — the first request's full prompt, "
             "then only each later request's prompt growth, plus every completion"
@@ -354,6 +415,27 @@ def _step_tokens(step: TraceStep) -> int:
     return int((usage or {}).get("total_tokens", 0))
 
 
+PRICES_ENV = "OWC_PRICES"          # path to {model: {input, output, cache_read}} USD per 1M tokens
+
+
+def load_prices(path: Optional[str] = None) -> Dict[str, Dict[str, float]]:
+    """Model price table, in USD per 1M tokens, from ``--prices`` or ``$OWC_PRICES``.
+
+    Absent by design: the repository ships no prices, so a cost figure only ever appears when
+    someone supplies the table their organization actually pays. Shape::
+
+        {"claude-fable-5": {"input": 3.0, "output": 15.0, "cache_read": 0.3}, "code": {...}}
+    """
+    src = path or os.environ.get(PRICES_ENV)
+    if not src:
+        return {}
+    try:
+        data = json.loads(Path(src).read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return {str(k): {kk: float(vv) for kk, vv in v.items()} for k, v in data.items() if isinstance(v, dict)}
+
+
 def unique_step_tokens(trace: TraceIR) -> Dict[str, tuple[int, str]]:
     """``{step_id: (unique tokens, basis)}`` — each token of the session counted once.
 
@@ -389,11 +471,20 @@ def unique_step_tokens(trace: TraceIR) -> Dict[str, tuple[int, str]]:
 
 
 def attach_unique_tokens(report: BenchReport, trace: TraceIR) -> BenchReport:
-    """Fill each step's ``recorded_tokens_unique`` / ``unique_basis`` from the trace."""
+    """Fill trace-derived per-step fields: unique tokens, wall-clock, and the recorded model.
+
+    Also backfills reports written before these columns existed, so ``bench --recompute-totals``
+    upgrades an old ``benchmark.json`` instead of reporting blanks.
+    """
     uniq = unique_step_tokens(trace)
+    by_id = {st.step_id: st for st in trace.steps}
     for a in report.actions:
         for s in a.steps:
             s.recorded_tokens_unique, s.unique_basis = uniq.get(s.step_id, (0, ""))
+            st = by_id.get(s.step_id)
+            if st is not None:
+                s.recorded_at = s.recorded_at or str(getattr(st, "timestamp", "") or "")
+                s.recorded_model = s.recorded_model or str(getattr(st, "model", "") or "")
     return report
 
 
@@ -477,7 +568,8 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
             bench.steps.append(StepBench(step.step_id, rec_tokens, rec_latency, 0, 0.0, f"{tier} (skipped)",
                                          None, rec_out, "", "self-referential step (benchmarks/recompiles this build) not replayed",
                                          recorded_model=_step_model(step), compiled_model="skipped",
-                                         recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step)))
+                                         recorded_prompt_tokens=pt, recorded_completion_tokens=ct, recorded_cached_tokens=_step_cached(step),
+                                         recorded_at=str(getattr(step, "timestamp", "") or "")))
         elif executable and replay:
             t0 = time.perf_counter()
             os.environ[BENCH_ACTIVE_ENV] = "1"
@@ -532,6 +624,10 @@ def run_benchmark(build_dir: Path | str, trace: TraceIR, replay: bool = True, en
 
     report.actions = [benches[a] for a in work_ir.actions]
     attach_unique_tokens(report, trace)
+    try:  # a person-minutes baseline is declared in the work spec, when the org knows it
+        report.baseline_minutes = float(work_ir.to_dict().get("baseline_minutes") or 0.0)
+    except Exception:
+        report.baseline_minutes = 0.0
     t = report.totals()
     telemetry.event("bench.report", work=work_ir.work, run_id=trace.run_id, recorded_tokens=t["recorded_tokens"],
                     recorded_tokens_unique=t["recorded_tokens_unique"],

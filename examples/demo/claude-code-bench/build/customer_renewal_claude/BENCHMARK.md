@@ -9,6 +9,7 @@ Recorded agent session `claude_5603ea11-cf34-4d8d-b6db-0be21322061e` (`claude-co
 | wall time | 74.1 s | 10.72 s | 6.9× faster |
 | outputs reproduced | — | 4/6 | |
 | actions compiled / escalated | — | 6 / 1 | |
+| recorded window | 2026-08-29T03:32:41.637078+00:00 → 2026-08-29T03:33:52.884528+00:00 | | |
 
 **Unique** is the headline metric: each token counted once — the first request's full prompt, then only each later request's prompt growth, plus every completion. The cumulative-context sum adds up every request's usage as reported by the provider — an agent session re-sends its whole context every turn, so that sum counts the same tokens once per turn and overstates the cost of the agent path. Escalated steps keep their full recorded per-request cost on the compiled side (conservative: a real escalation would send a smaller, rebuilt prompt).
 

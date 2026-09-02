@@ -1,0 +1,14 @@
+{
+  "holdout_customers": [
+    "CUST-2041",
+    "CUST-2097",
+    "CUST-2103",
+    "CUST-2152",
+    "CUST-2233",
+    "CUST-2263"
+  ],
+  "seed": 20260831,
+  "sources": {
+    "fleet": 300
+  }
+}

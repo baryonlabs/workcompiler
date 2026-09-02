@@ -17,7 +17,9 @@
     "outputs_matched": 6,
     "compiled_actions": 5,
     "escalated_actions": 0,
-    "slm_actions": 1
+    "slm_actions": 1,
+    "recorded_from": "2026-08-30T11:51:32.989431+00:00",
+    "recorded_to": "2026-08-30T11:53:21.409488+00:00"
   },
   "by_model": {
     "gpt-5.6-sol": {
@@ -176,6 +178,7 @@
           "recorded_cached_tokens": 0,
           "recorded_tokens_unique": 13765,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-30T11:51:32.989431+00:00",
           "quality": null
         },
         {
@@ -196,6 +199,7 @@
           "recorded_cached_tokens": 15104,
           "recorded_tokens_unique": 1050,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-30T11:52:36.657028+00:00",
           "quality": null
         }
       ]
@@ -228,6 +232,7 @@
           "recorded_cached_tokens": 13056,
           "recorded_tokens_unique": 641,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-30T11:51:36.792137+00:00",
           "quality": null
         }
       ]
@@ -260,6 +265,7 @@
           "recorded_cached_tokens": 13056,
           "recorded_tokens_unique": 842,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-30T11:51:45.663625+00:00",
           "quality": null
         }
       ]
@@ -292,6 +298,7 @@
           "recorded_cached_tokens": 14080,
           "recorded_tokens_unique": 1925,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-30T11:52:32.072866+00:00",
           "quality": 1.0
         },
         {
@@ -312,6 +319,7 @@
           "recorded_cached_tokens": 16128,
           "recorded_tokens_unique": 561,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-30T11:53:03.147351+00:00",
           "quality": 1.0
         }
       ]
@@ -344,6 +352,7 @@
           "recorded_cached_tokens": 16128,
           "recorded_tokens_unique": 426,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-30T11:52:43.637108+00:00",
           "quality": null
         },
         {
@@ -364,6 +373,7 @@
           "recorded_cached_tokens": 17152,
           "recorded_tokens_unique": 701,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-30T11:53:15.264592+00:00",
           "quality": null
         },
         {
@@ -384,6 +394,7 @@
           "recorded_cached_tokens": 17152,
           "recorded_tokens_unique": 595,
           "unique_basis": "prompt_delta",
+          "recorded_at": "2026-08-30T11:53:21.409488+00:00",
           "quality": null
         }
       ]

@@ -61,13 +61,36 @@ claude 빌드는 respond가 frontier 에스컬레이션으로 남아 있어 **�
 unseen 정확 일치 72.9% **[64.7, 80.9]**, 시드 3회 평균 62.8% ± 4.8pp. 대외 문서에서 점추정만
 인용하지 않는다 — 구간이 곧 주장이다.
 
-## 5. 아직 못 재는 것 (입력이 없어서)
+## 5. 조직이 입력을 주면 재는 것
 
-| 지표 | 막힌 이유 | 필요한 입력 |
+넷 다 **코드가 아니라 입력**의 문제였고, 이제 입력을 주면 계산된다. 입력이 없으면 해당 항목은
+리포트에 아예 나타나지 않는다 — 없는 값을 0이나 추정치로 채우지 않는다.
+
+| 지표 | 입력 | 결과 |
 | :-- | :-- | :-- |
-| 원화·달러 절감액 | 단가표 부재 | 모델별 입력/출력/캐시읽기 단가 |
-| 절감 시간(사람 기준) | 인간 기준시간 부재 | `work.yaml`의 `baseline_minutes` |
-| 팀별 집계 | 신원이 git user 하나 | ledger 항목의 team/seat |
-| 주간·일간 추이 | 값은 트레이스에 있으나 집계면에 미노출 | `bench` totals·대시보드에 timestamp 전달 |
+| 비용·절감액 | `owc build bench --prices table.json`(또는 `$OWC_PRICES`) — `{모델: {input, output, cache_read}}`, USD/1M | totals의 `cost{recorded, compiled, saved, unpriced_models}` |
+| 절감 시간(사람 기준) | `work.yaml`의 `baseline_minutes` | totals의 `baseline_minutes`·`saved_minutes` |
+| 팀·좌석별 집계 | publish 시 `OWC_TEAM`, `OWC_SEAT` 환경변수 | ledger 항목의 `team`/`seat`, `owc org status`의 팀별 표 |
+| 주간·일간 추이 | (추가 입력 불필요) | totals의 `recorded_from`·`recorded_to`, 스텝별 `recorded_at` |
 
-이 넷은 코드 문제가 아니라 입력 데이터 문제다. 채우기 전에는 ROI를 계산하지 않는다.
+비용 계산의 두 가지 안전장치: 캐시 읽기는 `cache_read` 단가로 따로 곱하고, 단가표에 없는 모델은
+0원으로 조용히 계산하지 않고 `unpriced_models`에 이름을 남긴다. 스텝에 모델 표기가 없는 트레이스는
+세션의 에이전트 이름(`source_agent`)으로 조회하므로, 단가표를 에이전트 단위로 써도 된다.
+
+예시:
+
+```bash
+cat > prices.json <<'JSON'
+{"claude-fable-5": {"input": 3.0, "output": 15.0, "cache_read": 0.3},
+ "codex_exec":     {"input": 1.25, "output": 10.0, "cache_read": 0.125},
+ "qwen2.5:7b":     {"input": 0.0, "output": 0.0, "cache_read": 0.0},
+ "code": {"input": 0.0}, "rule": {"input": 0.0}}
+JSON
+owc build bench build/customer_renewal_codex --recompute-totals --prices prices.json
+# → cost (USD, supplied price table) | $0.2020 | $0.0000 | $0.2020 saved
+
+OWC_TEAM=sales OWC_SEAT=seat-12 owc org publish build/customer_renewal_codex
+```
+
+여전히 못 재는 것: **업무 건 단위 완료 4분류**(완료/미완료/행위 위반/중단). `quality_record`의 행위
+판정이 `benchmark.json`에 연결되어 있지 않다 — 이건 입력이 아니라 구현이 남은 항목이다.

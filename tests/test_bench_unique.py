@@ -177,3 +177,46 @@ def test_org_status_totals_claim_only_unique_savings(tmp_path, monkeypatch):
     assert t["recorded_tokens_unique"] == 200_000
     assert t["savings_unique_pct"] == 75.0     # 200k → 50k, the claimable number
     assert t["token_savings_pct"] == 95.0      # 1M → 50k, reference only
+
+
+# --------------------------------------------------------------------------- business inputs
+
+def _report_with(steps, **kw):
+    from core.build.bench import ActionBench, BenchReport, StepBench
+    a = ActionBench(action="act", tier="llm", steps=[StepBench(**s) for s in steps])
+    return BenchReport(work="w", build_dir="b", run_id="r", source_agent="codex", actions=[a], **kw)
+
+
+BASE_STEP = dict(recorded_tokens=0, recorded_latency_ms=0.0, compiled_tokens=0, compiled_latency_ms=0.0,
+                 executor_used="code:x", output_match=True, recorded_output="", compiled_output="")
+
+
+def test_cost_prices_cache_reads_separately_and_names_unpriced_models():
+    """A price table is supplied, never shipped. Cache reads bill at their own rate, so folding
+    them into the input rate would overstate what compiling saved."""
+    r = _report_with([{**BASE_STEP, "step_id": "s1", "recorded_model": "big", "compiled_model": "code",
+                       "recorded_prompt_tokens": 1_000_000, "recorded_cached_tokens": 900_000,
+                       "recorded_completion_tokens": 100_000, "compiled_tokens": 0},
+                      {**BASE_STEP, "step_id": "s2", "recorded_model": "mystery", "compiled_model": "code"}])
+    c = r.costs({"big": {"input": 3.0, "output": 15.0, "cache_read": 0.3}, "code": {"input": 0.0}})
+    # 100k fresh input @3 + 900k cache @0.3 + 100k output @15 = 0.3 + 0.27 + 1.5
+    assert c["recorded"] == 2.07 and c["compiled"] == 0.0 and c["saved"] == 2.07
+    assert c["unpriced_models"] == ["mystery"]      # never silently priced at zero
+
+
+def test_no_price_table_means_no_cost_figure():
+    r = _report_with([{**BASE_STEP, "step_id": "s1", "recorded_model": "big", "compiled_model": "code"}])
+    assert r.costs({}) is None and "cost" not in r.totals()
+
+
+def test_time_window_and_person_minutes_appear_only_when_known():
+    r = _report_with([{**BASE_STEP, "step_id": "s1", "recorded_at": "2026-09-02T10:00:00Z"},
+                      {**BASE_STEP, "step_id": "s2", "recorded_at": "2026-09-02T10:04:00Z",
+                       "compiled_latency_ms": 60_000.0}])
+    t = r.totals()
+    assert t["recorded_from"] == "2026-09-02T10:00:00Z" and t["recorded_to"] == "2026-09-02T10:04:00Z"
+    assert "baseline_minutes" not in t              # undeclared: no invented human baseline
+
+    r.baseline_minutes = 45.0
+    t = r.totals()
+    assert t["saved_minutes"] == 44.0               # 45 min baseline − 1 min compiled run
