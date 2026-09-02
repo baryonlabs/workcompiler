@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **docs/METRICS.md**: one authoritative definition per metric (which basis token savings use, how to attach a price table without double-counting cache reads, what the reproduction denominator is and is not, why point estimates are not quoted alone, and which metrics are blocked on missing inputs rather than code).
 - **One savings basis, everywhere**: `owc run` and `owc org status` now lead with **unique tokens** (each token of a recorded session counted once) and keep the cumulative-context sum beside it as reference — the two used to disagree by 37× on the same build (−85.1% cumulative vs −2.3% unique), and only the cumulative one was exported. Run ledger rows also split `run_cached_tokens` / `run_uncached_tokens` so cache-read pricing is never silently folded into a savings claim. Regression tests pin both bases.
 
 - **Honest savings metric**: benchmarks now report **unique tokens** (per-step prompt delta + completion) as the headline, demoting the cumulative-context sum to a reference row — the renewal build is −82.2% unique (was advertised −97% cumulative), and the claude build is reframed as a reproduction case (−2.3% unique). `owc build bench --recompute-totals` rewrites reports from stored traces.

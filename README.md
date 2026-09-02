@@ -729,6 +729,9 @@ openworkcompiler/
 
 ---
 
+지표의 정의(무엇을 어떤 기준으로 세는가, 특히 토큰 절감의 유니크/누적 두 기준)는
+[docs/METRICS.md](docs/METRICS.md)에 한 곳으로 모아 두었습니다.
+
 ## owc-inspect — 레이어 검증 콘솔
 
 <p align="center"><img src="docs/images/owc-inspect.png" alt="owc-inspect: 캡처·컴파일·벤치·SLM 게이트·캐시·하네스·원장을 한 화면에서 검증" width="840"></p>

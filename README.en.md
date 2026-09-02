@@ -703,6 +703,9 @@ openworkcompiler/
 
 ---
 
+Metric definitions — what is counted on which basis, in particular the unique vs cumulative
+bases for token savings — live in one place: [docs/METRICS.md](docs/METRICS.md).
+
 ## owc-inspect — the layer-verification console
 
 <p align="center"><img src="docs/images/owc-inspect.png" alt="owc-inspect: capture, tier map, reproduction matrix, SLM gates, cache freshness, harness loop and ledger on one screen" width="840"></p>
