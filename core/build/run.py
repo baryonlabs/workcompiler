@@ -128,7 +128,9 @@ class RunReport:
     params: Dict[str, Any]
     binding: Dict[str, str]
     steps: List[RunStep] = field(default_factory=list)
-    recorded_tokens: int = 0
+    recorded_tokens: int = 0                   # per-request usage summed (cumulative context re-counted each turn)
+    recorded_tokens_unique: int = 0            # each token of the recorded session counted once
+    unique_basis: str = ""                     # prompt_delta (exact) | total_delta (estimated)
     recorded_latency_ms: float = 0.0
 
     def totals(self) -> Dict[str, Any]:
@@ -139,6 +141,9 @@ class RunReport:
         return {
             "tokens": tokens, "cached_tokens": cached, "uncached_tokens": tokens - cached, "latency_ms": round(latency, 1),
             "cost_usd": round(sum(costs), 4) if costs else None,
+            "recorded_tokens_unique": self.recorded_tokens_unique, "unique_token_basis": self.unique_basis or "n/a",
+            "savings_unique_pct": (round(100.0 * (self.recorded_tokens_unique - tokens) / self.recorded_tokens_unique, 1)
+                                   if self.recorded_tokens_unique else None),
             "code_steps": sum(1 for s in self.steps if s.mode == "code"),
             "slm_steps": sum(1 for s in self.steps if s.mode.startswith("slm:")),
             "cache_steps": sum(1 for s in self.steps if s.mode == "cache"),
@@ -158,7 +163,8 @@ class RunReport:
 
     def ledger_rows(self) -> List[Dict[str, Any]]:
         return [{"step": s.step_id, "action": s.action, "recorded_model": s.recorded_model, "recorded_tokens": s.recorded_tokens,
-                 "run_executor": s.model, "run_tokens": s.tokens, "run_cached_tokens": s.cached_tokens, "mode": s.mode,
+                 "run_executor": s.model, "run_tokens": s.tokens, "run_cached_tokens": s.cached_tokens,
+                 "run_uncached_tokens": s.tokens - s.cached_tokens, "mode": s.mode,
                  "params": self.params} for s in self.steps]
 
     def to_dict(self) -> Dict[str, Any]:
@@ -177,9 +183,13 @@ class RunReport:
                   f"| LLM tokens | {t['tokens']:,}" + (f" ({t['cached_tokens']:,} cached · {t['uncached_tokens']:,} uncached)" if t['cached_tokens'] else "") + f" | {t['recorded_tokens']:,} |",
                   f"| wall time | {t['latency_ms']/1000:.1f} s | {t['recorded_latency_ms']/1000:.1f} s |",
                   f"| steps: code / cache / slm / escalated / needs agent | {t['code_steps']} / {t['cache_steps']} / {t['slm_steps']} / {t['escalated_steps']} / {t['needs_agent_steps']} | — |"]
+        if t["savings_unique_pct"] is not None:
+            pct = t["savings_unique_pct"]
+            basis = "" if t["unique_token_basis"] == "prompt_delta" else f" · {t['unique_token_basis']}, estimated"
+            lines.append(f"| token savings (unique){basis} | {'−' if pct >= 0 else '+'}{abs(pct)}% | {t['recorded_tokens_unique']:,} |")
         if t["token_savings_pct"] is not None:
             pct = t["token_savings_pct"]
-            lines.append(f"| token savings | {'−' if pct >= 0 else '+'}{abs(pct)}% | |")
+            lines.append(f"| token savings (cumulative-context sum; reference) | {'−' if pct >= 0 else '+'}{abs(pct)}% | |")
         if t["speedup_x"]:
             lines.append(f"| speedup | {t['speedup_x']}× | |")
         if t["cost_usd"] is not None:
@@ -240,6 +250,10 @@ def run_build(build_dir: Path | str, request: Optional[str] = None, params: Opti
     if trace is not None:
         report.recorded_tokens = sum(int(getattr(s.token_usage, "total_tokens", 0) or 0) for s in trace.steps)
         report.recorded_latency_ms = sum(float(getattr(s, "latency_ms", 0.0) or 0.0) for s in trace.steps)
+        from core.build.bench import unique_step_tokens
+        uniq = unique_step_tokens(trace)
+        report.recorded_tokens_unique = sum(v for v, _ in uniq.values())
+        report.unique_basis = "+".join(sorted({b for _, b in uniq.values() if b}))
 
     steps_src = trace.steps if trace is not None else []
     from core.build import slm as slm_tier

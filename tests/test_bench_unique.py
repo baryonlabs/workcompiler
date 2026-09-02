@@ -133,3 +133,47 @@ class TestReportRecompute:
         report = attach_unique_tokens(report_from_dict(self.BENCH), trace)
         assert report.totals()["unique_token_basis"] == "total_delta"
         assert "estimated from `total_tokens` increments" in report.to_markdown()
+
+
+# --------------------------------------------------------------------------- basis consistency
+
+def test_run_totals_lead_with_the_unique_basis(tmp_path):
+    """A run report must expose both bases explicitly: the unique one (what the org can claim)
+    and the cumulative-context sum (what a per-request bill looks like). Reporting only the
+    latter is what let a −85% headline stand next to a −2.3% reality."""
+    from core.build.run import RunReport, RunStep
+
+    r = RunReport(work="w", build_dir="b", request="", params={}, binding={})
+    r.steps = [RunStep(step_id="s1", action="a", mode="code", tokens=100, latency_ms=10.0, ok=True, output="")]
+    r.recorded_tokens = 1000          # per-request usage summed (context re-counted each turn)
+    r.recorded_tokens_unique = 200    # each token counted once
+    r.unique_basis = "prompt_delta"
+    t = r.totals()
+    assert t["savings_unique_pct"] == 50.0          # 200 → 100
+    assert t["token_savings_pct"] == 90.0           # kept, but as the reference basis
+    assert t["unique_token_basis"] == "prompt_delta"
+    md = r.to_markdown()
+    assert "token savings (unique)" in md and "cumulative-context sum; reference" in md
+
+
+def test_org_status_totals_claim_only_unique_savings(tmp_path, monkeypatch):
+    """`owc org status` aggregates published benchmark totals; the org-wide number it prints
+    must be the unique-basis one, with the cumulative sum kept beside it as reference."""
+    import json
+    from core import org
+
+    repo = tmp_path / "registry"
+    (repo / "works" / "renewal").mkdir(parents=True)
+    (repo / "ledger").mkdir()
+    (repo / "ledger" / "renewal.jsonl").write_text(json.dumps({
+        "work": "renewal", "by": "alice", "at": "2026-09-02T00:00:00",
+        "totals": {"recorded_tokens": 1_000_000, "recorded_tokens_unique": 200_000,
+                   "compiled_tokens": 50_000, "outputs_matched": 6, "outputs_checked": 6},
+    }) + "\n", encoding="utf-8")
+    monkeypatch.setattr(org, "registry_path", lambda create=False: repo)
+
+    st = org.status()
+    t = st["org_totals"]
+    assert t["recorded_tokens_unique"] == 200_000
+    assert t["savings_unique_pct"] == 75.0     # 200k → 50k, the claimable number
+    assert t["token_savings_pct"] == 95.0      # 1M → 50k, reference only

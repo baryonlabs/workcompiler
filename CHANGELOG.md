@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **One savings basis, everywhere**: `owc run` and `owc org status` now lead with **unique tokens** (each token of a recorded session counted once) and keep the cumulative-context sum beside it as reference — the two used to disagree by 37× on the same build (−85.1% cumulative vs −2.3% unique), and only the cumulative one was exported. Run ledger rows also split `run_cached_tokens` / `run_uncached_tokens` so cache-read pricing is never silently folded into a savings claim. Regression tests pin both bases.
+
 - **Honest savings metric**: benchmarks now report **unique tokens** (per-step prompt delta + completion) as the headline, demoting the cumulative-context sum to a reference row — the renewal build is −82.2% unique (was advertised −97% cumulative), and the claude build is reframed as a reproduction case (−2.3% unique). `owc build bench --recompute-totals` rewrites reports from stored traces.
 - **Gate fixes** (adversarially tested): the thousands-separator fusion bug in `_NUM_RE` (a CSV row no longer yields a fabricated number) and a sentence-scoped negation-cue check (a "does not exist / ignore these numbers" output no longer passes with recall 1.00); 25-case adversarial suite pins FP 11→3, FN 3→1 with remaining principled limits as strict xfails.
 - **Decision-eval statistics**: append-only eval history, case-cluster bootstrap 95% CIs, per-policy scoreboards, a relaxed-match metric, and fair re-baselining of raw models on the same bf16 greedy shim (conclusion unchanged). Training runs are now pinned and manifested (seed, epochs, package versions, adapter hashes).

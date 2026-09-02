@@ -181,7 +181,7 @@ def status() -> Dict[str, Any]:
     repo = registry_path(create=True)
     _sync(repo)
     works: List[Dict[str, Any]] = []
-    total_recorded = total_compiled = total_cache = 0
+    total_recorded = total_unique = total_compiled = total_cache = 0
     for wdir in sorted((repo / "works").glob("*")) if (repo / "works").exists() else []:
         ledger = repo / "ledger" / f"{wdir.name}.jsonl"
         entries = [json.loads(l) for l in ledger.read_text(encoding="utf-8").splitlines()] if ledger.exists() else []
@@ -190,14 +190,20 @@ def status() -> Dict[str, Any]:
         caches = len(list((wdir / "cache").glob("*/*.json")))
         works.append({"work": wdir.name, "publishes": len(entries), "last_by": last.get("by", "?"),
                       "last_at": last.get("at", "?"), "recorded_tokens": totals.get("recorded_tokens", 0),
+                      "recorded_tokens_unique": totals.get("recorded_tokens_unique", 0),
                       "compiled_tokens": totals.get("compiled_tokens", 0),
                       "outputs": f"{totals.get('outputs_matched', '?')}/{totals.get('outputs_checked', '?')}",
                       "cache_entries": caches})
         total_recorded += int(totals.get("recorded_tokens", 0) or 0)
+        total_unique += int(totals.get("recorded_tokens_unique", 0) or 0)
         total_compiled += int(totals.get("compiled_tokens", 0) or 0)
         total_cache += caches
     return {"registry": str(repo), "works": works,
-            "org_totals": {"works": len(works), "recorded_tokens": total_recorded, "compiled_tokens": total_compiled,
+            # the savings the org can claim are the *unique* ones: summing per-request usage would
+            # count a session's cumulative context once per turn. The cumulative sum stays as reference.
+            "org_totals": {"works": len(works), "recorded_tokens": total_recorded,
+                           "recorded_tokens_unique": total_unique, "compiled_tokens": total_compiled,
+                           "savings_unique_pct": round(100 * (total_unique - total_compiled) / total_unique, 1) if total_unique else None,
                            "token_savings_pct": round(100 * (total_recorded - total_compiled) / total_recorded, 1) if total_recorded else None,
                            "cache_entries": total_cache}}
 
@@ -245,8 +251,9 @@ def main(argv=None) -> int:
         print(f"{w['work']:28s} {w['publishes']:4d} {w['last_by']:14s} "
               f"{w['recorded_tokens']:>10,} → {w['compiled_tokens']:<9,} {w['outputs']:>8s} {w['cache_entries']:6d}")
     t = st["org_totals"]
-    savings = f" (−{t['token_savings_pct']}%)" if t["token_savings_pct"] is not None else ""
-    print(f"org total: {t['works']} works · {t['recorded_tokens']:,} → {t['compiled_tokens']:,} tokens{savings} · {t['cache_entries']} cached escalations")
+    savings = f" (−{t['savings_unique_pct']}% unique)" if t["savings_unique_pct"] is not None else ""
+    ref = f", cumulative-context sum {t['recorded_tokens']:,} −{t['token_savings_pct']}%" if t["token_savings_pct"] is not None else ""
+    print(f"org total: {t['works']} works · {t['recorded_tokens_unique']:,} → {t['compiled_tokens']:,} unique tokens{savings}{ref} · {t['cache_entries']} cached escalations")
     return 0
 
 
